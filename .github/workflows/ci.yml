@@ -50,7 +50,7 @@ jobs:
 
       - name: Upload coverage (core)
         if: matrix.node == '20'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-core
           path: packages/core/coverage
@@ -59,7 +59,7 @@ jobs:
 
       - name: Upload coverage (cli)
         if: matrix.node == '20'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-cli
           path: packages/cli/coverage
@@ -68,7 +68,7 @@ jobs:
 
       - name: Upload coverage (action)
         if: matrix.node == '20'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-action
           path: packages/action/coverage
@@ -77,7 +77,7 @@ jobs:
 
       - name: Upload coverage (dashboard)
         if: matrix.node == '20'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: coverage-dashboard
           path: packages/dashboard/coverage
