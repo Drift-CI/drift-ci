@@ -1,0 +1,36 @@
+# drift-ci on GitLab CI.
+#
+# The GitHub Action is Node20 + ncc-bundled, which is GitHub-specific.
+# On GitLab CI (and any other CI), run the CLI directly via npx and
+# upload the JUnit report via GitLab's `artifacts.reports.junit` so
+# the merge-request UI surfaces per-case results.
+
+stages: [test]
+
+drift-ci:
+  stage: test
+  image: node:20-bookworm
+  rules:
+    - if: $CI_PIPELINE_SOURCE == "merge_request_event"
+      changes:
+        - .drift/**
+        - src/prompts/**
+        - src/lib/llm/**
+  cache:
+    # Cache the embedding model — first run downloads ~90 MB.
+    key: drift-ci-embeddings-all-MiniLM-L6-v2-v1
+    paths:
+      - /root/.cache/huggingface/
+  variables:
+    ANTHROPIC_API_KEY: $ANTHROPIC_API_KEY   # set in CI/CD settings as a masked variable
+  script:
+    - npm install -g drift-ci
+    - drift-ci run --junit-path junit.xml --reporter json > drift.json
+  artifacts:
+    when: always
+    expire_in: 1 week
+    paths:
+      - junit.xml
+      - drift.json
+    reports:
+      junit: junit.xml

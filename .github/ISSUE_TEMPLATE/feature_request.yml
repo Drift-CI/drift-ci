@@ -1,0 +1,37 @@
+name: Feature request
+description: Suggest a new capability or enhancement
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for the suggestion. Please check the
+        [roadmap](../ROADMAP.md) and existing issues first — the feature
+        may already be planned or under discussion.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem does this solve?
+      description: >-
+        Describe the use case, not the implementation. What are you trying to
+        do that drift-ci makes hard today?
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed solution
+      description: >-
+        How would you like this to work? CLI flag, config option, new
+        evaluator, etc. Rough sketch is fine.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+      description: Workarounds you have tried or other designs you rejected.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context

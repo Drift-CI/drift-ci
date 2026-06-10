@@ -1,0 +1,6 @@
+# Next.js build output — rebuilt by CI + Docker image build.
+.next/
+.vercel/
+
+# Next-generated TS ambient types file is committed (next-env.d.ts) —
+# do NOT add it here.

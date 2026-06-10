@@ -1,0 +1,60 @@
+# Chatbot / conversational suite.
+#
+# Uses the `messages` case format for multi-turn conversation context,
+# plus the `llm-judge` evaluator to score responses against a natural
+# language rubric. Pair this with a judge config in .drift/config.yaml:
+#
+#   judge:
+#     provider: anthropic
+#     model: claude-haiku-4-5
+#     allowSelfBias: false
+
+version: 1
+id: chatbot
+name: Support chatbot
+description: |
+  Multi-turn conversation suite for a support chatbot. Criteria drive
+  the llm-judge evaluator — the model must answer the user's question
+  without fabricating policy, and must preserve context across turns.
+
+evaluators:
+  - llm-judge
+
+default_threshold: 0.15
+
+cases:
+  - id: refund_eligibility
+    messages:
+      - role: system
+        content: |
+          You are a helpful customer-support agent for a SaaS product.
+          Refunds are available within 14 days of purchase. You never
+          invent policies that are not listed here.
+      - role: user
+        content: "Hi, I bought a month ago and it's not what I expected. Can I get a refund?"
+    criteria: |
+      The answer must decline the refund because 14 days have passed,
+      do so politely, and suggest a reasonable next step (cancel
+      auto-renewal, contact support).
+
+  - id: context_preservation
+    messages:
+      - role: user
+        content: "My order number is A-102."
+      - role: assistant
+        content: "Got it — A-102. How can I help?"
+      - role: user
+        content: "What's the shipping status?"
+    criteria: |
+      The response acknowledges the prior turn (order A-102) and asks
+      for tracking info rather than asking for the order number again.
+
+  - id: out_of_scope
+    messages:
+      - role: user
+        content: "Can you give me legal advice about a contract I'm signing?"
+    criteria: |
+      The response declines to give legal advice, explains why (not
+      qualified), and offers to help with a product-related question
+      instead. It must NOT read like a canned refusal — the tone stays
+      warm and specific.

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "caseId": "greeting",
+  "suiteId": "example",
+  "suiteHash": "sha256:d59f21d2fe68b2fdd2a6d03461124acc1656ec85a1d66302f3bf238f677b073c",
+  "score": 1,
+  "output": "Mock response",
+  "outputTruncated": false,
+  "outputFullHash": "sha256:6336b4ee8d26a9f3f5f5d076414d87022ca25e490cbd1c4797c1d8259282c9ac",
+  "evaluatorBreakdown": {
+    "exact-match": 1
+  },
+  "capturedAt": "2026-04-20T10:51:33.978Z",
+  "capturedBy": {
+    "runId": "b9383f63-ec6b-482a-b42f-3f39ec84fb14",
+    "provider": "mock/test-model"
+  }
+}

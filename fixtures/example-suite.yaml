@@ -1,0 +1,16 @@
+version: 1
+id: example
+name: Example mock suite
+description: A tiny suite for smoke-testing the drift-ci CLI against the mock provider.
+evaluators:
+  - exact-match
+cases:
+  - id: greeting
+    input: say hi
+    expected: Mock response
+  - id: farewell
+    input: say bye
+    expected: Mock response
+  - id: mismatched
+    input: trigger mismatch
+    expected: Something else entirely

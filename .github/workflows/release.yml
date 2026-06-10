@@ -1,0 +1,150 @@
+name: Release
+
+# Release-please workflow.
+#
+# On every push to main this does two things:
+#
+#   1. Opens / updates release PRs per package (scoped by conventional-commit
+#      prefixes — feat(core): …, fix(cli): …, chore(action): …). Merging a
+#      release PR cuts a GitHub release + git tag for that package.
+#
+#   2. When a release PR merges, detects which packages just released and
+#      runs the matching publish job (npm for core + cli, floating-tag
+#      update for the action).
+#
+# Maintainer setup — required before the first release cuts:
+#   * Add NPM_TOKEN repo secret (npm automation token with publish scope,
+#     2FA-enabled account required for --provenance attestation).
+#   * The default GITHUB_TOKEN drives release-please. No PAT required.
+#   * The Marketplace listing is a one-time human action in the GitHub
+#     UI after the first v1.0.0 tag is cut — see docs/RELEASING.md.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+  pull-requests: write
+  # id-token: write is required by npm publish --provenance so npm can mint
+  # a sigstore attestation bound to this workflow run.
+  id-token: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release-please:
+    name: Open release PRs / cut releases
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      core-released: ${{ steps.release.outputs['packages/core--release_created'] }}
+      core-tag: ${{ steps.release.outputs['packages/core--tag_name'] }}
+      cli-released: ${{ steps.release.outputs['packages/cli--release_created'] }}
+      cli-tag: ${{ steps.release.outputs['packages/cli--tag_name'] }}
+      action-released: ${{ steps.release.outputs['packages/action--release_created'] }}
+      action-tag: ${{ steps.release.outputs['packages/action--tag_name'] }}
+      action-major: ${{ steps.release.outputs['packages/action--major'] }}
+
+    steps:
+      - name: release-please
+        id: release
+        uses: googleapis/release-please-action@v4
+        with:
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json
+
+  publish-core:
+    name: Publish @drift-ci/core to npm
+    needs: release-please
+    if: needs.release-please.outputs.core-released == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build
+        run: pnpm --filter @drift-ci/core build
+
+      - name: Publish with provenance
+        working-directory: packages/core
+        run: pnpm publish --no-git-checks --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  publish-cli:
+    name: Publish drift-ci to npm
+    needs: release-please
+    if: needs.release-please.outputs.cli-released == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: pnpm
+          registry-url: "https://registry.npmjs.org"
+
+      - name: Install
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (core is required as an upstream build output)
+        run: pnpm --filter @drift-ci/core... build
+
+      - name: Publish with provenance
+        working-directory: packages/cli
+        run: pnpm publish --no-git-checks --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+  update-action-major-tag:
+    name: Update floating v<major> tag for the Action
+    needs: release-please
+    if: needs.release-please.outputs.action-released == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Retag v<major>
+        env:
+          ACTION_TAG: ${{ needs.release-please.outputs.action-tag }}
+          ACTION_MAJOR: ${{ needs.release-please.outputs.action-major }}
+        run: |
+          set -euo pipefail
+          if [ -z "${ACTION_MAJOR}" ] || [ -z "${ACTION_TAG}" ]; then
+            echo "::error::action-tag or action-major output missing"
+            exit 1
+          fi
+          MAJOR_TAG="v${ACTION_MAJOR}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git tag -f "${MAJOR_TAG}" "${ACTION_TAG}^{}"
+          git push origin "${MAJOR_TAG}" --force
+          echo "Updated ${MAJOR_TAG} → ${ACTION_TAG}"

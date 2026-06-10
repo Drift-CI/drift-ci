@@ -1,0 +1,5 @@
+# Treat the bundled GitHub Action artifact as binary so Windows and Linux
+# checkouts agree byte-for-byte. The `check-action-bundle` CI job rebuilds
+# from source and fails on `git diff --exit-code packages/action/dist`, so
+# any CRLF / LF normalization would surface as a false drift.
+packages/action/dist/** -text

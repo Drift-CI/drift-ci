@@ -1,0 +1,53 @@
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 10
+    commit-message:
+      prefix: chore(deps)
+      include: scope
+    labels:
+      - dependencies
+      - javascript
+    groups:
+      typescript-tooling:
+        patterns:
+          - typescript
+          - "@types/*"
+          - eslint*
+          - "@typescript-eslint/*"
+          - vitest
+          - turbo
+      build-tooling:
+        patterns:
+          - "@vercel/ncc"
+          - tsx
+      runtime-prod:
+        patterns:
+          - "commander"
+          - "js-yaml"
+          - "zod"
+          - "p-limit"
+          - "better-sqlite3"
+          - "ink"
+          - "react"
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+      day: monday
+      time: "06:00"
+      timezone: Etc/UTC
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: chore(ci)
+      include: scope
+    labels:
+      - dependencies
+      - github-actions

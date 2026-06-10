@@ -1,0 +1,44 @@
+# RAG-pipeline suite.
+#
+# Uses `cosine-similarity` so semantically-equivalent answers score
+# high even when wording drifts. Good for retrieval-augmented systems
+# whose answers should be faithful to a reference without being an
+# exact transcription.
+#
+# Cache the embedding model in CI so the first run isn't slow:
+#
+#   - uses: actions/cache@v4
+#     with:
+#       path: ~/.cache/huggingface
+#       key: drift-ci-embeddings-all-MiniLM-L6-v2-v1
+
+version: 1
+id: rag
+name: RAG answers
+description: |
+  Embeddings-based similarity check for a retrieval-augmented system.
+  Thresholds are looser than exact-match because wording will vary.
+
+evaluators:
+  - cosine-similarity
+
+default_threshold: 0.20
+
+cases:
+  - id: product_return_window
+    input: "How long do I have to return a product?"
+    expected: |
+      Our return window is 30 days from delivery. Items must be
+      unused and in original packaging.
+
+  - id: subscription_billing_cycle
+    input: "When is my subscription billed?"
+    expected: |
+      Subscriptions are billed on the same calendar day each month —
+      whatever day you first signed up.
+
+  - id: password_reset
+    input: "I forgot my password. How do I reset it?"
+    expected: |
+      Visit the sign-in page and click "Forgot password?". We'll email
+      a reset link to the address on file within a minute.

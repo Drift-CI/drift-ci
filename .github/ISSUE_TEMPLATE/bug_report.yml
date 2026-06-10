@@ -1,0 +1,94 @@
+name: Bug report
+description: Report a defect in drift-ci
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for filing a bug. Please fill out as much of the template as
+        you can — reproduction steps and environment details matter most.
+
+        If this is a security issue, please do **not** file it here. Follow
+        the instructions in [SECURITY.md](../SECURITY.md) instead.
+  - type: textarea
+    id: summary
+    attributes:
+      label: Summary
+      description: A clear, one-paragraph description of the bug.
+      placeholder: What went wrong?
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Reproduction steps
+      description: >-
+        Minimal steps that reliably reproduce the bug. Include the
+        `.drift/config.yaml` and `suite.yaml` snippets that trigger it if
+        relevant.
+      placeholder: |
+        1. `drift-ci run --suite ...`
+        2. ...
+        3. Expected X, got Y
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behaviour
+    validations:
+      required: true
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behaviour
+      description: Paste the output, stack trace, or exit code.
+      render: shell
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: drift-ci version
+      description: Output of `drift-ci --version`.
+      placeholder: e.g. 0.3.0
+    validations:
+      required: true
+  - type: input
+    id: node-version
+    attributes:
+      label: Node.js version
+      description: Output of `node --version`.
+      placeholder: e.g. v20.11.0
+    validations:
+      required: true
+  - type: dropdown
+    id: os
+    attributes:
+      label: Operating system
+      options:
+        - Linux
+        - macOS
+        - Windows
+        - Other
+    validations:
+      required: true
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider
+      options:
+        - anthropic
+        - openai
+        - google
+        - bedrock
+        - ollama
+        - mock
+        - other / not applicable
+    validations:
+      required: true
+  - type: textarea
+    id: extra
+    attributes:
+      label: Additional context
+      description: Logs, screenshots, related issues, anything else.

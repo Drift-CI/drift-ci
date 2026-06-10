@@ -1,0 +1,58 @@
+# Safe-to-run-llm-tests pattern for fork pull requests.
+#
+# GitHub doesn't pass repository secrets to fork PRs triggered by
+# pull_request, so drift-ci would always fail on the first provider
+# call. This workflow uses `pull_request_target` + a label gate to let
+# a maintainer opt the PR in after review.
+#
+# DO NOT REMOVE THE LABEL CHECK. Without it, a malicious fork can
+# exfiltrate your provider API keys by modifying the suite to post
+# the key to an attacker-controlled endpoint.
+
+name: drift-ci (fork-gated)
+
+on:
+  pull_request_target:
+    types: [labeled, synchronize]
+    branches: [main]
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  drift:
+    if: >
+      github.event_name == 'pull_request_target' &&
+      contains(github.event.pull_request.labels.*.name, 'safe-to-run-llm-tests')
+
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # Check out the fork's head SHA. The label gate is what makes
+          # this safe — without it, `pull_request_target` + fork-SHA
+          # checkout is a well-known secret-leak pattern.
+          ref: ${{ github.event.pull_request.head.sha }}
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          fetch-depth: 0
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: drift-ci-embeddings-all-MiniLM-L6-v2-v1
+
+      - uses: drift-ci/drift-ci@v1
+        with:
+          provider: anthropic
+          # Strongly recommended: scope this key with a low cost ceiling
+          # and a per-minute rate limit. A bad fork PR shouldn't drain
+          # your monthly budget even when the label is on.
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          threshold: '0.10'
+          baseline-source: branch
+          post-comment: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

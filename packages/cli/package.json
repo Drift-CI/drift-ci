@@ -1,0 +1,52 @@
+{
+  "name": "drift-ci",
+  "version": "0.1.0",
+  "description": "Behaviour regression testing for LLM applications",
+  "license": "MIT",
+  "homepage": "https://github.com/Drift-CI/drift-ci#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Drift-CI/drift-ci.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/Drift-CI/drift-ci/issues"
+  },
+  "type": "module",
+  "bin": {
+    "drift-ci": "./dist/index.js"
+  },
+  "main": "./dist/index.js",
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/add-shebang.mjs",
+    "dev": "tsc -p tsconfig.json --watch",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage",
+    "clean": "rimraf dist"
+  },
+  "dependencies": {
+    "@drift-ci/core": "workspace:*",
+    "better-sqlite3": "^11.10.0",
+    "commander": "^12.1.0",
+    "ink": "^5.2.1",
+    "js-yaml": "^4.1.1",
+    "react": "^18.3.1"
+  },
+  "devDependencies": {
+    "@types/js-yaml": "^4.0.9",
+    "@types/node": "^20.14.0",
+    "@types/react": "^18.3.28",
+    "@vitest/coverage-v8": "^1.6.1",
+    "ink-testing-library": "^4.0.0",
+    "rimraf": "^6.0.0",
+    "typescript": "^5.5.0",
+    "vitest": "^1.6.0"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "engines": {
+    "node": ">=20.0.0"
+  }
+}

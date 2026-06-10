@@ -1,0 +1,58 @@
+name: drift-ci
+description: Behaviour regression testing for LLM applications
+author: drift-ci
+
+branding:
+  icon: activity
+  color: blue
+
+inputs:
+  suite:
+    description: Path to the suite YAML file.
+    default: .drift/suite.yaml
+  config:
+    description: Path to the drift-ci config YAML file.
+    default: .drift/config.yaml
+  provider:
+    description: LLM provider — anthropic | openai | google | bedrock | ollama.
+    required: true
+  api-key:
+    description: API key for the provider (if required).
+    required: false
+  model:
+    description: Model name override. Defaults to the config value.
+    required: false
+  threshold:
+    description: Regression threshold (0.0–1.0). Overrides config.thresholds.regression.
+    required: false
+  baseline-source:
+    description: Where to load baselines from — `branch` (PR head, default) or `main` (origin/main).
+    default: branch
+  fail-on-regression:
+    description: Fail the action if regressions are detected.
+    default: 'true'
+  post-comment:
+    description: Post results as a PR comment. Requires pull-requests write permission.
+    default: 'true'
+  dashboard-url:
+    description: URL of a self-hosted dashboard to sync results to.
+    required: false
+  dashboard-token:
+    description: API token for dashboard sync.
+    required: false
+
+outputs:
+  regression-count:
+    description: Number of regressions detected.
+  avg-score:
+    description: Average score across all cases, to three decimals.
+  run-id:
+    description: ID of this run for dashboard lookup.
+  baseline-changed:
+    description: '`true` if this PR modifies any .drift/baseline/ files.'
+  junit-path:
+    description: Absolute path to a JUnit-XML report of every case (written to $RUNNER_TEMP/drift-junit.xml).
+
+runs:
+  using: node20
+  main: dist/index.js

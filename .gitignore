@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+*.tsbuildinfo
+
+# The GitHub Action ships its bundled artifact in-tree — GitHub executes it
+# directly. The `check-action-bundle` CI job rebuilds and asserts no drift.
+!packages/action/dist/
+!packages/action/dist/**
+
+# Turborepo
+.turbo/
+
+# Test / coverage
+coverage/
+.nyc_output/
+
+# Env
+.env
+.env.local
+.env.*.local
+
+# IDE
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+
+# Claude settings — local agent config / permission allowlists, not shipped publicly
+.claude/settings.local.json
+.claude/settings.json
+
+# Internal planning / AI-process artifacts — kept private, not part of the public repo
+docs/superpowers/
+.superpowers/
+.claire/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+pnpm-debug.log*
+
+# Runtime
+*.pid
+*.seed
+
+# drift-ci ephemeral state (baselines at .drift/baseline/ are committed; runs are not)
+.drift/runs/

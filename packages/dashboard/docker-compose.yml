@@ -1,0 +1,97 @@
+# Self-hosted drift-ci dashboard. Bring it up with `docker compose up`
+# from this directory; the container applies migrations before the
+# server starts.
+
+name: drift-ci
+
+services:
+  postgres:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: drift
+      POSTGRES_PASSWORD: drift
+      POSTGRES_DB: drift_ci
+    ports:
+      - "5432:5432"
+    volumes:
+      - drift-ci-pg-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U drift -d drift_ci"]
+      interval: 5s
+      timeout: 3s
+      retries: 20
+
+  dashboard:
+    build:
+      # Build from the repo root so the Dockerfile can pull in the full
+      # pnpm workspace (packages/core is a workspace dep).
+      context: ../..
+      dockerfile: packages/dashboard/Dockerfile
+    restart: unless-stopped
+    # Pulls DRIFT_SESSION_SECRET / DRIFT_ADMIN_EMAIL / GITHUB_OAUTH_*
+    # / GOOGLE_OAUTH_* / GITHUB_WEBHOOK_SECRET / DRIFT_DASHBOARD_PASSWORD
+    # / DRIFT_INGEST_TOKEN / DRIFT_OAUTH_REDIRECT_URI from the .env file
+    # next to this docker-compose.yml. Compose only auto-passes vars
+    # explicitly listed here — `env_file:` is the bridge.
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://drift:drift@postgres:5432/drift_ci
+      NODE_ENV: production
+    ports:
+      - "3000:3000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "node -e \"fetch('http://localhost:3000/api/health').then(r => process.exit(r.ok ? 0 : 1)).catch(() => process.exit(1))\"",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  # Retention cron — daily run-sweep at 03:00 UTC. Drops runs whose
+  # `started_at + retention_days` has passed; baseline_snapshots are
+  # preserved (no FK to runs by design — see arch §18 / v1.3 B14).
+  # Disable by removing this service or commenting it out.
+  retention:
+    image: ${COMPOSE_PROJECT_NAME:-drift-ci}-dashboard
+    restart: unless-stopped
+    depends_on:
+      postgres:
+        condition: service_healthy
+      dashboard:
+        # `service_started` is enough — the sidecar doesn't need the
+        # web server to be healthy, only for it to have run migrations.
+        condition: service_started
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgres://drift:drift@postgres:5432/drift_ci
+      DRIFT_RETENTION_BATCH_LIMIT: "10000"
+    entrypoint: ["sh", "-c"]
+    command:
+      - |
+        # Tiny in-container scheduler — sleeps until the next 03:00 UTC,
+        # runs the sweep, repeats. Operators wanting cron / k8s CronJob
+        # instead of an in-container loop can `docker compose stop
+        # retention` and wire `node scripts/retention.mjs` externally.
+        while true; do
+          NOW=$$(date -u +%s)
+          NEXT=$$(date -u -d 'today 03:00' +%s)
+          if [ "$$NEXT" -le "$$NOW" ]; then
+            NEXT=$$(date -u -d 'tomorrow 03:00' +%s)
+          fi
+          SLEEP=$$(( NEXT - NOW ))
+          echo "retention: sleeping $$SLEEP s until next 03:00 UTC sweep"
+          sleep "$$SLEEP"
+          node packages/dashboard/scripts/retention.mjs
+        done
+
+volumes:
+  drift-ci-pg-data:

@@ -1,0 +1,42 @@
+# Minimal drift-ci workflow — runs on every PR that touches prompts,
+# the suite, or the LLM library glue. Posts a PR comment, fails the
+# check on regressions.
+
+name: drift-ci
+
+on:
+  pull_request:
+    paths:
+      - '.drift/**'
+      - 'src/prompts/**'
+      - 'src/lib/llm/**'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0          # needed for baseline-source: main or base-ref diffs
+
+      # Cache the embeddings model so the first run isn't slow. Key is
+      # drift-ci's curated model + version; bump when you upgrade.
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: drift-ci-embeddings-all-MiniLM-L6-v2-v1
+
+      - uses: drift-ci/drift-ci@v1
+        with:
+          provider: anthropic
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+          threshold: '0.10'
+          baseline-source: branch
+          post-comment: 'true'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

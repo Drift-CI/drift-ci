@@ -1,0 +1,80 @@
+# Run the same suite against multiple providers in parallel. Each job
+# gets its own PR comment because the action uses a per-repo comment
+# marker — if you want one consolidated comment instead, pick a single
+# "canonical" provider with `post-comment: true` and set false on the
+# others.
+
+name: drift-ci (matrix)
+
+on:
+  pull_request:
+    paths:
+      - '.drift/**'
+      - 'src/prompts/**'
+      - 'src/lib/llm/**'
+
+permissions:
+  pull-requests: write
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: anthropic-sonnet
+            provider: anthropic
+            model: claude-sonnet-4-5
+            secret: ANTHROPIC_API_KEY
+            post-comment: 'true'
+          - name: openai-gpt4o
+            provider: openai
+            model: gpt-4o
+            secret: OPENAI_API_KEY
+            post-comment: 'false'     # avoid double comments; JUnit still uploaded
+          - name: bedrock-sonnet
+            provider: bedrock
+            model: anthropic.claude-sonnet-4-5-20260101-v1:0
+            secret: ''                # Bedrock uses AWS credentials, not api-key
+            post-comment: 'false'
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/cache@v4
+        with:
+          path: ~/.cache/huggingface
+          key: drift-ci-embeddings-all-MiniLM-L6-v2-v1
+
+      # Bedrock takes AWS credentials from the environment; configure
+      # them here when matrix.provider == 'bedrock'.
+      - name: Configure AWS credentials
+        if: matrix.provider == 'bedrock'
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ secrets.AWS_ROLE_ARN }}
+          aws-region: us-east-1
+
+      - id: drift
+        uses: drift-ci/drift-ci@v1
+        with:
+          provider: ${{ matrix.provider }}
+          api-key: ${{ matrix.secret != '' && secrets[matrix.secret] || '' }}
+          model: ${{ matrix.model }}
+          threshold: '0.10'
+          post-comment: ${{ matrix.post-comment }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload JUnit
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: drift-junit-${{ matrix.name }}
+          path: ${{ steps.drift.outputs.junit-path }}
+          if-no-files-found: warn

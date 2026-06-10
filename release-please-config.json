@@ -1,0 +1,44 @@
+{
+  "$schema": "https://raw.githubusercontent.com/googleapis/release-please/main/schemas/config.json",
+  "release-type": "node",
+  "packages": {
+    "packages/core": {
+      "package-name": "@drift-ci/core",
+      "pull-request-title-pattern": "chore(core): release ${version}",
+      "changelog-path": "CHANGELOG.md",
+      "release-as": "1.0.0",
+      "draft": false,
+      "prerelease": false
+    },
+    "packages/cli": {
+      "package-name": "drift-ci",
+      "pull-request-title-pattern": "chore(cli): release ${version}",
+      "changelog-path": "CHANGELOG.md",
+      "release-as": "1.0.0",
+      "draft": false,
+      "prerelease": false
+    },
+    "packages/action": {
+      "package-name": "@drift-ci/action",
+      "pull-request-title-pattern": "chore(action): release ${version}",
+      "changelog-path": "CHANGELOG.md",
+      "include-component-in-tag": false,
+      "release-as": "1.0.0",
+      "draft": false,
+      "prerelease": false
+    },
+    "packages/dashboard": {
+      "package-name": "@drift-ci/dashboard",
+      "pull-request-title-pattern": "chore(dashboard): release ${version}",
+      "changelog-path": "CHANGELOG.md",
+      "release-as": "1.0.0",
+      "draft": false,
+      "prerelease": false
+    }
+  },
+  "plugins": [
+    { "type": "node-workspace" }
+  ],
+  "separate-pull-requests": true,
+  "group-pull-request-title-pattern": "chore: release ${version}"
+}

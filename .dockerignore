@@ -1,0 +1,21 @@
+# Excluded from Docker build context. The dashboard Dockerfile uses
+# `context: ../..` (the repo root) — Docker reads `.dockerignore` from
+# the context root, NOT from the Dockerfile's directory, so this file
+# (rather than `packages/dashboard/.dockerignore`) is what governs.
+#
+# Critical: exclude `**/node_modules`. The host's node_modules carries
+# Windows-flavoured pnpm `.bin/` shims that don't resolve when copied
+# into a Linux container — we want the container's pnpm install to
+# generate Linux-correct shims, untouched.
+**/node_modules
+**/.next
+**/coverage
+**/dist
+**/build
+**/*.log
+**/.turbo
+.git
+.gitignore
+.env
+.env.*
+packages/dashboard/.env

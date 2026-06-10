@@ -1,0 +1,10 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/drift-ci/drift-ci/security/advisories/new
+    about: >-
+      Please report security issues privately via GitHub Security Advisories
+      or email security@drift-ci.dev. Do not open a public issue.
+  - name: Question or discussion
+    url: https://github.com/drift-ci/drift-ci/discussions
+    about: Usage questions and open-ended discussion belong in Discussions.

@@ -1,0 +1,68 @@
+# Structured-output classification suite.
+#
+# Each case asserts the model produces JSON that validates against a
+# per-case schema. Mix `json-schema` with `exact-match` on the same
+# case to check schema validity AND a specific field value.
+
+version: 1
+id: classification
+name: Intent classification
+description: |
+  Model receives a short utterance and must classify it into a closed
+  set of intents, returning JSON with a confidence score.
+
+evaluators:
+  - json-schema
+
+default_threshold: 0.05
+
+cases:
+  - id: intent_billing
+    input: "When will my card be charged?"
+    schema:
+      type: object
+      required: [intent, confidence]
+      properties:
+        intent:
+          type: string
+          enum: [billing, support, feedback, other]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+      additionalProperties: false
+    expected: |
+      {"intent": "billing", "confidence": 0.95}
+
+  - id: intent_feedback
+    input: "I love the new design, great job!"
+    schema:
+      type: object
+      required: [intent, sentiment]
+      properties:
+        intent:
+          type: string
+          enum: [billing, support, feedback, other]
+        sentiment:
+          type: string
+          enum: [positive, neutral, negative]
+      additionalProperties: false
+    expected: |
+      {"intent": "feedback", "sentiment": "positive"}
+
+  - id: intent_support_with_fields
+    input: "The export button is broken in the dashboard."
+    schema:
+      type: object
+      required: [intent, areas]
+      properties:
+        intent:
+          type: string
+          enum: [billing, support, feedback, other]
+        areas:
+          type: array
+          items: { type: string }
+          minItems: 1
+      additionalProperties: false
+    expected: |
+      {"intent": "support", "areas": ["dashboard", "export"]}

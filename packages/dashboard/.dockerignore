@@ -1,0 +1,13 @@
+**/node_modules
+**/.next
+**/coverage
+**/dist
+**/build
+**/*.log
+**/.turbo
+.git
+.gitignore
+packages/action/dist
+packages/cli/dist
+packages/core/dist
+packages/dashboard/.next
