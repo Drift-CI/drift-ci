@@ -6,7 +6,10 @@ provider on every pull request, compares scores to the committed
 baseline, and posts a rich PR comment with a per-case diff.
 
 **Runtime:** native Node 20 (no Docker). Bundled via `@vercel/ncc` and
-shipped as `dist/index.js` inside this package.
+shipped as `dist/index.js` inside this package. The action's metadata
+(`action.yml`) lives at the **repository root** — GitHub Marketplace and
+the `Drift-CI/drift-ci@v1` reference only resolve a root `action.yml` — with
+its `runs.main` pointing back at `packages/action/dist/index.js`.
 
 ## Quick start
 
