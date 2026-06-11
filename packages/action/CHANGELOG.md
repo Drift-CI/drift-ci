@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.0.2](https://github.com/Drift-CI/drift-ci/compare/v1.0.1...v1.0.2) (2026-06-11)
+
+
+### Bug Fixes
+
+* **core:** bump openai SDK to v6.42.0 ([#27](https://github.com/Drift-CI/drift-ci/issues/27)) ([3898073](https://github.com/Drift-CI/drift-ci/commit/389807379f0ee572048830142fe96f9df967436e))
+
 ## [1.0.1](https://github.com/Drift-CI/drift-ci/compare/v1.0.0...v1.0.1) (2026-06-11)
 
 
