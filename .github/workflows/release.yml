@@ -109,8 +109,8 @@ jobs:
       - name: Install
         run: pnpm install --frozen-lockfile
 
-      - name: Build (core is required as an upstream build output)
-        run: pnpm --filter @drift-ci/core... build
+      - name: Build cli (and its upstream @drift-ci/core dependency)
+        run: pnpm --filter @drift-ci/cli... build
 
       - name: Publish with provenance
         working-directory: packages/cli

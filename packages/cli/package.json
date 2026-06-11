@@ -1,5 +1,5 @@
 {
-  "name": "drift-ci",
+  "name": "@drift-ci/cli",
   "version": "1.0.0",
   "description": "Behaviour regression testing for LLM applications",
   "license": "MIT",

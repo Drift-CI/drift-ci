@@ -11,7 +11,7 @@
       "prerelease": false
     },
     "packages/cli": {
-      "package-name": "drift-ci",
+      "package-name": "@drift-ci/cli",
       "pull-request-title-pattern": "chore(cli): release ${version}",
       "changelog-path": "CHANGELOG.md",
       "release-as": "1.0.0",
