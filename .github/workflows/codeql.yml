@@ -48,6 +48,11 @@ jobs:
         with:
           languages: ${{ matrix.language }}
           queries: security-and-quality
+          # The committed ncc Action bundle is generated, third-party-heavy code;
+          # scanning it floods code-scanning with false positives in vendored deps.
+          config: |
+            paths-ignore:
+              - packages/action/dist
 
       - name: Build
         run: pnpm -r build
