@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.0.2](https://github.com/Drift-CI/drift-ci/compare/cli-v1.0.1...cli-v1.0.2) (2026-06-11)
+
+
+### Bug Fixes
+
+* **deps:** bump js-yaml, p-limit, better-sqlite3 (runtime-prod subset) ([03ceda9](https://github.com/Drift-CI/drift-ci/commit/03ceda904d27297ac8c89d48c65b1a710a1a1700))
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @drift-ci/core bumped to 1.0.2
+
 ## [1.0.1](https://github.com/Drift-CI/drift-ci/compare/cli-v1.0.0...cli-v1.0.1) (2026-06-11)
 
 
