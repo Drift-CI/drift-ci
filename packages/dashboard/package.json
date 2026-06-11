@@ -1,6 +1,6 @@
 {
   "name": "@drift-ci/dashboard",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "drift-ci self-hostable dashboard — Next.js 15 + Postgres",
   "scripts": {
