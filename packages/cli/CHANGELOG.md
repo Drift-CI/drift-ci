@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.1.0](https://github.com/Drift-CI/drift-ci/compare/cli-v1.0.2...cli-v1.1.0) (2026-06-11)
+
+
+### Features
+
+* initial public release of drift-ci ([bcb86ec](https://github.com/Drift-CI/drift-ci/commit/bcb86ec482a93948b772824d101649343186ae6d))
+
+
+### Bug Fixes
+
+* **cli:** publish CLI as scoped @drift-ci/cli and build it in the publish job ([beaddc8](https://github.com/Drift-CI/drift-ci/commit/beaddc84be10c6c885efc100a3af6a63a0fd2ecc))
+* **deps:** bump js-yaml, p-limit, better-sqlite3 (runtime-prod subset) ([03ceda9](https://github.com/Drift-CI/drift-ci/commit/03ceda904d27297ac8c89d48c65b1a710a1a1700))
+
 ## [1.0.2](https://github.com/Drift-CI/drift-ci/compare/cli-v1.0.1...cli-v1.0.2) (2026-06-11)
 
 
