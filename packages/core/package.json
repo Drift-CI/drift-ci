@@ -75,7 +75,7 @@
     "vitest": "^1.6.0"
   },
   "engines": {
-    "node": ">=20.0.0"
+    "node": ">=22.0.0"
   },
   "optionalDependencies": {
     "better-sqlite3": "^11.10.0",
