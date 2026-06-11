@@ -9,22 +9,25 @@ release flow.
 
 Before the first release can cut, the repository needs three things:
 
-### 1. `NPM_TOKEN` repository secret
+### 1. npm OIDC Trusted Publishing (tokenless)
 
-Required for publishing `@drift-ci/core` and `@drift-ci/cli` to npm with
-provenance attestation. (Both publishable packages are scoped under
-`@drift-ci`, so an org-scoped token covers them.)
+`@drift-ci/core` and `@drift-ci/cli` publish **tokenlessly** via OIDC
+Trusted Publishing — there is no `NPM_TOKEN` secret. The workflow's
+`id-token: write` lets pnpm exchange a GitHub OIDC token for a short-lived
+npm publish token scoped to this repo + workflow.
 
-1. Sign in to `https://www.npmjs.com/` as a maintainer with publish
-   rights on the `@drift-ci` scope.
-2. **Enable 2FA** on the account — provenance attestation requires it.
-3. Generate a **classic Automation token** (Profile → *Access Tokens* →
-   *Generate New Token* → *Classic Token* → **Automation**). Automation
-   tokens bypass the interactive 2FA OTP in CI; granular and "publish"
-   tokens are subject to the account's 2FA-for-writes policy and fail in
-   CI with `EOTP`.
-4. In this GitHub repo: *Settings* → *Secrets and variables* → *Actions*
-   → *New repository secret* → name `NPM_TOKEN`, paste the token.
+One-time, on npmjs.com, for **each** package (`@drift-ci/core` and
+`@drift-ci/cli`) → *Settings* → *Trusted Publisher* → *GitHub Actions*:
+
+- Organization or user: `Drift-CI`
+- Repository: `drift-ci`
+- Workflow filename: `release.yml`
+- Environment: *(leave blank)*
+
+**Enable 2FA** on the npm account — `--provenance` attestation requires it.
+
+> Earlier releases used a classic Automation token in an `NPM_TOKEN` secret.
+> After a tokenless release is confirmed working, that secret can be deleted.
 
 ### 2. Workflow permissions
 

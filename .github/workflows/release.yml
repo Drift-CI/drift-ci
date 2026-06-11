@@ -12,12 +12,15 @@ name: Release
 #      runs the matching publish job (npm for core + cli, floating-tag
 #      update for the action).
 #
-# Maintainer setup — required before the first release cuts:
-#   * Add NPM_TOKEN repo secret (npm automation token with publish scope,
-#     2FA-enabled account required for --provenance attestation).
+# Maintainer setup:
+#   * npm publishing is tokenless via OIDC Trusted Publishing — no NPM_TOKEN
+#     secret. Configure a trusted publisher for @drift-ci/core and
+#     @drift-ci/cli on npmjs.com (GitHub Actions → org Drift-CI, repo
+#     drift-ci, workflow release.yml). 2FA on the account is still required
+#     for --provenance attestation.
 #   * The default GITHUB_TOKEN drives release-please. No PAT required.
-#   * The Marketplace listing is a one-time human action in the GitHub
-#     UI after the first v1.0.0 tag is cut — see docs/RELEASING.md.
+#   * The Marketplace listing is a one-time human action in the GitHub UI on
+#     a release whose tag contains the root action.yml — see docs/RELEASING.md.
 
 on:
   push:
@@ -26,8 +29,8 @@ on:
 permissions:
   contents: write
   pull-requests: write
-  # id-token: write is required by npm publish --provenance so npm can mint
-  # a sigstore attestation bound to this workflow run.
+  # id-token: write powers OIDC Trusted Publishing (tokenless npm auth) and
+  # --provenance (sigstore attestation bound to this workflow run).
   id-token: write
 
 concurrency:
@@ -84,8 +87,6 @@ jobs:
       - name: Publish with provenance
         working-directory: packages/core
         run: pnpm publish --no-git-checks --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-cli:
     name: Publish drift-ci to npm
@@ -115,8 +116,6 @@ jobs:
       - name: Publish with provenance
         working-directory: packages/cli
         run: pnpm publish --no-git-checks --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   update-action-major-tag:
     name: Update floating v<major> tag for the Action
