@@ -13,11 +13,12 @@ name: Release
 #      update for the action).
 #
 # Maintainer setup:
-#   * npm publishing is tokenless via OIDC Trusted Publishing — no NPM_TOKEN
-#     secret. Configure a trusted publisher for @drift-ci/core and
-#     @drift-ci/cli on npmjs.com (GitHub Actions → org Drift-CI, repo
-#     drift-ci, workflow release.yml). 2FA on the account is still required
-#     for --provenance attestation.
+#   * npm publishing uses the NPM_TOKEN repo secret (classic Automation
+#     token; 2FA on the account is still required for --provenance). OIDC
+#     Trusted Publishing is configured on npm but pnpm 10.33 + setup-node
+#     did not complete the OIDC exchange here (it used setup-node's
+#     placeholder token) — keep NPM_TOKEN until that's solved. See
+#     docs/RELEASING.md.
 #   * The default GITHUB_TOKEN drives release-please. No PAT required.
 #   * The Marketplace listing is a one-time human action in the GitHub UI on
 #     a release whose tag contains the root action.yml — see docs/RELEASING.md.
@@ -87,6 +88,8 @@ jobs:
       - name: Publish with provenance
         working-directory: packages/core
         run: pnpm publish --no-git-checks --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-cli:
     name: Publish drift-ci to npm
@@ -116,6 +119,8 @@ jobs:
       - name: Publish with provenance
         working-directory: packages/cli
         run: pnpm publish --no-git-checks --access public --provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   update-action-major-tag:
     name: Update floating v<major> tag for the Action
