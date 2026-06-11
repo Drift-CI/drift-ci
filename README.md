@@ -1,7 +1,7 @@
 # drift-ci
 
 [![CI](https://github.com/drift-ci/drift-ci/actions/workflows/ci.yml/badge.svg)](https://github.com/drift-ci/drift-ci/actions/workflows/ci.yml)
-[![npm (drift-ci)](https://img.shields.io/npm/v/drift-ci?label=drift-ci)](https://www.npmjs.com/package/drift-ci)
+[![npm (@drift-ci/cli)](https://img.shields.io/npm/v/@drift-ci/cli?label=%40drift-ci%2Fcli)](https://www.npmjs.com/package/@drift-ci/cli)
 [![npm (@drift-ci/core)](https://img.shields.io/npm/v/@drift-ci/core?label=%40drift-ci%2Fcore)](https://www.npmjs.com/package/@drift-ci/core)
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -37,9 +37,9 @@ dashboard, and is approaching its first tagged release. See
 drift-ci requires Node.js 20 or newer.
 
 ```bash
-npm install --save-dev drift-ci
+npm install --save-dev @drift-ci/cli
 # or
-pnpm add -D drift-ci
+pnpm add -D @drift-ci/cli
 ```
 
 ### GitHub Action
@@ -62,13 +62,13 @@ example workflows (basic, matrix, fork-gated, GitLab CI) live under
 
 ```bash
 # 1. Scaffold a .drift/config.yaml and .drift/suite.yaml
-npx drift-ci init
+npx @drift-ci/cli init
 
 # 2. Run the suite
-npx drift-ci run
+npx @drift-ci/cli run
 
 # 3. Inspect the diff, then accept intentional changes
-npx drift-ci baseline accept
+npx @drift-ci/cli baseline accept
 git add .drift/baseline && git commit -m "accept baseline updates"
 ```
 
