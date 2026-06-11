@@ -1,6 +1,6 @@
 {
   "name": "@drift-ci/action",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "private": true,
   "description": "drift-ci GitHub Action — native Node 20 entrypoint bundled by ncc",
   "type": "module",
