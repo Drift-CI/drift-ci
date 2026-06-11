@@ -1,6 +1,6 @@
 {
   "name": "drift-ci",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "Behaviour regression testing for LLM applications",
   "license": "MIT",
   "homepage": "https://github.com/Drift-CI/drift-ci#readme",
