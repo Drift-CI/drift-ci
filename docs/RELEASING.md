@@ -36,13 +36,18 @@ provenance attestation. (Both publishable packages are scoped under
 
 ### 3. Marketplace listing (Action only)
 
-After the first `v1.0.0` tag lands:
+**The action metadata must live at the repo root** (`action.yml`), not in
+`packages/action/` — Marketplace, and the `Drift-CI/drift-ci@v1` reference,
+only resolve a *root* `action.yml`. The root file's `runs.main` points at
+`packages/action/dist/index.js`.
+
+After a release whose tag contains the root `action.yml` lands (≥ `v1.0.1`):
 
 1. Go to the repo's *Releases* page.
-2. Edit the release for `v1.0.0`.
+2. Edit that release.
 3. Tick **Publish this Action to the GitHub Marketplace** — GitHub
-   validates `packages/action/action.yml` (we already have `branding`
-   set), shows a preview, and lists it.
+   validates the root `action.yml` (`branding` is already set), shows a
+   preview, and lists it.
 4. Assign a primary category (**Testing** is the right fit).
 
 That's a one-time action; subsequent `v1.x.y` releases auto-update the
