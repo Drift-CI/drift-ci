@@ -1,5 +1,17 @@
 # Changelog
 
+## [1.0.0](https://github.com/Drift-CI/drift-ci/compare/cli-v0.1.0...cli-v1.0.0) (2026-06-11)
+
+
+### Features
+
+* initial public release of drift-ci ([bcb86ec](https://github.com/Drift-CI/drift-ci/commit/bcb86ec482a93948b772824d101649343186ae6d))
+
+
+### Bug Fixes
+
+* **cli:** publish CLI as scoped @drift-ci/cli and build it in the publish job ([beaddc8](https://github.com/Drift-CI/drift-ci/commit/beaddc84be10c6c885efc100a3af6a63a0fd2ecc))
+
 ## [1.0.0](https://github.com/Drift-CI/drift-ci/compare/drift-ci-v0.1.0...drift-ci-v1.0.0) (2026-06-11)
 
 
