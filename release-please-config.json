@@ -35,6 +35,6 @@
   "plugins": [
     { "type": "node-workspace" }
   ],
-  "separate-pull-requests": true,
+  "separate-pull-requests": false,
   "group-pull-request-title-pattern": "chore: release ${version}"
 }
