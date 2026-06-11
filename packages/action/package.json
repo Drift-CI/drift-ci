@@ -12,12 +12,12 @@
   },
   "dependencies": {
     "@actions/core": "^1.11.1",
-    "@actions/github": "^6.0.0",
+    "@actions/github": "^9.1.1",
     "@drift-ci/core": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^20.14.0",
-    "@vercel/ncc": "^0.38.1",
+    "@vercel/ncc": "^0.44.0",
     "@vitest/coverage-v8": "^1.6.1",
     "rimraf": "^6.0.0",
     "typescript": "^5.5.0",
