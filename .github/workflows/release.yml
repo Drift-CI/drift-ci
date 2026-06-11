@@ -13,12 +13,12 @@ name: Release
 #      update for the action).
 #
 # Maintainer setup:
-#   * npm publishing uses the NPM_TOKEN repo secret (classic Automation
-#     token; 2FA on the account is still required for --provenance). OIDC
-#     Trusted Publishing is configured on npm but pnpm 10.33 + setup-node
-#     did not complete the OIDC exchange here (it used setup-node's
-#     placeholder token) — keep NPM_TOKEN until that's solved. See
-#     docs/RELEASING.md.
+#   * npm publishing is tokenless via OIDC Trusted Publishing (pnpm 11.5 +
+#     Node 22 perform the OIDC exchange; no registry-url, so there's no
+#     placeholder authToken to shadow it). Trusted publishers are configured
+#     on npm for @drift-ci/core and @drift-ci/cli (GitHub Actions → org
+#     Drift-CI, repo drift-ci, workflow release.yml). No NPM_TOKEN; 2FA is
+#     still required for --provenance. See docs/RELEASING.md.
 #   * The default GITHUB_TOKEN drives release-please. No PAT required.
 #   * The Marketplace listing is a one-time human action in the GitHub UI on
 #     a release whose tag contains the root action.yml — see docs/RELEASING.md.
@@ -77,7 +77,6 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
-          registry-url: "https://registry.npmjs.org"
 
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -88,8 +87,6 @@ jobs:
       - name: Publish with provenance
         working-directory: packages/core
         run: pnpm publish --no-git-checks --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   publish-cli:
     name: Publish drift-ci to npm
@@ -108,7 +105,6 @@ jobs:
         with:
           node-version: "22"
           cache: pnpm
-          registry-url: "https://registry.npmjs.org"
 
       - name: Install
         run: pnpm install --frozen-lockfile
@@ -119,8 +115,6 @@ jobs:
       - name: Publish with provenance
         working-directory: packages/cli
         run: pnpm publish --no-git-checks --access public --provenance
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   update-action-major-tag:
     name: Update floating v<major> tag for the Action
