@@ -6,7 +6,6 @@
       "package-name": "@drift-ci/core",
       "pull-request-title-pattern": "chore(core): release ${version}",
       "changelog-path": "CHANGELOG.md",
-      "release-as": "1.0.0",
       "draft": false,
       "prerelease": false
     },
@@ -14,7 +13,6 @@
       "package-name": "@drift-ci/cli",
       "pull-request-title-pattern": "chore(cli): release ${version}",
       "changelog-path": "CHANGELOG.md",
-      "release-as": "1.0.0",
       "draft": false,
       "prerelease": false
     },
@@ -23,7 +21,6 @@
       "pull-request-title-pattern": "chore(action): release ${version}",
       "changelog-path": "CHANGELOG.md",
       "include-component-in-tag": false,
-      "release-as": "1.0.0",
       "draft": false,
       "prerelease": false
     },
@@ -31,7 +28,6 @@
       "package-name": "@drift-ci/dashboard",
       "pull-request-title-pattern": "chore(dashboard): release ${version}",
       "changelog-path": "CHANGELOG.md",
-      "release-as": "1.0.0",
       "draft": false,
       "prerelease": false
     }

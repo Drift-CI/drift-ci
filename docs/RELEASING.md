@@ -11,16 +11,18 @@ Before the first release can cut, the repository needs three things:
 
 ### 1. `NPM_TOKEN` repository secret
 
-Required for publishing `@drift-ci/core` and `drift-ci` to npm with
-provenance attestation.
+Required for publishing `@drift-ci/core` and `@drift-ci/cli` to npm with
+provenance attestation. (Both publishable packages are scoped under
+`@drift-ci`, so an org-scoped token covers them.)
 
 1. Sign in to `https://www.npmjs.com/` as a maintainer with publish
-   rights on the `@drift-ci` scope and the `drift-ci` package.
+   rights on the `@drift-ci` scope.
 2. **Enable 2FA** on the account — provenance attestation requires it.
-3. Generate a token that bypasses interactive 2FA in CI — either a
-   **granular access token** scoped to the `@drift-ci` packages with
-   read + write, or a classic **Automation** token: Profile → *Access
-   Tokens* → *Generate New Token*.
+3. Generate a **classic Automation token** (Profile → *Access Tokens* →
+   *Generate New Token* → *Classic Token* → **Automation**). Automation
+   tokens bypass the interactive 2FA OTP in CI; granular and "publish"
+   tokens are subject to the account's 2FA-for-writes policy and fail in
+   CI with `EOTP`.
 4. In this GitHub repo: *Settings* → *Secrets and variables* → *Actions*
    → *New repository secret* → name `NPM_TOKEN`, paste the token.
 
