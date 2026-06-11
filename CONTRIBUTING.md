@@ -46,7 +46,6 @@ pnpm vitest run src/path/to/file.test.ts
 - `packages/dashboard/` — the Next.js dashboard.
 - `docs/drift-ci-architecture.md` — the canonical design document. Do not
   renumber sections; cross-references exist throughout the code.
-- `ROADMAP.md` — high-level view of what's shipped and what's planned.
 
 ## Submitting changes
 

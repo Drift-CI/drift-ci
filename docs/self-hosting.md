@@ -32,7 +32,7 @@ be." It owns history and visibility. (See arch §6 / §16 / §19.)
 ## 1. Clone the repo
 
 ```bash
-git clone https://github.com/drift-ci/drift-ci.git
+git clone https://github.com/Drift-CI/drift-ci.git
 cd drift-ci/packages/dashboard
 ```
 
@@ -60,7 +60,7 @@ GITHUB_OAUTH_CLIENT_SECRET=
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=
 
-# Optional — webhook receiver (Phase 4 alerting hooks attach here later)
+# Optional — webhook receiver (HMAC-verified; see step 8)
 GITHUB_WEBHOOK_SECRET=$(openssl rand -hex 32)
 
 # Optional — retention sweep batch size (default 10000)
@@ -122,10 +122,9 @@ Open `http://localhost:3000/login` and either:
 - Or use the password fallback (if you set `DRIFT_DASHBOARD_PASSWORD`).
 
 There is **no JIT user creation** — a hostile GitHub account can't
-sign in just because OAuth is enabled. Add new users via the admin
-flow once Phase 4 lands user management; until then, seed them by
-inserting a row into `users` with the same email as the verified
-GitHub email.
+sign in just because OAuth is enabled. There is no self-serve sign-up;
+add new users by inserting a row into `users` with the same email as
+the verified GitHub email.
 
 ## 5. Point CI at the dashboard
 
@@ -144,7 +143,7 @@ storage:
 In your CI workflow:
 
 ```yaml
-- uses: drift-ci/drift-ci@v1
+- uses: Drift-CI/drift-ci@v1
   with:
     provider: anthropic
     api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -206,11 +205,9 @@ to override the container-local callback URL — same role as
 
 ## 8. (Optional) Webhook receiver
 
-The `POST /api/v1/webhooks/github` endpoint is the eventual target for
-Phase 4 alerting (PR comment reactions, deployment hooks, etc.).
-Today it verifies the `X-Hub-Signature-256` HMAC, records every
-delivery in the audit log, and 200s — concrete event handlers attach
-in Phase 4.
+The `POST /api/v1/webhooks/github` endpoint verifies the
+`X-Hub-Signature-256` HMAC, records every delivery in the audit log,
+and returns 200.
 
 To turn it on now:
 
@@ -290,4 +287,3 @@ file's apply is gated by an advisory lock).
 - [drift-ci-architecture.md](./drift-ci-architecture.md) §16 — the
   full RBAC, audit, and rate-limit design if you want to extend the
   dashboard.
-- [ROADMAP.md](../ROADMAP.md) — what's shipped and what's planned.

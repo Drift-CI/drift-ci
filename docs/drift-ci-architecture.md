@@ -26,7 +26,7 @@
 17. [Data Flow Diagrams](#17-data-flow-diagrams)
 18. [Database Schema](#18-database-schema)
 19. [API Reference](#19-api-reference)
-20. [Phased Delivery Plan](#20-phased-delivery-plan) — see [ROADMAP.md](../ROADMAP.md)
+20. [Phased Delivery Plan](#20-phased-delivery-plan)
 21. [Open Source Licensing & Project Hygiene](#21-open-source-licensing--project-hygiene)
 22. [Technology Decisions & Rationale](#22-technology-decisions--rationale)
 23. [Package Configuration Files](#23-package-configuration-files)
@@ -2849,7 +2849,7 @@ Four adapters implement the same interface, chosen per runtime:
 
 `better-sqlite3` is an `optionalDependency` of `@drift-ci/core` — the CLI installs it; the action bundle does not. This keeps the action bundle portable and free of native-binding landmines.
 
-**Phased delivery.** The storage layer ships in three stages (see the [roadmap](../ROADMAP.md)):
+**Phased delivery.** The storage layer ships in three stages (see §20):
 
 - **Phase 1 — `SqliteStorage` (CLI)** and the in-memory test harness. The canonical run-history store for local developers.
 - **Phase 2 — `MemoryStorage` (Action)**. Adds the Action-side adapter. Retains its data only for the duration of a single `node20` invocation; the action relies on PR-comment output, not persistence.
@@ -3901,7 +3901,7 @@ interface TimelineResponse {
 
 ## 20. Phased Delivery Plan
 
-> The high-level delivery phasing is summarised below; see [ROADMAP.md](../ROADMAP.md) for current status. This section is a stable pointer so cross-references to "§20" keep resolving.
+> The high-level delivery phasing is summarised below. This section is a stable pointer so cross-references to "§20" keep resolving.
 
 At a glance:
 

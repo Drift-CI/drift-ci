@@ -6,7 +6,7 @@ Before you open this PR, please confirm:
 - [ ] Commits are signed off (DCO): `git commit -s ...`
 - [ ] Commit messages follow Conventional Commits
 - [ ] You have added or updated tests
-- [ ] You have updated relevant docs (architecture / roadmap) if behaviour changed
+- [ ] You have updated relevant docs (architecture) if behaviour changed
 
 If this is a draft PR, mark it as such in the UI. Keep one logical change per PR.
 -->

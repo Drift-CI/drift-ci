@@ -5,7 +5,7 @@ check. The action runs your `.drift/suite.yaml` against the configured
 provider on every pull request, compares scores to the committed
 baseline, and posts a rich PR comment with a per-case diff.
 
-**Runtime:** native Node 20 (no Docker). Bundled via `@vercel/ncc` and
+**Runtime:** native JavaScript (no Docker). Bundled via `@vercel/ncc` and
 shipped as `dist/index.js` inside this package. The action's metadata
 (`action.yml`) lives at the **repository root** — GitHub Marketplace and
 the `Drift-CI/drift-ci@v1` reference only resolve a root `action.yml` — with
@@ -32,7 +32,7 @@ jobs:
   drift:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 0   # needed for baseline-source: main + base-ref diff
 
@@ -41,7 +41,7 @@ jobs:
           path: ~/.cache/huggingface
           key: drift-ci-embeddings-all-MiniLM-L6-v2-v1
 
-      - uses: drift-ci/drift-ci@v1
+      - uses: Drift-CI/drift-ci@v1
         with:
           provider: anthropic
           api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -65,7 +65,7 @@ jobs:
 | `baseline-source`  | `branch`             | `branch` (PR head) or `main` (origin/main). |
 | `fail-on-regression` | `true`             | Exit non-zero if any case regressed. |
 | `post-comment`     | `true`               | Post / update a PR comment via `GITHUB_TOKEN`. |
-| `dashboard-url` / `dashboard-token` | — | Reserved for Phase 3. |
+| `dashboard-url` / `dashboard-token` | — | Sync results to a self-hosted dashboard. |
 
 ## Outputs
 
@@ -73,20 +73,20 @@ jobs:
 | ------------------ | ----------- |
 | `regression-count` | Number of regressions detected. |
 | `avg-score`        | Average score across all cases. |
-| `run-id`           | UUID for this run (for dashboard lookup later). |
+| `run-id`           | UUID for this run (for dashboard lookup). |
 | `baseline-changed` | `true` if this PR modifies any `.drift/baseline/` files. |
 | `junit-path`       | Absolute path to `$RUNNER_TEMP/drift-junit.xml`. |
 
 ### Exposing JUnit to downstream steps
 
 ```yaml
-      - uses: drift-ci/drift-ci@v1
+      - uses: Drift-CI/drift-ci@v1
         id: drift
         with:
           provider: anthropic
           api-key: ${{ secrets.ANTHROPIC_API_KEY }}
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         if: always()
         with:
           name: drift-junit
@@ -142,7 +142,7 @@ jobs:
       contains(github.event.pull_request.labels.*.name, 'safe-to-run-llm-tests')
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           # Check out the fork's head SHA, not the base — we want to test
           # the contributor's code. The label gate is what makes this safe.
@@ -150,7 +150,7 @@ jobs:
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           fetch-depth: 0
 
-      - uses: drift-ci/drift-ci@v1
+      - uses: Drift-CI/drift-ci@v1
         with:
           provider: anthropic
           api-key: ${{ secrets.ANTHROPIC_API_KEY }}
