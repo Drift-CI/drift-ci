@@ -28,7 +28,9 @@ export interface RunOptions {
   model?: string;
   baselineDir: string;
   runsDir: string;
-  noBaseline?: boolean;
+  // Commander stores the lone `--no-baseline` flag under `baseline`
+  // (default true; false when the flag is passed) — not `noBaseline`.
+  baseline?: boolean;
   reporter: ReporterKind;
   junitPath?: string;
 }
@@ -146,7 +148,7 @@ async function runWithStorage(
   const run = await runner.run(suite);
 
   let deltas: DeltaReport | null = null;
-  if (opts.noBaseline !== true) {
+  if (opts.baseline !== false) {
     const baselineStore = new FileBaselineStore(opts.baselineDir);
     deltas = await computeDeltas(run, suite, baselineStore, {
       defaultThreshold: loaded.config.thresholds.regression,

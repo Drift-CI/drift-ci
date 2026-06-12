@@ -193,6 +193,41 @@ describe('CLI end-to-end (mock provider)', () => {
     expect(mathBaseline.output).toBe('five');
   }, 60_000);
 
+  it('honors --no-baseline through real CLI parsing (skips the comparison)', () => {
+    const initOut = runCli(
+      ['init', '--provider', 'mock', '--model', 'e2e-model'],
+      workdir,
+    );
+    expect(initOut.status, initOut.stderr).toBe(0);
+    writeConfig(join(workdir, '.drift/config.yaml'), {
+      'What is 2+2?': '4',
+      'Say hi': 'hi',
+    });
+    writeFileSync(join(workdir, '.drift/suite.yaml'), SUITE_YAML);
+
+    // Establish baselines so a comparison would otherwise have something to do.
+    runCli(['run'], workdir);
+    const baseInit = runCli(['baseline', 'init', '.drift/suite.yaml'], workdir);
+    expect(baseInit.status, baseInit.stderr).toBe(0);
+
+    // Control: a normal json run with baselines present reports deltas.
+    const withBaseline = runCli(['run', '--reporter', 'json'], workdir);
+    expect(withBaseline.status, withBaseline.stderr).toBe(0);
+    const withPayload = JSON.parse(withBaseline.stdout) as { deltas: unknown };
+    expect(withPayload.deltas).not.toBeNull();
+
+    // `--no-baseline` (a lone negated commander flag → stored under `baseline`)
+    // must skip the comparison entirely, so deltas is null. A regression here
+    // means the flag is being read from the wrong option attribute.
+    const noBaseline = runCli(
+      ['run', '--no-baseline', '--reporter', 'json'],
+      workdir,
+    );
+    expect(noBaseline.status, noBaseline.stderr).toBe(0);
+    const noPayload = JSON.parse(noBaseline.stdout) as { deltas: unknown };
+    expect(noPayload.deltas).toBeNull();
+  }, 60_000);
+
   it('baseline doctor reports missing and stale baselines', () => {
     // `init` creates .drift/ and placeholder files we'll overwrite.
     const initOut = runCli(
