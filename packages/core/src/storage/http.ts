@@ -1,5 +1,6 @@
 import type { RunResult, Suite } from '../types/index.js';
 import { computeSuiteHash } from '../engine/baseline.js';
+import { stripTrailingSlashes } from '../util/url.js';
 import type { RunFilter, StorageAdapter } from './interface.js';
 
 /**
@@ -63,7 +64,7 @@ export class HttpStorage implements StorageAdapter {
     if (!config.url) {
       throw new Error('HttpStorage: `url` is required.');
     }
-    this.url = config.url.replace(/\/+$/, '');
+    this.url = stripTrailingSlashes(config.url);
     this.token = config.token;
     this.context = config.context;
     this.fetchImpl = config.fetch ?? globalThis.fetch;

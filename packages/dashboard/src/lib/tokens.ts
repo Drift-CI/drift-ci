@@ -37,11 +37,19 @@ const BCRYPT_COST = 10;
 
 export const TOKEN_PATTERN = /^drift_([A-Za-z0-9]{8})_([A-Za-z0-9]{32})$/;
 
-function randomString(length: number): string {
-  const buf = randomBytes(length);
+/** @internal Exported only for distribution/bias testing. */
+export function randomString(length: number): string {
+  // Rejection sampling to avoid modulo bias: 256 % 62 == 8, so mapping a raw
+  // byte with `% ALPHABET.length` would over-represent the first 8 characters
+  // and shrink the effective token keyspace. Discard bytes in the biased tail
+  // (>= the largest multiple of the alphabet size) so every index is uniform.
+  const limit = 256 - (256 % ALPHABET.length);
   let out = '';
-  for (let i = 0; i < length; i += 1) {
-    out += ALPHABET[buf[i] % ALPHABET.length];
+  while (out.length < length) {
+    const buf = randomBytes(length - out.length);
+    for (let i = 0; i < buf.length && out.length < length; i += 1) {
+      if (buf[i] < limit) out += ALPHABET[buf[i] % ALPHABET.length];
+    }
   }
   return out;
 }

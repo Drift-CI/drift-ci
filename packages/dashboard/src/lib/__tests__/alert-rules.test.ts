@@ -30,12 +30,6 @@ function makeFakeDb(initial: DbAlertRule[] = []): {
   // `eq(alertRules.id, x)`. We capture the rhs at call time so the
   // fake can filter on it.
   let pendingWhereId: string | undefined;
-  const captureEq = vi.fn((..._args: unknown[]) => {
-    // The lib stores the right-hand side of `eq` in a tag the fake
-    // can read. We approximate by tracking the most-recent eq via
-    // module-level state; this is fine because Drizzle calls eq
-    // synchronously before the chain method that uses it.
-  });
 
   const select = vi.fn(() => {
     const chain = {

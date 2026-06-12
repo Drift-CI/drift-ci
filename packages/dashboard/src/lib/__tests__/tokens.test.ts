@@ -4,9 +4,34 @@ import {
   mintToken,
   parseAuthHeader,
   parseTokenString,
+  randomString,
   TOKEN_PATTERN,
   verifyTokenHash,
 } from '../tokens';
+
+const ALPHABET =
+  'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789';
+
+describe('randomString (token entropy)', () => {
+  it('draws uniformly from the alphabet — no modulo bias', () => {
+    const sample = randomString(200_000);
+    const counts = new Map<string, number>();
+    for (const ch of sample) counts.set(ch, (counts.get(ch) ?? 0) + 1);
+
+    // Every alphabet character should appear; none should leak in.
+    expect(counts.size).toBe(ALPHABET.length);
+    for (const ch of counts.keys()) expect(ALPHABET).toContain(ch);
+
+    // The old `byte % 62` mapping over-represented the first 8 characters by
+    // ~25% (256 % 62 === 8). Rejection sampling keeps every frequency within a
+    // few percent of the mean, so a 10% band fails on the biased version but
+    // passes comfortably here.
+    const mean = sample.length / ALPHABET.length;
+    const freqs = [...counts.values()];
+    expect(Math.max(...freqs) / mean).toBeLessThan(1.1);
+    expect(Math.min(...freqs) / mean).toBeGreaterThan(0.9);
+  });
+});
 
 describe('mintToken', () => {
   it('produces a drift_<8>_<32> plaintext token matching the public pattern', async () => {

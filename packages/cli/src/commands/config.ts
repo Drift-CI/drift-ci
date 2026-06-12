@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { load as yamlLoad } from 'js-yaml';
 
 import {
@@ -33,14 +33,20 @@ export function registerConfigCommand(program: Command): void {
 /* c8 ignore stop */
 
 export async function executeMigrate(opts: MigrateOptions): Promise<number> {
-  if (!existsSync(opts.config)) {
-    console.error(
-      `drift-ci: config not found at ${opts.config}. Run 'drift-ci init' to scaffold one.`,
-    );
-    return 1;
+  // Read directly and handle ENOENT, rather than existsSync-then-read, to
+  // avoid an existsSync→readFileSync TOCTOU race (CodeQL js/file-system-race).
+  let original: string;
+  try {
+    original = readFileSync(opts.config, 'utf8');
+  } catch (err) {
+    if ((err as NodeJS.ErrnoException).code === 'ENOENT') {
+      console.error(
+        `drift-ci: config not found at ${opts.config}. Run 'drift-ci init' to scaffold one.`,
+      );
+      return 1;
+    }
+    throw err;
   }
-
-  const original = readFileSync(opts.config, 'utf8');
   let rawVersion: unknown;
   try {
     const parsed = yamlLoad(original) as Record<string, unknown> | null;
