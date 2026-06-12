@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.1.0...core-v1.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **core:** require Node &gt;=22.13 to match the toolchain floor ([#52](https://github.com/Drift-CI/drift-ci/issues/52)) ([8bd658c](https://github.com/Drift-CI/drift-ci/commit/8bd658c7b0dd8687e8bdb406a41df45c2a1eb7ca))
+
 ## [1.1.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.0.2...core-v1.1.0) (2026-06-11)
 
 
