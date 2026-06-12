@@ -1,6 +1,6 @@
 {
   "name": "@drift-ci/core",
-  "version": "1.1.1",
+  "version": "1.1.2",
   "description": "drift-ci core engine: types, providers, evaluators, storage, runner",
   "license": "MIT",
   "homepage": "https://github.com/Drift-CI/drift-ci#readme",
