@@ -11,7 +11,7 @@ const VersionSchema = z.union([
 
 const MockProviderConfigSchema = z
   .object({
-    responses: z.record(z.string()).optional(),
+    responses: z.record(z.string(), z.string()).optional(),
     defaultResponse: z.string().optional(),
     latencyMs: z.number().int().min(0).optional(),
   })
