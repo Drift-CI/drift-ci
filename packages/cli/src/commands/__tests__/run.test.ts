@@ -152,7 +152,7 @@ cases:
   });
 
   it('skips baseline comparison when --no-baseline is passed', async () => {
-    const code = await executeRun(undefined, opts(ws, { noBaseline: true }));
+    const code = await executeRun(undefined, opts(ws, { baseline: false }));
     expect(code).toBe(0);
     const payload = JSON.parse(chunks.join('')) as { deltas: unknown };
     expect(payload.deltas).toBeNull();
