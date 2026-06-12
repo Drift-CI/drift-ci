@@ -6,6 +6,7 @@ import {
   type ProviderAdapter,
 } from './base.js';
 import { withRetry, type RetryOptions } from './utils.js';
+import { stripTrailingSlashes } from '../util/url.js';
 
 export interface OllamaProviderConfig {
   model: string;
@@ -40,7 +41,7 @@ export class OllamaProvider implements ProviderAdapter {
   constructor(config: OllamaProviderConfig) {
     this.config = config;
     this.name = `ollama/${config.model}`;
-    this.baseURL = (config.baseURL ?? DEFAULT_BASE_URL).replace(/\/+$/, '');
+    this.baseURL = stripTrailingSlashes(config.baseURL ?? DEFAULT_BASE_URL);
     this.fetchImpl = config.fetch ?? globalThis.fetch;
     if (typeof this.fetchImpl !== 'function') {
       throw new Error(

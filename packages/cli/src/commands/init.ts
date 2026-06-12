@@ -1,5 +1,5 @@
 import type { Command } from 'commander';
-import { existsSync, mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 
 export interface InitOptions {
@@ -78,12 +78,19 @@ export function executeInit(opts: InitOptions): void {
   const written: string[] = [];
   const skipped: string[] = [];
   for (const f of files) {
-    if (existsSync(f.path) && !opts.force) {
-      skipped.push(f.path);
-      continue;
+    try {
+      // 'wx' fails atomically if the file already exists, eliminating the
+      // existsSync→writeFileSync TOCTOU race (CodeQL js/file-system-race).
+      // --force overwrites unconditionally with 'w'.
+      writeFileSync(f.path, f.content, { flag: opts.force ? 'w' : 'wx' });
+      written.push(f.path);
+    } catch (err) {
+      if (!opts.force && (err as NodeJS.ErrnoException).code === 'EEXIST') {
+        skipped.push(f.path);
+        continue;
+      }
+      throw err;
     }
-    writeFileSync(f.path, f.content);
-    written.push(f.path);
   }
 
   for (const p of written) console.log(`  wrote   ${p}`);

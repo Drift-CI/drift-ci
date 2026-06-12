@@ -264,6 +264,24 @@ describe('renderComment', () => {
     expect(out).toMatch(/`c\\\|d`/);
   });
 
+  it('escapes backslashes before pipes so the escape cannot be neutralised', () => {
+    const out = renderComment(
+      baseInput({
+        suite: {
+          version: 1,
+          id: 's',
+          name: 'a\\|b',
+          cases: [{ id: 'c1', input: 'q', expected: 'a' }],
+        },
+        run: makeRun([makeCase('c1')]),
+      }),
+    );
+    // Backslash is doubled first, then the pipe escaped: `a\|b` -> `a\\\|b`.
+    // The previous code escaped only the pipe, yielding `a\\|b` — a literal
+    // backslash followed by an *unescaped* pipe that breaks out of the cell.
+    expect(out).toContain('a\\\\\\|b');
+  });
+
   it('formats latencies above 1000 ms in seconds', () => {
     const out = renderComment(
       baseInput({ run: makeRun([makeCase('c1', { latencyMs: 1234 })]) }),

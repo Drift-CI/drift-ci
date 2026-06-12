@@ -298,9 +298,14 @@ function formatLatency(ms: number): string {
 
 function escapeMd(s: string): string {
   // Minimal escaping — case IDs and suite names go through table cells and
-  // inline code spans, so only ` and | matter. We could escape more, but
-  // we'd lose intentional markdown if anyone wants it in their suite name.
-  return s.replace(/\|/g, '\\|').replace(/`/g, 'ˋ');
+  // inline code spans, so only ` and | matter. Escape backslashes FIRST so an
+  // attacker-supplied `\` can't neutralise the `\|` escape that follows and
+  // break out of the table cell. Backticks are swapped for a homoglyph (they
+  // can't be reliably backslash-escaped inside a cell).
+  return s
+    .replace(/\\/g, '\\\\')
+    .replace(/\|/g, '\\|')
+    .replace(/`/g, 'ˋ');
 }
 
 // ──────────────────────────────────────────────────────────────────────────
