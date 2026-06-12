@@ -5,7 +5,7 @@ const EvaluatorSpecSchema = z.union([
   z.object({
     name: z.string(),
     weight: z.number().min(0).max(1).optional(),
-    options: z.record(z.unknown()).optional(),
+    options: z.record(z.string(), z.unknown()).optional(),
   }),
 ]);
 
@@ -50,12 +50,12 @@ export const RubricQuorumSchema = z
     /** Bypass the self-bias rejection — only valid when ALL judges happen to be the test provider. */
     allowSelfBias: z.boolean().default(false),
   })
-  .refine(
-    (q) => q.threshold !== 'majority' || q.judges.length % 2 === 1,
-    (q) => ({
-      message: `majority quorum requires an odd number of judges (got ${q.judges.length})`,
-    }),
-  );
+  .refine((q) => q.threshold !== 'majority' || q.judges.length % 2 === 1, {
+    error: (issue) => {
+      const { judges } = issue.input as { judges: string[] };
+      return `majority quorum requires an odd number of judges (got ${judges.length})`;
+    },
+  });
 
 export type RubricItem = z.infer<typeof RubricItemSchema>;
 export type RubricSpec = z.infer<typeof RubricSpecSchema>;
@@ -83,7 +83,7 @@ export const TestCaseSchema = z
     tags: z.array(z.string()).optional(),
     systemPrompt: z.string().optional(),
     messages: z.array(MessageParamSchema).optional(),
-    schema: z.record(z.unknown()).optional(),
+    schema: z.record(z.string(), z.unknown()).optional(),
     rubric: RubricSpecSchema.optional(),
     rubricQuorum: RubricQuorumSchema.optional(),
   })

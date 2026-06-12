@@ -27,8 +27,8 @@ const CaseResultSchema = z
     latencyMs: z.number(),
     status: CaseStatusSchema,
     error: z.string().optional(),
-    tokenUsage: z.record(z.unknown()).optional(),
-    evaluatorBreakdown: z.record(z.unknown()).optional(),
+    tokenUsage: z.record(z.string(), z.unknown()).optional(),
+    evaluatorBreakdown: z.record(z.string(), z.unknown()).optional(),
   })
   .passthrough();
 
@@ -40,12 +40,12 @@ const RunResultSchema = z
     startedAt: z.string().datetime(),
     completedAt: z.string().datetime(),
     cases: z.array(CaseResultSchema),
-    summary: z.record(z.unknown()),
+    summary: z.record(z.string(), z.unknown()),
   })
   .passthrough();
 
 const IngestContextSchema = z.object({
-  suiteHashes: z.record(z.string()),
+  suiteHashes: z.record(z.string(), z.string()),
   judgeHash: z.string().optional(),
 });
 
