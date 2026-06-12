@@ -9,3 +9,20 @@ allowBuilds:
   esbuild: true
   protobufjs: true
   sharp: false
+
+minimumReleaseAgeExclude:
+  - protobufjs@7.6.4
+
+# Security overrides for transitive deps flagged by Dependabot. Versions are
+# single-line in this tree, so the simple form is safe; esbuild is scoped to the
+# deprecated @esbuild-kit chain (via drizzle-kit) so it doesn't downgrade vite's
+# newer esbuild. (pnpm 11 reads overrides from here, not package.json.)
+overrides:
+  protobufjs: ^7.6.4
+  undici: ^6.26.0
+  fast-uri: ^3.1.2
+  ws: ^8.21.0
+  postcss: ^8.5.10
+  brace-expansion: ^5.0.6
+  fast-xml-builder: ^1.1.7
+  '@esbuild-kit/core-utils>esbuild': ^0.25.0
