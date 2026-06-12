@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.1](https://github.com/Drift-CI/drift-ci/compare/cli-v1.1.0...cli-v1.1.1) (2026-06-12)
+
+
+### Bug Fixes
+
+* **cli:** honor --no-baseline (was read from the wrong option attribute) ([#50](https://github.com/Drift-CI/drift-ci/issues/50)) ([45f098f](https://github.com/Drift-CI/drift-ci/commit/45f098f0bf6e3cc1de43aeab22effca48e60e7ad))
+
 ## [1.1.0](https://github.com/Drift-CI/drift-ci/compare/cli-v1.0.2...cli-v1.1.0) (2026-06-11)
 
 
