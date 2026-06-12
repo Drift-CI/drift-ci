@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.1.1](https://github.com/Drift-CI/drift-ci/compare/dashboard-v1.1.0...dashboard-v1.1.1) (2026-06-12)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @drift-ci/core bumped to 1.1.1
+
 ## [1.1.0](https://github.com/Drift-CI/drift-ci/compare/dashboard-v1.0.2...dashboard-v1.1.0) (2026-06-11)
 
 
