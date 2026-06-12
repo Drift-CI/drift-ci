@@ -169,8 +169,8 @@ importers:
         specifier: workspace:*
         version: link:../core
       bcryptjs:
-        specifier: ^2.4.3
-        version: 2.4.3
+        specifier: ^3.0.3
+        version: 3.0.3
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@types/better-sqlite3@7.6.13)(better-sqlite3@12.10.0)(gel@2.2.0)(postgres@3.4.9)
@@ -190,9 +190,6 @@ importers:
         specifier: ^3.25.76
         version: 3.25.76
     devDependencies:
-      '@types/bcryptjs':
-        specifier: ^2.4.6
-        version: 2.4.6
       '@types/node':
         specifier: ^20.14.0
         version: 20.19.39
@@ -1877,9 +1874,6 @@ packages:
     cpu: [arm64]
     os: [win32]
 
-  '@types/bcryptjs@2.4.6':
-    resolution: {integrity: sha512-9xlo6R2qDs5uixm0bcIqCeMCE6HiQsIyel9KQySStiyqNl2tnj2mP3DX1Nf56MD6KMenNNlBBsy3LJ7gUEQPXQ==}
-
   '@types/better-sqlite3@7.6.13':
     resolution: {integrity: sha512-NMv9ASNARoKksWtsq/SHakpYAYnhBrQgGD8zkLYk/jaK8jUGn08CfEdTRgYhMypUQAfzSP8W6gNLe0q19/t4VA==}
 
@@ -2067,8 +2061,9 @@ packages:
     engines: {node: '>=6.0.0'}
     hasBin: true
 
-  bcryptjs@2.4.3:
-    resolution: {integrity: sha512-V/Hy/X9Vt7f3BbPJEi8BdVFMByHi+jNXrYkW3huaybV/kQ0KJg0Y6PkEMbn+zeT+i+SiKZ/HMqJGIIt4LZDqNQ==}
+  bcryptjs@3.0.3:
+    resolution: {integrity: sha512-GlF5wPWnSa/X5LKM1o0wz0suXIINz1iHRLvTS+sLyi7XPbe5ycmYI3DlZqVGZZtDgl4DmasFg7gOB3JYbphV5g==}
+    hasBin: true
 
   before-after-hook@4.0.0:
     resolution: {integrity: sha512-q6tR3RPqIB1pMiTRMFcZwuG5T8vwp+vUvEG0vuI6B+Rikh5BfPp2fQ82c925FOs+b0lcFQ8CFrL+KbilfZFhOQ==}
@@ -5227,8 +5222,6 @@ snapshots:
   '@turbo/windows-arm64@2.9.6':
     optional: true
 
-  '@types/bcryptjs@2.4.6': {}
-
   '@types/better-sqlite3@7.6.13':
     dependencies:
       '@types/node': 20.19.39
@@ -5413,7 +5406,7 @@ snapshots:
 
   baseline-browser-mapping@2.10.21: {}
 
-  bcryptjs@2.4.3: {}
+  bcryptjs@3.0.3: {}
 
   before-after-hook@4.0.0: {}
 
