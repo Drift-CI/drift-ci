@@ -1,6 +1,6 @@
 {
   "packages/core": "1.1.1",
-  "packages/cli": "1.1.0",
+  "packages/cli": "1.1.1",
   "packages/action": "1.1.0",
   "packages/dashboard": "1.1.0"
 }
