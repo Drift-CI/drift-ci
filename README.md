@@ -1,10 +1,14 @@
-<p align="center">
-  <img src="assets/drift-ci-logo.png" alt="drift-ci" width="480">
-</p>
+# drift-ci
+**Block merges when your LLM app's behaviour regresses.**
 
-<p align="center">
-  <em>Catch LLM behaviour regressions in CI, before they ship.</em>
-</p>
+
+
+![drift-ci logo](assets/drift-ci-logo.png)
+
+
+
+*Catch LLM behaviour regressions in CI, before they ship.*
+
 
 <p align="center">
   <a href="https://github.com/Drift-CI/drift-ci/actions/workflows/ci.yml"><img src="https://github.com/Drift-CI/drift-ci/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
