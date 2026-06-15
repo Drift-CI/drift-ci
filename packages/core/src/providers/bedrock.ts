@@ -10,6 +10,7 @@ import {
 } from './base.js';
 import { withRetry, type RetryOptions } from './utils.js';
 import type { AnthropicLike } from './anthropic.js';
+import { claudeModelRejectsSamplingParams } from './claude-models.js';
 
 export interface BedrockAnthropicProviderConfig {
   /** Bedrock model id, e.g. `anthropic.claude-sonnet-4-5-20260101-v1:0`. Takes precedence over `model`. */
@@ -84,7 +85,10 @@ export class BedrockAnthropicProvider implements ProviderAdapter {
         this.client.messages.create({
           model: this.modelId,
           max_tokens: options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
-          temperature: options.temperature ?? 0,
+          // claude-4.7+ models removed sampling params and 400 if they are sent.
+          ...(claudeModelRejectsSamplingParams(this.modelId)
+            ? {}
+            : { temperature: options.temperature ?? 0 }),
           system,
           messages: toBedrockMessages(input),
         }),

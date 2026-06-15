@@ -53,6 +53,20 @@ describe('AnthropicProvider', () => {
     expect(client.messages.create.mock.calls[0][0].temperature).toBe(0);
   });
 
+  it('omits temperature for claude-4.7+ models that reject sampling params', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-opus-4-8', client });
+    await p.complete('x');
+    expect('temperature' in client.messages.create.mock.calls[0][0]).toBe(false);
+  });
+
+  it('omits temperature on a rejecting model even when explicitly provided', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-fable-5', client });
+    await p.complete('x', undefined, { temperature: 0.7 });
+    expect('temperature' in client.messages.create.mock.calls[0][0]).toBe(false);
+  });
+
   it('sends system prompt with cache_control when cacheSystemPrompt is true', async () => {
     const client = makeClient(baseResponse());
     const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
