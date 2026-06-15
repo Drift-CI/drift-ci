@@ -11,7 +11,7 @@
     "clean": "rimraf dist build"
   },
   "dependencies": {
-    "@actions/core": "^1.11.1",
+    "@actions/core": "^3.0.1",
     "@actions/github": "^9.1.1",
     "@drift-ci/core": "workspace:*"
   },
