@@ -1,5 +1,15 @@
 # Changelog
 
+## [1.1.3](https://github.com/Drift-CI/drift-ci/compare/core-v1.1.2...core-v1.1.3) (2026-06-15)
+
+
+### Bug Fixes
+
+* **core:** omit temperature for claude-4.7+ models that reject it ([2584fde](https://github.com/Drift-CI/drift-ci/commit/2584fde4b6c6ee54c65f6b22ba6c603a7fa60a4b))
+* **core:** resolve a judge for per-case and rubric-checklist evaluators ([d13a33e](https://github.com/Drift-CI/drift-ci/commit/d13a33e716694d1d41b8630c9d5413a4c682bb58))
+* **core:** strip a surrounding code fence from judge responses ([e432042](https://github.com/Drift-CI/drift-ci/commit/e4320422250a62785ca106647c89b130007edabe))
+* judge resolution, temperature on claude-4.7+, judge-JSON fences, Node 24 ([02bda41](https://github.com/Drift-CI/drift-ci/commit/02bda41530903966d169646f79e5ec1f889090c3))
+
 ## [1.1.2](https://github.com/Drift-CI/drift-ci/compare/core-v1.1.1...core-v1.1.2) (2026-06-12)
 
 
