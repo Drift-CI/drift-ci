@@ -3,6 +3,7 @@ import { randomBytes } from 'node:crypto';
 import type { ProviderAdapter } from '../providers/base.js';
 import type { RubricItem, RubricSpec } from '../types/suite.js';
 import type { EvalInput, EvalResult, Evaluator } from './base.js';
+import { stripJsonFence } from './judge-json.js';
 
 /**
  * Rubric-checklist evaluator. Spec lives in arch §10 ("Roadmap
@@ -333,11 +334,13 @@ async function callJudge(
   return parseJudgeResponse(response.text);
 }
 
-/** Strict JSON parse of `{ items: [...] }`. Returns null on any shape error. */
+/** Parse `{ items: [...] }` from the judge response, tolerating a surrounding
+ *  ```json fence then strict-parsing (arch §10 — no fuzzy extraction). Returns
+ *  null on any shape error. */
 export function parseJudgeResponse(text: string): JudgeItemVerdict[] | null {
   let parsed: unknown;
   try {
-    parsed = JSON.parse(text.trim());
+    parsed = JSON.parse(stripJsonFence(text));
   } catch {
     return null;
   }

@@ -582,6 +582,16 @@ describe('parseJudgeResponse', () => {
     expect(parseJudgeResponse('not json at all')).toBeNull();
   });
 
+  it('parses items wrapped in a ```json code fence', () => {
+    const out = parseJudgeResponse(
+      '```json\n' +
+        JSON.stringify({ items: [{ id: 'a', passed: true, score: 1 }] }) +
+        '\n```',
+    );
+    expect(out).not.toBeNull();
+    expect(out![0]).toMatchObject({ id: 'a', passed: true, score: 1 });
+  });
+
   it('returns null when items is missing', () => {
     expect(parseJudgeResponse('{"score": 1}')).toBeNull();
   });

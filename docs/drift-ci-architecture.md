@@ -1946,7 +1946,7 @@ The candidate answer is attacker-controlled content — the model being tested c
 
 1. Wrap user-supplied fields in uniquely-named fence markers, never newlines alone.
 2. Remind the judge in the system prompt that everything inside the fences is untrusted data, not instructions.
-3. Parse strictly — if the response doesn't match the expected JSON shape, fall back to score 0 with `reason: 'judge-unparseable'` rather than regex-extracting a number (which is itself injection-prone).
+3. Parse strictly — strip a single surrounding markdown code fence (```` ```json … ``` ````) if present, then strict-parse the full object. If the response still doesn't match the expected JSON shape, fall back to score 0 with `reason: 'judge-unparseable'` rather than regex-extracting a number or fuzzily pulling an object out of prose (both injection-prone). Fence-stripping is the only leniency — the whole object is still strict-parsed, so a candidate that smuggles `{"score":1.0}` into prose cannot inject a score.
 
 **Fence marker contract.** LLM-judge fence markers use the literal `drift_` prefix followed by `randomBytes(6).toString('hex')` — 12 hex characters, 48 bits of entropy per call. The exact bit-width is load-bearing: an implementer using 4 bytes would produce 8-hex markers and halve the collision resistance against an adversary who can see the prompt.
 
@@ -2421,7 +2421,7 @@ You MUST return exactly one entry per rubric item, in the same order, with match
 - Items returned out-of-order are accepted **only if** every rubric `id` is present exactly once. The evaluator re-orders the response by rubric id before scoring.
 - Items missing from the judge response default to `{ passed: false, score: 0, reason: 'judge-omitted' }`.
 - Items present in the response but absent from the rubric are dropped (logged once per case at warn level).
-- Any other parse / shape failure produces `{ score: 0, reason: 'judge-unparseable' }` for the whole case (no per-item breakdown). This matches the `llm-judge` precedent — never fall back to regex extraction.
+- A surrounding ```` ```json ```` code fence is stripped before the strict parse (matching `llm-judge`); any other parse / shape failure produces `{ score: 0, reason: 'judge-unparseable' }` for the whole case (no per-item breakdown). Fence-stripping aside, never fall back to regex or prose extraction.
 
 #### Output shape
 
@@ -4029,11 +4029,13 @@ LLM API calls are I/O-bound, not CPU-bound. `p-limit` with async/await gives con
 
 ---
 
-*Document version 1.6 — drift-ci*  
-*Last updated: 2026-06-07*  
+*Document version 1.7 — drift-ci*  
+*Last updated: 2026-06-15*  
 *v1.1 revises: baseline storage (now git-committed files, not DB), GitHub Action runtime (now native Node.js, not Docker), branch-scoped baselines, intentional-change flow, suite-hash drift detection.*
 
 ### Changelog
+
+**v1.7 (2026-06-15) — "Dogfood fix: judge-JSON fence tolerance" pass.** Accompanies code. §10 now strips a single surrounding markdown code fence (```` ```json … ``` ````) from a judge response before the strict JSON parse, for both `llm-judge` and `rubric-checklist`. This is the only added leniency: the full object is still strict-parsed (no regex-number or prose extraction), so the prompt-injection hardening is unchanged, and an unrecoverable response still falls back to `score: 0, reason: 'judge-unparseable'`. Surfaced by the test-app dogfood, where capable judge models routinely fenced their JSON despite the prompt's "no markdown fences" instruction and were wrongly scored as unparseable.
 
 **v1.6 (2026-06-07) — "Open-source readiness" pass.** Doc-only. Scrubbed internal-strategy and commercial framing ahead of going public. §20 retitled "Phased Delivery Plan" and pointed at the public `ROADMAP.md` (durations/KPIs dropped). §21 retitled "Open Source Licensing & Project Hygiene" with the open-core/SaaS feature matrix, community-growth tactics, and `FUNDING.yml` commercial row removed; licensing, repo-hygiene, contribution, telemetry, and supply-chain content kept. Neutralised scattered "hosted SaaS / Stripe" mentions. The granular delivery tracker (`implementation-plan.md`) and the `docs/superpowers/` process artifacts were relocated out of the repo; references repointed to `ROADMAP.md`. No code changes.
 
