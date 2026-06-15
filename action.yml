@@ -54,5 +54,5 @@ outputs:
     description: Absolute path to a JUnit-XML report of every case (written to $RUNNER_TEMP/drift-junit.xml).
 
 runs:
-  using: node20
+  using: node24
   main: packages/action/dist/index.js
