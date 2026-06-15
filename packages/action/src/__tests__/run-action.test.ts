@@ -11,7 +11,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 
-import { runAction, type RunActionInputs, type RunActionWriters } from '../run-action.js';
+import { runAction, resolveJudgeProvider, type RunActionInputs, type RunActionWriters } from '../run-action.js';
+import type { DriftConfig, ProviderAdapter } from '@drift-ci/core';
 
 const SUITE_YAML = `version: 1
 id: act-suite
@@ -576,3 +577,24 @@ function computeExpectedSuiteHash(_caseId: string, input: string, expected: stri
 function hashString(s: string): string {
   return createHash('sha256').update(s).digest('hex');
 }
+
+describe('resolveJudgeProvider', () => {
+  const prevKey = process.env.ANTHROPIC_API_KEY;
+  beforeEach(() => {
+    delete process.env.ANTHROPIC_API_KEY;
+  });
+  afterEach(() => {
+    if (prevKey === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = prevKey;
+  });
+
+  it('gives the judge provider the action api-key input when config.judge has no apiKey', () => {
+    const config = {
+      provider: { name: 'anthropic', model: 'claude-sonnet-4-6' },
+      judge: { provider: 'anthropic', model: 'claude-haiku-4-5' },
+    } as unknown as DriftConfig;
+    const fallback = {} as ProviderAdapter;
+    const inputs = { provider: 'anthropic', apiKey: 'sk-ant-test' } as RunActionInputs;
+    expect(() => resolveJudgeProvider(config, fallback, inputs)).not.toThrow();
+  });
+});
