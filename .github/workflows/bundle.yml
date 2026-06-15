@@ -1,0 +1,78 @@
+name: action bundle
+
+# Keep packages/action/dist in sync without contributors rebuilding it locally.
+# The ncc bundle is environment-sensitive (webpack assigns different module ids
+# across OS / Node patch), so a locally-built bundle rarely byte-matches what a
+# GitHub runner produces. This job rebuilds the bundle ON the runner and, for
+# same-repo PRs, commits the result back to the PR branch. Fork PRs can't be
+# pushed to, so it fails with instructions instead (the contributor rebuilds).
+#
+# Replaces the old `check-action-bundle` verify-only job in ci.yml; the job name
+# is preserved so existing required-status-check config keeps working.
+
+on:
+  pull_request:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: action-bundle-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  bundle:
+    name: action bundle is up to date
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout PR head
+        uses: actions/checkout@v6
+        with:
+          # Check out the actual PR head branch (not the merge commit) so the
+          # rebuilt bundle can be committed back to it on same-repo PRs.
+          repository: ${{ github.event.pull_request.head.repo.full_name }}
+          ref: ${{ github.head_ref }}
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v6
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v6
+        with:
+          node-version: "22"
+          cache: pnpm
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Build core (action build depends on @drift-ci/core)
+        run: pnpm --filter @drift-ci/core build
+
+      - name: Rebuild action bundle
+        run: pnpm --filter @drift-ci/action build
+
+      - name: Commit the rebuilt bundle if it changed
+        env:
+          IS_SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          if git diff --quiet -- packages/action/dist; then
+            echo "Action bundle is already in sync."
+            exit 0
+          fi
+
+          echo "Action bundle is out of date:"
+          git --no-pager diff --stat -- packages/action/dist
+
+          if [ "$IS_SAME_REPO" != "true" ]; then
+            echo "::error::packages/action/dist is out of sync on a fork PR (cannot auto-commit). Run \`pnpm --filter @drift-ci/action build\` and commit packages/action/dist."
+            exit 1
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add packages/action/dist
+          git commit -m "build(action): sync dist bundle [skip ci]"
+          git push origin "HEAD:${HEAD_REF}"
+          echo "Pushed the rebuilt bundle to ${HEAD_REF}."
