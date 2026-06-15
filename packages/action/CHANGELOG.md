@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/Drift-CI/drift-ci/compare/v1.1.3...v1.1.4) (2026-06-15)
+
+
+### Bug Fixes
+
+* **action:** pass api-key to the judge provider ([#82](https://github.com/Drift-CI/drift-ci/issues/82)) ([9a5168d](https://github.com/Drift-CI/drift-ci/commit/9a5168dd5bae4dc829c27968cdd77be96182af45))
+
 ## [1.1.3](https://github.com/Drift-CI/drift-ci/compare/v1.1.2...v1.1.3) (2026-06-15)
 
 
