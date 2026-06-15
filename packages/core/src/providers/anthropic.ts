@@ -8,6 +8,7 @@ import {
   type ProviderAdapter,
 } from './base.js';
 import { withRetry, type RetryOptions } from './utils.js';
+import { claudeModelRejectsSamplingParams } from './claude-models.js';
 
 export interface AnthropicProviderConfig {
   model: string;
@@ -69,7 +70,10 @@ export class AnthropicProvider implements ProviderAdapter {
         this.client.messages.create({
           model: this.config.model,
           max_tokens: options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
-          temperature: options.temperature ?? 0,
+          // claude-4.7+ models removed sampling params and 400 if they are sent.
+          ...(claudeModelRejectsSamplingParams(this.config.model)
+            ? {}
+            : { temperature: options.temperature ?? 0 }),
           system,
           messages: toAnthropicMessages(input),
         }),

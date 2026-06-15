@@ -108636,7 +108636,27 @@ function defaultSleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
 //# sourceMappingURL=utils.js.map
+;// CONCATENATED MODULE: ../core/dist/providers/claude-models.js
+/**
+ * Claude models in the 4.7+ generation removed the sampling parameters
+ * (`temperature` / `top_p` / `top_k`) and return a 400
+ * (`"temperature is deprecated for this model"`) if they are sent. Earlier
+ * generations — Opus 4.6 and older, Sonnet 4.6/4.5, Haiku 4.5 — still accept
+ * them.
+ *
+ * Matched by case-insensitive substring so Bedrock's `anthropic.`-prefixed and
+ * region-prefixed model ids are covered too.
+ *
+ * Keep this list in sync as new sampling-param-free Claude models ship.
+ */
+const SAMPLING_PARAM_FREE = ['opus-4-7', 'opus-4-8', 'fable', 'mythos'];
+function claudeModelRejectsSamplingParams(model) {
+    const id = model.toLowerCase();
+    return SAMPLING_PARAM_FREE.some((needle) => id.includes(needle));
+}
+//# sourceMappingURL=claude-models.js.map
 ;// CONCATENATED MODULE: ../core/dist/providers/anthropic.js
+
 
 
 
@@ -108674,7 +108694,10 @@ class AnthropicProvider {
         const response = await utils_withRetry(() => this.client.messages.create({
             model: this.config.model,
             max_tokens: options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
-            temperature: options.temperature ?? 0,
+            // claude-4.7+ models removed sampling params and 400 if they are sent.
+            ...(claudeModelRejectsSamplingParams(this.config.model)
+                ? {}
+                : { temperature: options.temperature ?? 0 }),
             system,
             messages: toAnthropicMessages(input),
         }), this.config.retry);
@@ -121282,6 +121305,7 @@ function makeBetaResource(client) {
 
 
 
+
 class BedrockAnthropicProvider {
     name;
     modelId;
@@ -121323,7 +121347,10 @@ class BedrockAnthropicProvider {
         const response = await utils_withRetry(() => this.client.messages.create({
             model: this.modelId,
             max_tokens: options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
-            temperature: options.temperature ?? 0,
+            // claude-4.7+ models removed sampling params and 400 if they are sent.
+            ...(claudeModelRejectsSamplingParams(this.modelId)
+                ? {}
+                : { temperature: options.temperature ?? 0 }),
             system,
             messages: toBedrockMessages(input),
         }), this.config.retry);
@@ -143145,7 +143172,27 @@ class EmbeddingEvaluator {
 //# sourceMappingURL=embedding.js.map
 // EXTERNAL MODULE: external "node:crypto"
 var external_node_crypto_ = __nccwpck_require__(77598);
+;// CONCATENATED MODULE: ../core/dist/evaluators/judge-json.js
+/**
+ * Strip a single surrounding markdown code fence (```json … ``` or ``` … ```)
+ * from a judge response and return the inner text. Judge models routinely wrap
+ * their JSON in a fence despite the prompt asking them not to, which makes a
+ * strict `JSON.parse(text.trim())` fail and silently drop the verdict (the
+ * parser fragility surfaced by the test-app dogfood).
+ *
+ * This is intentionally narrow: it removes ONLY a surrounding fence. It does
+ * NOT extract a JSON object out of prose or regex out a number — the caller
+ * still strict-parses the full object (arch §10), so an attacker who controls
+ * the candidate output cannot use this to inject a score.
+ */
+function stripJsonFence(text) {
+    const trimmed = text.trim();
+    const fence = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i);
+    return fence ? fence[1].trim() : trimmed;
+}
+//# sourceMappingURL=judge-json.js.map
 ;// CONCATENATED MODULE: ../core/dist/evaluators/llm-judge.js
+
 
 const DEFAULT_JUDGE_PROMPT_TEMPLATE = (fence) => `You are a strict, impartial quality evaluator for LLM outputs.
 
@@ -143199,9 +143246,11 @@ class LLMJudgeEvaluator {
             candidate: output,
         });
         const response = await this.opts.judgeProvider.complete(userMessage, this.promptTemplate(fence), { temperature: 0, maxTokens: 300 });
+        // Tolerate a surrounding ```json fence, then strict-parse (arch §10):
+        // no fuzzy extraction, so an unparseable response still falls back to 0.
         let parsed;
         try {
-            parsed = JSON.parse(response.text.trim());
+            parsed = JSON.parse(stripJsonFence(response.text));
         }
         catch {
             return { score: 0, reason: 'judge-unparseable' };
@@ -143273,6 +143322,7 @@ function truncate(s, max = 60) {
 }
 //# sourceMappingURL=refusal.js.map
 ;// CONCATENATED MODULE: ../core/dist/evaluators/rubric-checklist.js
+
 
 /**
  * Rubric-checklist evaluator. Spec lives in arch §10 ("Roadmap
@@ -143471,11 +143521,13 @@ async function callJudge(judge, systemPrompt, userMessage) {
     });
     return parseJudgeResponse(response.text);
 }
-/** Strict JSON parse of `{ items: [...] }`. Returns null on any shape error. */
+/** Parse `{ items: [...] }` from the judge response, tolerating a surrounding
+ *  ```json fence then strict-parsing (arch §10 — no fuzzy extraction). Returns
+ *  null on any shape error. */
 function parseJudgeResponse(text) {
     let parsed;
     try {
-        parsed = JSON.parse(text.trim());
+        parsed = JSON.parse(stripJsonFence(text));
     }
     catch {
         return null;
@@ -144210,6 +144262,22 @@ function hasLLMJudge(specs) {
     if (!specs)
         return false;
     return specs.some((s) => (typeof s === 'string' ? s : s.name) === 'llm-judge');
+}
+/** Evaluators that require a judge provider to be resolved. */
+const JUDGE_EVALUATORS = new Set(['llm-judge', 'rubric-checklist']);
+function specsNeedJudge(specs) {
+    return (specs?.some((s) => JUDGE_EVALUATORS.has(typeof s === 'string' ? s : s.name)) ?? false);
+}
+/**
+ * Whether any evaluator in the suite needs a judge provider — checking the
+ * suite-level `evaluators` AND each case's per-case `evaluators`. Use this for
+ * judge resolution instead of `hasLLMJudge(suite.evaluators)`, which misses
+ * per-case evaluators and treats `rubric-checklist` as not needing a judge.
+ */
+function suiteNeedsJudge(suite) {
+    if (specsNeedJudge(suite.evaluators))
+        return true;
+    return suite.cases.some((c) => specsNeedJudge(c.evaluators));
 }
 function judgeHashForProvider({ provider, promptTemplate, }) {
     const template = promptTemplate ?? DEFAULT_JUDGE_PROMPT_TEMPLATE;
@@ -148169,7 +148237,7 @@ async function runAction(inputs, writers, deps = {}) {
         ? deps.providerFor(loaded.config, inputs)
         : resolveProvider(loaded.config, inputs);
     const regressionThreshold = inputs.threshold ?? loaded.config.thresholds.regression;
-    const needsJudge = hasLLMJudge(suite.evaluators);
+    const needsJudge = suiteNeedsJudge(suite);
     const judgeProvider = needsJudge
         ? resolveJudgeProvider(loaded.config, provider)
         : undefined;

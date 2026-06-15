@@ -2,8 +2,13 @@ import { describe, it, expect } from 'vitest';
 
 import type { ProviderAdapter } from '../../providers/base.js';
 import { computeJudgeHash } from '../../engine/baseline.js';
-import { hasLLMJudge, judgeHashForProvider } from '../judge-hash.js';
+import {
+  hasLLMJudge,
+  judgeHashForProvider,
+  suiteNeedsJudge,
+} from '../judge-hash.js';
 import { DEFAULT_JUDGE_PROMPT_TEMPLATE } from '../llm-judge.js';
+import type { Suite } from '../../types/index.js';
 
 function fakeProvider(name: string): ProviderAdapter {
   return {
@@ -33,6 +38,61 @@ describe('hasLLMJudge', () => {
 
   it('returns false when llm-judge absent', () => {
     expect(hasLLMJudge(['exact-match', { name: 'json-schema' }])).toBe(false);
+  });
+});
+
+describe('suiteNeedsJudge', () => {
+  function suite(partial: {
+    evaluators?: Suite['evaluators'];
+    cases: Suite['cases'];
+  }): Suite {
+    return {
+      version: 1,
+      id: 'test',
+      name: 'Test',
+      evaluators: partial.evaluators,
+      cases: partial.cases,
+    } as Suite;
+  }
+
+  it('detects llm-judge declared per-case (no suite-level evaluators)', () => {
+    expect(
+      suiteNeedsJudge(
+        suite({ cases: [{ id: 'a', input: 'x', evaluators: ['llm-judge'] }] }),
+      ),
+    ).toBe(true);
+  });
+
+  it('detects rubric-checklist declared per-case', () => {
+    expect(
+      suiteNeedsJudge(
+        suite({
+          cases: [{ id: 'a', input: 'x', evaluators: ['rubric-checklist'] }],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('detects rubric-checklist at suite level (not just llm-judge)', () => {
+    expect(
+      suiteNeedsJudge(
+        suite({
+          evaluators: ['rubric-checklist'],
+          cases: [{ id: 'a', input: 'x' }],
+        }),
+      ),
+    ).toBe(true);
+  });
+
+  it('returns false when no judge evaluator appears anywhere', () => {
+    expect(
+      suiteNeedsJudge(
+        suite({
+          evaluators: ['exact-match'],
+          cases: [{ id: 'a', input: 'x', evaluators: ['json-schema'] }],
+        }),
+      ),
+    ).toBe(false);
   });
 });
 

@@ -1,6 +1,6 @@
 # drift-ci on GitLab CI.
 #
-# The GitHub Action is Node20 + ncc-bundled, which is GitHub-specific.
+# The GitHub Action is Node24 + ncc-bundled, which is GitHub-specific.
 # On GitLab CI (and any other CI), run the CLI directly via npx and
 # upload the JUnit report via GitLab's `artifacts.reports.junit` so
 # the merge-request UI surfaces per-case results.

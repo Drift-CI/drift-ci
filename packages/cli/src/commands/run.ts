@@ -8,7 +8,7 @@ import {
   createProvider,
   createStorage,
   FileBaselineStore,
-  hasLLMJudge,
+  suiteNeedsJudge,
   judgeHashForProvider,
   loadConfigFromFile,
   loadSuiteFromFile,
@@ -85,7 +85,7 @@ export async function executeRun(
   // Precompute the HTTP ingest context up front so `http` storage can
   // enrich POST /api/v1/runs with per-case suiteHash + judgeHash. No-op
   // for other storage types.
-  const needsJudge = hasLLMJudge(suite.evaluators);
+  const needsJudge = suiteNeedsJudge(suite);
   const judgeProvider = needsJudge
     ? resolveJudgeProvider(loaded.config, provider)
     : undefined;

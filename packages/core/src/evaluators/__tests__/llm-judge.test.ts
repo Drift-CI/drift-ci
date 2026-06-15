@@ -56,6 +56,16 @@ describe('LLMJudgeEvaluator', () => {
     expect(res.reason).toBe('judge-shape-invalid');
   });
 
+  it('parses a judge response wrapped in a ```json code fence', async () => {
+    const provider = judgeProvider(
+      '```json\n{"score": 0.9, "reason": "good"}\n```',
+    );
+    const ev = new LLMJudgeEvaluator({ judgeProvider: provider });
+    const res = await ev.evaluate({ input: 'q', output: 'a' });
+    expect(res.score).toBeCloseTo(0.9);
+    expect(res.reason).toBe('good');
+  });
+
   it('fences user fields with a per-call random marker and does not leak field tags into prompt outside fences', async () => {
     const provider = judgeProvider('{"score": 1}');
     const seen: string[] = [];

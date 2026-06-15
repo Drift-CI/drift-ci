@@ -60,6 +60,15 @@ describe('BedrockAnthropicProvider', () => {
     expect(args.system?.[0]?.cache_control).toBeUndefined();
   });
 
+  it('omits temperature for claude-4.7+ modelIds that reject sampling params', async () => {
+    const { client, create } = fakeClient();
+    const modelId = 'anthropic.claude-opus-4-8-20260101-v1:0';
+    create.mockResolvedValue(okResponse(modelId));
+    const p = new BedrockAnthropicProvider({ modelId, client });
+    await p.complete('q');
+    expect('temperature' in create.mock.calls[0][0]).toBe(false);
+  });
+
   it('applies cache_control: ephemeral when cacheSystemPrompt is set', async () => {
     const { client, create } = fakeClient();
     create.mockResolvedValue(okResponse(MODEL_ID));

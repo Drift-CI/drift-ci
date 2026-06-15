@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 
 import type { ProviderAdapter } from '../providers/base.js';
 import type { EvalInput, EvalResult, Evaluator } from './base.js';
+import { stripJsonFence } from './judge-json.js';
 
 export const DEFAULT_JUDGE_PROMPT_TEMPLATE = (
   fence: string,
@@ -91,9 +92,11 @@ export class LLMJudgeEvaluator implements Evaluator {
       { temperature: 0, maxTokens: 300 },
     );
 
+    // Tolerate a surrounding ```json fence, then strict-parse (arch §10):
+    // no fuzzy extraction, so an unparseable response still falls back to 0.
     let parsed: unknown;
     try {
-      parsed = JSON.parse(response.text.trim());
+      parsed = JSON.parse(stripJsonFence(response.text));
     } catch {
       return { score: 0, reason: 'judge-unparseable' };
     }

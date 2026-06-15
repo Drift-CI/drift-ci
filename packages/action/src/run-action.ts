@@ -8,7 +8,7 @@ import {
   createProvider,
   FileBaselineStore,
   HttpStorage,
-  hasLLMJudge,
+  suiteNeedsJudge,
   judgeHashForProvider,
   loadConfigFromFile,
   loadSuiteFromFile,
@@ -127,7 +127,7 @@ export async function runAction(
   const regressionThreshold =
     inputs.threshold ?? loaded.config.thresholds.regression;
 
-  const needsJudge = hasLLMJudge(suite.evaluators);
+  const needsJudge = suiteNeedsJudge(suite);
   const judgeProvider = needsJudge
     ? resolveJudgeProvider(loaded.config, provider)
     : undefined;
