@@ -148239,7 +148239,7 @@ async function runAction(inputs, writers, deps = {}) {
     const regressionThreshold = inputs.threshold ?? loaded.config.thresholds.regression;
     const needsJudge = suiteNeedsJudge(suite);
     const judgeProvider = needsJudge
-        ? resolveJudgeProvider(loaded.config, provider)
+        ? resolveJudgeProvider(loaded.config, provider, inputs)
         : undefined;
     const judgeHash = judgeProvider
         ? judgeHashForProvider({ provider: judgeProvider })
@@ -148426,14 +148426,17 @@ function resolveProvider(config, inputs) {
         mock: config.provider.mock,
     });
 }
-function resolveJudgeProvider(config, fallback) {
+function resolveJudgeProvider(config, fallback, inputs) {
     const judge = config.judge;
     if (!judge || (!judge.provider && !judge.model))
         return fallback;
     return createProvider({
+        // Fall back to the Action's `api-key` input — config.judge rarely carries
+        // its own key (you can't commit one), and the judge usually shares the
+        // test provider's key.
+        apiKey: judge.apiKey ?? inputs.apiKey,
         name: judge.provider ?? config.provider.name,
         model: judge.model ?? config.provider.model,
-        apiKey: judge.apiKey,
         baseUrl: judge.baseUrl ?? config.provider.baseUrl,
         region: config.provider.region,
     });
