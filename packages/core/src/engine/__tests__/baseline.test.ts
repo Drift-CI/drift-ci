@@ -516,6 +516,26 @@ describe('computeDeltas', () => {
     expect(report.staleJudges).toEqual(['c1']);
   });
 
+  it('does not flag a regression when the judge changed (stale judge)', async () => {
+    const tc = makeTestCase({ id: 'c1', threshold: 0.1 });
+    const suite = suiteWith([tc]);
+    const entry = FileBaselineStore.fromCaseResult(
+      tc,
+      makeCaseResult({ score: 1 }),
+      makeRun(),
+      { judgeHash: 'sha256:old-judge' },
+    );
+    await store.save(entry);
+    const run = makeRun({
+      cases: [makeCaseResult({ caseId: 'c1', score: 0.1, threshold: 0.1 })],
+    });
+    const report = await computeDeltas(run, suite, store, {
+      judgeHash: 'sha256:new-judge',
+    });
+    expect(report.staleJudges).toEqual(['c1']);
+    expect(report.regressions).toEqual([]);
+  });
+
   it('treats NaN score as noScore, never a regression', async () => {
     const tc = makeTestCase({ id: 'c1' });
     const suite = suiteWith([tc]);

@@ -391,7 +391,16 @@ export async function computeDeltas(
     report.deltas[caseId] = delta;
 
     const threshold = caseResult.threshold ?? defaultThreshold;
-    if (report.staleBaselines.includes(caseId)) continue;
+    // Scores across a changed judge are not directly comparable — same
+    // rationale as a changed case definition (stale baseline). A judge swap
+    // emits a warning and requires re-baselining; it is never a regression.
+    // (CLAUDE.md / arch §6, v1.3 D1)
+    if (
+      report.staleBaselines.includes(caseId) ||
+      report.staleJudges.includes(caseId)
+    ) {
+      continue;
+    }
 
     if (-delta > threshold) {
       report.regressions.push(caseId);
