@@ -1,3 +1,6 @@
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { Command } from 'commander';
 import { registerRunCommand } from './commands/run.js';
 import { registerBaselineCommand } from './commands/baseline.js';
@@ -5,12 +8,19 @@ import { registerInitCommand } from './commands/init.js';
 import { registerConfigCommand } from './commands/config.js';
 import { registerCompareCommand } from './commands/compare.js';
 
+const { version } = JSON.parse(
+  readFileSync(
+    join(dirname(fileURLToPath(import.meta.url)), '..', 'package.json'),
+    'utf8',
+  ),
+) as { version: string };
+
 async function main(argv: string[]): Promise<void> {
   const program = new Command();
   program
     .name('drift-ci')
     .description('Behaviour regression testing for LLM applications')
-    .version('0.1.0');
+    .version(version);
 
   registerInitCommand(program);
   registerRunCommand(program);

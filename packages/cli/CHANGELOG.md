@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.1.4](https://github.com/Drift-CI/drift-ci/compare/cli-v1.1.3...cli-v1.1.4) (2026-06-16)
+
+
+### Bug Fixes
+
+* **cli:** report the real package version in --version ([c5e8d08](https://github.com/Drift-CI/drift-ci/commit/c5e8d08a11897de7577734fd1bc9a9da8b3a92b0))
+* **cli:** report the real package version in --version ([3b23356](https://github.com/Drift-CI/drift-ci/commit/3b233561a8d815dfe77ad66efdf662c393175dcb))
+
 ## [1.1.3](https://github.com/Drift-CI/drift-ci/compare/cli-v1.1.2...cli-v1.1.3) (2026-06-15)
 
 
