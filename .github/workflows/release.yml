@@ -26,6 +26,10 @@ name: Release
 on:
   push:
     branches: [main]
+  # Manual fallback: a squash-merge can inherit a `[skip ci]` marker from an
+  # auto-committed bundle sync, which suppresses this push trigger and stalls
+  # release-please. Dispatch manually to re-run it against current `main`.
+  workflow_dispatch: {}
 
 permissions:
   contents: write
