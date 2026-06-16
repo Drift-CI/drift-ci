@@ -228,6 +228,18 @@ describe('CLI end-to-end (mock provider)', () => {
     expect(noPayload.deltas).toBeNull();
   }, 60_000);
 
+  it('reports the real package version with --version', () => {
+    const pkg = JSON.parse(
+      readFileSync(
+        resolve(fileURLToPath(import.meta.url), '..', '..', '..', 'package.json'),
+        'utf8',
+      ),
+    ) as { version: string };
+    const { stdout, status } = runCli(['--version'], tmpdir());
+    expect(status).toBe(0);
+    expect(stdout.trim()).toBe(pkg.version);
+  });
+
   it('baseline doctor reports missing and stale baselines', () => {
     // `init` creates .drift/ and placeholder files we'll overwrite.
     const initOut = runCli(
