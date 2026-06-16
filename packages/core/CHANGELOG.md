@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.1.4](https://github.com/Drift-CI/drift-ci/compare/core-v1.1.3...core-v1.1.4) (2026-06-16)
+
+
+### Bug Fixes
+
+* **core:** stale-judge cases are not regressions ([#84](https://github.com/Drift-CI/drift-ci/issues/84)) ([aee323a](https://github.com/Drift-CI/drift-ci/commit/aee323a1f58b93e19839be7303ecc8b9a2dd928c))
+
 ## [1.1.3](https://github.com/Drift-CI/drift-ci/compare/core-v1.1.2...core-v1.1.3) (2026-06-15)
 
 
