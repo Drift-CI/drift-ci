@@ -2,7 +2,6 @@ import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 import {
-  buildIngestContext,
   computeDeltas,
   createEvaluatorChain,
   createProvider,
@@ -29,6 +28,7 @@ import {
   type CommentApi,
   type PrContext,
 } from './comment.js';
+import { actionIngestContext } from './ingest-context.js';
 
 export interface RunActionInputs {
   suite: string;
@@ -179,7 +179,7 @@ export async function runAction(
       const httpStorage = new HttpStorage({
         url: inputs.dashboardUrl,
         token: inputs.dashboardToken,
-        context: buildIngestContext(suite, judgeHash),
+        context: actionIngestContext(suite, judgeHash, deltas),
       });
       await httpStorage.saveRun(run);
       writers.info(
