@@ -1,18 +1,18 @@
-export const id = 839;
-export const ids = [839];
+export const id = 48;
+export const ids = [48];
 export const modules = {
 
-/***/ 92839:
+/***/ 82048:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var propertyProvider = __webpack_require__(1269);
+var propertyProvider = __webpack_require__(32178);
 var url = __webpack_require__(87016);
 var buffer = __webpack_require__(20181);
 var http = __webpack_require__(58611);
-var nodeConfigProvider = __webpack_require__(93400);
-var urlParser = __webpack_require__(22923);
+var nodeConfigProvider = __webpack_require__(28787);
+var urlParser = __webpack_require__(35388);
 
 function httpRequest(options) {
     return new Promise((resolve, reject) => {

@@ -1,8 +1,8 @@
-export const id = 885;
-export const ids = [885];
+export const id = 62;
+export const ids = [62];
 export const modules = {
 
-/***/ 52885:
+/***/ 51062:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 // ESM COMPAT FLAG
@@ -25,7 +25,7 @@ __webpack_require__.d(__webpack_exports__, {
 });
 
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/tslib.mjs
-var tslib = __webpack_require__(23880);
+var tslib = __webpack_require__(8507);
 // EXTERNAL MODULE: external "node:fs/promises"
 var promises_ = __webpack_require__(51455);
 // EXTERNAL MODULE: external "node:fs"
@@ -39,13 +39,13 @@ var external_node_crypto_ = __webpack_require__(77598);
 // EXTERNAL MODULE: external "node:readline"
 var external_node_readline_ = __webpack_require__(80481);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/core/error.mjs
-var error = __webpack_require__(26116);
+var error = __webpack_require__(26247);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/lib/tools/ToolError.mjs
-var ToolError = __webpack_require__(83846);
+var ToolError = __webpack_require__(48571);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/index.mjs + 79 modules
-var sdk = __webpack_require__(69139);
+var sdk = __webpack_require__(41683);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils.mjs + 1 modules
-var utils = __webpack_require__(84794);
+var utils = __webpack_require__(75503);
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/lib/transform-json-schema.mjs
 
 // Supported string formats
@@ -213,7 +213,7 @@ function betaJSONSchemaOutputFormat(jsonSchema, options) {
 }
 //# sourceMappingURL=json-schema.mjs.map
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils/promise.mjs
-var promise = __webpack_require__(83997);
+var promise = __webpack_require__(57678);
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/tools/agent-toolset/fs-util.mjs
 /**
  * Shared, Node-only filesystem helpers for the agent toolset's file tools:
@@ -373,7 +373,7 @@ var external_node_stream_ = __webpack_require__(57075);
 // EXTERNAL MODULE: external "node:stream/promises"
 var external_node_stream_promises_ = __webpack_require__(46466);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils/log.mjs
-var utils_log = __webpack_require__(42032);
+var utils_log = __webpack_require__(46743);
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/tools/agent-toolset/skills.mjs
 /**
  * Node-only skill plumbing for the agent toolset: downloading a session
