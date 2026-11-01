@@ -29,11 +29,14 @@
       "pull-request-title-pattern": "chore(dashboard): release ${version}",
       "changelog-path": "CHANGELOG.md",
       "draft": false,
-      "prerelease": false
+      "prerelease": false,
+      "release-as": "1.2.2"
     }
   },
   "plugins": [
-    { "type": "node-workspace" }
+    {
+      "type": "node-workspace"
+    }
   ],
   "separate-pull-requests": true,
   "group-pull-request-title-pattern": "chore: release ${version}"
