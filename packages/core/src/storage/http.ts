@@ -1,5 +1,5 @@
 import type { RunResult, Suite } from '../types/index.js';
-import { computeSuiteHash } from '../engine/baseline.js';
+import { computeSuiteHash, type DeltaReport } from '../engine/baseline.js';
 import { stripTrailingSlashes } from '../util/url.js';
 import type { RunFilter, StorageAdapter } from './interface.js';
 
@@ -15,6 +15,8 @@ export interface IngestContext {
   suiteHashes: Record<string, string>;
   /** Optional judge-provider hash (null when the suite has no llm-judge). */
   judgeHash?: string;
+  /** Regression/improvement verdicts for this run (drift-ci >= 1.2). */
+  delta?: IngestDelta;
 }
 
 /**
@@ -31,6 +33,28 @@ export function buildIngestContext(
     suiteHashes[tc.id] = computeSuiteHash(tc);
   }
   return { suiteHashes, judgeHash };
+}
+
+/**
+ * Which cases regressed or improved against the committed baseline, and by
+ * how much. Sent so a dashboard can attach work (issues, assignment) to the
+ * exact cases the PR check flagged, rather than re-deriving them.
+ */
+export interface IngestDelta {
+  regressions: string[];
+  improvements: string[];
+  /** Score delta vs baseline, only for the cases listed above. */
+  deltas: Record<string, number>;
+}
+
+/** Pure: trims a full DeltaReport to the compact shape sent on ingest. */
+export function buildDeltaContext(report: DeltaReport): IngestDelta {
+  const deltas: Record<string, number> = {};
+  for (const id of [...report.regressions, ...report.improvements]) {
+    const d = report.deltas[id];
+    if (typeof d === 'number' && Number.isFinite(d)) deltas[id] = d;
+  }
+  return { regressions: [...report.regressions], improvements: [...report.improvements], deltas };
 }
 
 export interface HttpStorageConfig {
@@ -56,7 +80,7 @@ const INGEST_SCHEMA_VERSION = 1 as const;
 export class HttpStorage implements StorageAdapter {
   private readonly url: string;
   private readonly token?: string;
-  private readonly context?: IngestContext;
+  private context?: IngestContext;
   private readonly fetchImpl: typeof fetch;
   private readonly timeoutMs: number;
 
@@ -74,6 +98,15 @@ export class HttpStorage implements StorageAdapter {
         'HttpStorage: global fetch is not available; pass config.fetch (Node 18+ has native fetch).',
       );
     }
+  }
+
+  /**
+   * Attach the run's regression verdicts. Called after computeDeltas, which
+   * happens after this storage is constructed (the suite context is known
+   * earlier than the deltas).
+   */
+  setDelta(delta: IngestDelta): void {
+    this.context = { ...(this.context ?? { suiteHashes: {} }), delta };
   }
 
   async saveRun(run: RunResult): Promise<void> {
