@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.2](https://github.com/Drift-CI/drift-ci/compare/dashboard-v1.2.1...dashboard-v1.2.2) (2026-11-01)
+
+
+### Bug Fixes
+
+* **deps:** upgrade dashboard to Next 16 and Tailwind 4 ([6b6f225](https://github.com/Drift-CI/drift-ci/commit/6b6f225b6e3880ef2499330e5c5211e7716f5be5))
+* **deps:** upgrade dashboard to Next 16 and Tailwind 4 ([33c0ad0](https://github.com/Drift-CI/drift-ci/commit/33c0ad0c320c0e25eac719015841af72840e4bf4))
+
 ## [1.2.1](https://github.com/Drift-CI/drift-ci/compare/dashboard-v1.2.0...dashboard-v1.2.1) (2026-11-01)
 
 
