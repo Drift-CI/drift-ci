@@ -73,7 +73,7 @@ export default async function AlertsPage({
                 required
                 maxLength={200}
                 placeholder="Production regressions"
-                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
               />
             </label>
             <label className="block">
@@ -83,7 +83,7 @@ export default async function AlertsPage({
               <input
                 name="suiteId"
                 placeholder="empty = all suites"
-                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
               />
             </label>
             <label className="block">
@@ -98,7 +98,7 @@ export default async function AlertsPage({
                 name="threshold"
                 defaultValue="0.15"
                 required
-                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
               />
             </label>
             <label className="block">
@@ -112,7 +112,7 @@ export default async function AlertsPage({
                 max="10080"
                 name="cooldownMinutes"
                 defaultValue="0"
-                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
               />
             </label>
           </div>
@@ -128,7 +128,7 @@ export default async function AlertsPage({
               <select
                 name="channelType"
                 defaultValue="slack"
-                className="block rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                className="block rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
               >
                 {CHANNEL_TYPES.map((t) => (
                   <option key={t.value} value={t.value}>
@@ -145,7 +145,7 @@ export default async function AlertsPage({
               <input
                 name="channelUrl"
                 placeholder="https://..."
-                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
               />
             </label>
             <label className="mt-3 block">
@@ -155,7 +155,7 @@ export default async function AlertsPage({
               <input
                 name="signingSecret"
                 placeholder="≥16 chars; HMAC-SHA256 over body+timestamp"
-                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
               />
             </label>
 
@@ -166,7 +166,7 @@ export default async function AlertsPage({
                 </span>
                 <input
                   name="routingKey"
-                  className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                  className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 />
               </label>
               <label className="block">
@@ -176,7 +176,7 @@ export default async function AlertsPage({
                 <select
                   name="severity"
                   defaultValue="error"
-                  className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                  className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
                 >
                   <option value="critical">critical</option>
                   <option value="error">error</option>
@@ -194,7 +194,7 @@ export default async function AlertsPage({
                 type="email"
                 name="emailTo"
                 placeholder="oncall@example.com"
-                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
               />
             </label>
           </fieldset>
@@ -257,11 +257,11 @@ export default async function AlertsPage({
                     </td>
                     <td className="px-4 py-2">
                       {r.enabled ? (
-                        <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <span className="rounded-sm bg-emerald-100 px-2 py-0.5 text-xs text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
                           enabled
                         </span>
                       ) : (
-                        <span className="rounded bg-neutral-200 px-2 py-0.5 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                        <span className="rounded-sm bg-neutral-200 px-2 py-0.5 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
                           disabled
                         </span>
                       )}
