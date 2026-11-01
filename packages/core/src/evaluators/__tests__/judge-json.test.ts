@@ -22,4 +22,15 @@ describe('stripJsonFence', () => {
     const text = 'Here is my verdict: {"score": 1}';
     expect(stripJsonFence(text)).toBe('Here is my verdict: {"score": 1}');
   });
+
+  it('strips an uppercase JSON fence', () => {
+    expect(stripJsonFence('```JSON\n{"score": 1}\n```')).toBe('{"score": 1}');
+  });
+
+  it('handles a long whitespace run after an unclosed fence in linear time', () => {
+    const text = '```' + ' '.repeat(100_000) + 'x';
+    const start = performance.now();
+    expect(stripJsonFence(text)).toBe(text);
+    expect(performance.now() - start).toBeLessThan(100);
+  });
 });
