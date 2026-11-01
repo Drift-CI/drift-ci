@@ -18,11 +18,11 @@
   "devDependencies": {
     "@types/node": "^25.9.3",
     "@vercel/ncc": "^0.44.0",
-    "@vitest/coverage-v8": "^4.1.8",
+    "@vitest/coverage-v8": "^4.1.12",
     "rimraf": "^6.0.0",
     "typescript": "^6.0.3",
-    "vite": "^7.3.5",
-    "vitest": "^4.1.8"
+    "vite": "^7.3.7",
+    "vitest": "^4.1.12"
   },
   "engines": {
     "node": ">=22.0.0"

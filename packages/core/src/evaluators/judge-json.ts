@@ -12,6 +12,10 @@
  */
 export function stripJsonFence(text: string): string {
   const trimmed = text.trim();
-  const fence = trimmed.match(/^```(?:json)?\s*\n?([\s\S]*?)\n?```$/i);
-  return fence ? fence[1].trim() : trimmed;
+  // String ops rather than a regex: the old pattern backtracked polynomially on
+  // inputs like "```" + many spaces (CodeQL js/polynomial-redos).
+  if (trimmed.length < 6 || !trimmed.startsWith("```") || !trimmed.endsWith("```")) return trimmed;
+  let inner = trimmed.slice(3, -3);
+  if (inner.slice(0, 4).toLowerCase() === "json") inner = inner.slice(4);
+  return inner.trim();
 }
