@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/Drift-CI/drift-ci/compare/v1.1.5...v1.2.0) (2026-11-01)
+
+
+### Features
+
+* **action:** upload regression verdicts with each run ([1572113](https://github.com/Drift-CI/drift-ci/commit/157211330e345f85fbd23b555a912141bac1e45c))
+* send regression verdicts on ingest (context.delta) ([d5c0e60](https://github.com/Drift-CI/drift-ci/commit/d5c0e60c375d513ecd175576b374321d81b635c7))
+
 ## [1.1.5](https://github.com/Drift-CI/drift-ci/compare/v1.1.4...v1.1.5) (2026-06-16)
 
 
