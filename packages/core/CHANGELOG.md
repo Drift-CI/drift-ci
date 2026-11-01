@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.1.4...core-v1.2.0) (2026-11-01)
+
+
+### Features
+
+* **core:** send regression verdicts on ingest (context.delta) ([183a55c](https://github.com/Drift-CI/drift-ci/commit/183a55c48a6d5f81ee812d9bd00087b7c2361e1f))
+* send regression verdicts on ingest (context.delta) ([d5c0e60](https://github.com/Drift-CI/drift-ci/commit/d5c0e60c375d513ecd175576b374321d81b635c7))
+
 ## [1.1.4](https://github.com/Drift-CI/drift-ci/compare/core-v1.1.3...core-v1.1.4) (2026-06-16)
 
 
