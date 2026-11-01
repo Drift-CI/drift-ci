@@ -22,7 +22,7 @@ export default async function LoginPage({
 
   return (
     <main className="mx-auto flex min-h-screen max-w-md flex-col justify-center px-6 py-12">
-      <div className="rounded-xl border border-neutral-200 bg-white p-8 shadow-sm dark:border-neutral-800 dark:bg-neutral-900">
+      <div className="rounded-xl border border-neutral-200 bg-white p-8 shadow-xs dark:border-neutral-800 dark:bg-neutral-900">
         <header className="mb-6 flex items-center gap-2 text-2xl font-semibold tracking-tight">
           <span aria-hidden>🌊</span>
           <span>drift-ci</span>
@@ -81,12 +81,12 @@ export default async function LoginPage({
                 required
                 autoComplete="current-password"
                 autoFocus={!anyOauth}
-                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm placeholder:text-neutral-400 focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+                className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs placeholder:text-neutral-400 focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
               />
             </label>
             <button
               type="submit"
-              className={`w-full rounded-md px-3 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 ${
+              className={`w-full rounded-md px-3 py-2 text-sm font-medium focus:outline-hidden focus:ring-2 focus:ring-sky-500 focus:ring-offset-2 ${
                 anyOauth
                   ? 'border border-neutral-300 bg-white text-neutral-900 hover:bg-neutral-50 dark:border-neutral-700 dark:bg-neutral-900 dark:text-neutral-100 dark:hover:bg-neutral-800'
                   : 'bg-neutral-900 text-white hover:bg-neutral-800 dark:bg-neutral-100 dark:text-neutral-900 dark:hover:bg-neutral-200'

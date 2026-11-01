@@ -14,6 +14,11 @@ updates:
     labels:
       - dependencies
       - javascript
+    ignore:
+      # v13.0.3 segfaults in new Database() on Node 20/22 (WiseLibs/better-sqlite3#1514);
+      # our engines allow Node 22. Drop this once a fixed 13.x ships.
+      - dependency-name: better-sqlite3
+        versions: ["13.x"]
     groups:
       typescript-tooling:
         patterns:

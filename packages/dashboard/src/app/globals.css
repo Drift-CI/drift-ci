@@ -1,6 +1,20 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import 'tailwindcss';
+
+/* Formerly tailwind.config.ts; Tailwind 4 detects content sources automatically. */
+@theme {
+  --font-sans: ui-sans-serif, system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+/* Keep the v3 defaults the UI was designed against: gray-200 borders, pointer on buttons. */
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    border-color: var(--color-gray-200, currentColor);
+  }
+  button:not(:disabled), [role='button']:not(:disabled) {
+    cursor: pointer;
+  }
+}
 
 :root {
   color-scheme: light dark;

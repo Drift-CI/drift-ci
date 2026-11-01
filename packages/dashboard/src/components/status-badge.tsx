@@ -8,7 +8,7 @@ export function StatusBadge({ status }: StatusBadgeProps): JSX.Element {
   const tone = pickTone(status);
   return (
     <span
-      className={`inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${tone}`}
+      className={`inline-flex items-center rounded-sm px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${tone}`}
     >
       {status}
     </span>

@@ -89,7 +89,7 @@ export default async function TokensPage({
               required
               maxLength={80}
               placeholder="e.g. github-action / cli-laptop"
-              className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+              className="block w-full rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
             />
           </label>
           <fieldset>
@@ -125,7 +125,7 @@ export default async function TokensPage({
             <input
               type="datetime-local"
               name="expiresAt"
-              className="block rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-sm focus:border-sky-500 focus:outline-none focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
+              className="block rounded-md border border-neutral-300 bg-white px-3 py-2 text-sm shadow-xs focus:border-sky-500 focus:outline-hidden focus:ring-1 focus:ring-sky-500 dark:border-neutral-700 dark:bg-neutral-950 dark:text-neutral-100"
             />
           </label>
           <button
@@ -191,15 +191,15 @@ export default async function TokensPage({
                     </td>
                     <td className="px-4 py-2">
                       {r.revokedAt ? (
-                        <span className="rounded bg-neutral-200 px-2 py-0.5 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
+                        <span className="rounded-sm bg-neutral-200 px-2 py-0.5 text-xs text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300">
                           revoked
                         </span>
                       ) : r.expiresAt && r.expiresAt < new Date() ? (
-                        <span className="rounded bg-amber-200 px-2 py-0.5 text-xs text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
+                        <span className="rounded-sm bg-amber-200 px-2 py-0.5 text-xs text-amber-900 dark:bg-amber-900/40 dark:text-amber-200">
                           expired
                         </span>
                       ) : (
-                        <span className="rounded bg-emerald-100 px-2 py-0.5 text-xs text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
+                        <span className="rounded-sm bg-emerald-100 px-2 py-0.5 text-xs text-emerald-900 dark:bg-emerald-950/40 dark:text-emerald-300">
                           active
                         </span>
                       )}
@@ -241,7 +241,7 @@ function pickBanner(params: {
         <div>
           <strong>Token “{params.name ?? 'new'}” minted.</strong> Copy it now —
           the dashboard will not show it again:
-          <pre className="mt-2 overflow-auto rounded bg-neutral-900 p-3 font-mono text-xs text-emerald-300">
+          <pre className="mt-2 overflow-auto rounded-sm bg-neutral-900 p-3 font-mono text-xs text-emerald-300">
             {params.minted}
           </pre>
         </div>

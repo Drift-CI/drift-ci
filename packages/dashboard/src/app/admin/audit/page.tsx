@@ -137,7 +137,7 @@ function KindBadge({ kind }: { kind: string }): JSX.Element {
           : 'bg-neutral-100 text-neutral-700 dark:bg-neutral-800 dark:text-neutral-300';
   return (
     <span
-      className={`inline-flex items-center rounded px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${tone}`}
+      className={`inline-flex items-center rounded-sm px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wide ${tone}`}
     >
       {auditKindLabel(kind)}
     </span>

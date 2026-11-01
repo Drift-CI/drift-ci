@@ -10,7 +10,7 @@ export function ScorePill({ score, threshold }: ScorePillProps): JSX.Element {
   const tone = pickTone(score, threshold);
   return (
     <span
-      className={`inline-flex min-w-[3.5rem] justify-center rounded px-2 py-0.5 font-mono text-xs font-medium ${tone}`}
+      className={`inline-flex min-w-[3.5rem] justify-center rounded-sm px-2 py-0.5 font-mono text-xs font-medium ${tone}`}
     >
       {formatScore(score)}
     </span>
