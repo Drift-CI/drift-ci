@@ -27,7 +27,7 @@ jobs:
     timeout-minutes: 10
     steps:
       - name: Checkout PR head
-        uses: actions/checkout@v6
+        uses: actions/checkout@v7
         with:
           # Check out the actual PR head branch (not the merge commit) so the
           # rebuilt bundle can be committed back to it on same-repo PRs.
