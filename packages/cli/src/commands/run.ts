@@ -2,12 +2,14 @@ import type { Command } from 'commander';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import {
+  buildDeltaContext,
   buildIngestContext,
   computeDeltas,
   createEvaluatorChain,
   createProvider,
   createStorage,
   FileBaselineStore,
+  HttpStorage,
   suiteNeedsJudge,
   judgeHashForProvider,
   loadConfigFromFile,
@@ -155,6 +157,7 @@ async function runWithStorage(
       judgeHash,
     });
     run.summary.regressions = deltas.regressions.length;
+    if (storage instanceof HttpStorage) storage.setDelta(buildDeltaContext(deltas));
     await storage.saveRun(run);
   }
 

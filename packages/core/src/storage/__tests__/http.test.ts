@@ -1,6 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 
-import { HttpStorage, buildIngestContext } from '../http.js';
+import { HttpStorage, buildIngestContext, buildDeltaContext } from '../http.js';
 import type { RunResult, Suite } from '../../types/index.js';
 
 function makeRun(overrides: Partial<RunResult> = {}): RunResult {
@@ -307,5 +307,62 @@ describe('HttpStorage', () => {
     });
     const s = new HttpStorage({ url: URL, fetch: fetchMock, timeoutMs: 10 });
     await expect(s.saveRun(makeRun())).rejects.toThrow();
+  });
+});
+
+describe('buildDeltaContext', () => {
+  const report = {
+    deltas: { a: -0.2, b: 0.15, c: 0.01, d: -0.5 },
+    regressions: ['a', 'd'],
+    improvements: ['b'],
+    missingBaselines: ['x'],
+    staleBaselines: [],
+    staleJudges: [],
+    noScore: [],
+  };
+  it('copies regressions/improvements and keeps deltas only for listed cases', () => {
+    expect(buildDeltaContext(report)).toEqual({
+      regressions: ['a', 'd'],
+      improvements: ['b'],
+      deltas: { a: -0.2, d: -0.5, b: 0.15 },
+    });
+  });
+  it('handles an empty report', () => {
+    expect(buildDeltaContext({ ...report, deltas: {}, regressions: [], improvements: [] })).toEqual({
+      regressions: [],
+      improvements: [],
+      deltas: {},
+    });
+  });
+});
+
+describe('HttpStorage.setDelta', () => {
+  const URL = 'https://dash.example';
+  it('includes context.delta in the posted body', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 201 }));
+    const s = new HttpStorage({
+      url: URL,
+      token: 't',
+      context: { suiteHashes: { a: 'h' } },
+      fetch: fetchMock,
+    });
+    s.setDelta({ regressions: ['a'], improvements: [], deltas: { a: -0.3 } });
+    await s.saveRun(makeRun());
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.context).toEqual({
+      suiteHashes: { a: 'h' },
+      delta: { regressions: ['a'], improvements: [], deltas: { a: -0.3 } },
+    });
+  });
+  it('setDelta without a base context still sends the delta', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 201 }));
+    const s = new HttpStorage({ url: URL, fetch: fetchMock });
+    s.setDelta({ regressions: [], improvements: [], deltas: {} });
+    await s.saveRun(makeRun());
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.context).toEqual({
+      suiteHashes: {},
+      delta: { regressions: [], improvements: [], deltas: {} },
+    });
   });
 });

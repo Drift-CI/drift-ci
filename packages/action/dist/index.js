@@ -145042,6 +145042,16 @@ function buildIngestContext(suite, judgeHash) {
     }
     return { suiteHashes, judgeHash };
 }
+/** Pure: trims a full DeltaReport to the compact shape sent on ingest. */
+function buildDeltaContext(report) {
+    const deltas = {};
+    for (const id of [...report.regressions, ...report.improvements]) {
+        const d = report.deltas[id];
+        if (typeof d === 'number' && Number.isFinite(d))
+            deltas[id] = d;
+    }
+    return { regressions: [...report.regressions], improvements: [...report.improvements], deltas };
+}
 const INGEST_SCHEMA_VERSION = 1;
 class http_HttpStorage {
     url;
@@ -145061,6 +145071,14 @@ class http_HttpStorage {
         if (typeof this.fetchImpl !== 'function') {
             throw new Error('HttpStorage: global fetch is not available; pass config.fetch (Node 18+ has native fetch).');
         }
+    }
+    /**
+     * Attach the run's regression verdicts. Called after computeDeltas, which
+     * happens after this storage is constructed (the suite context is known
+     * earlier than the deltas).
+     */
+    setDelta(delta) {
+        this.context = { ...(this.context ?? { suiteHashes: {} }), delta };
     }
     async saveRun(run) {
         const body = {
@@ -148218,7 +148236,15 @@ async function postOrUpdateComment(api, ctx, body) {
     return { action: 'created', id: created.id };
 }
 
+;// CONCATENATED MODULE: ./src/ingest-context.ts
+
+/** The ingest context the action uploads: suite/judge hashes plus the regression verdicts. */
+function actionIngestContext(suite, judgeHash, deltas) {
+    return { ...buildIngestContext(suite, judgeHash), delta: buildDeltaContext(deltas) };
+}
+
 ;// CONCATENATED MODULE: ./src/run-action.ts
+
 
 
 
@@ -148286,7 +148312,7 @@ async function runAction(inputs, writers, deps = {}) {
             const httpStorage = new http_HttpStorage({
                 url: inputs.dashboardUrl,
                 token: inputs.dashboardToken,
-                context: buildIngestContext(suite, judgeHash),
+                context: actionIngestContext(suite, judgeHash, deltas),
             });
             await httpStorage.saveRun(run);
             writers.info(`drift-ci: synced run ${run.id} to ${inputs.dashboardUrl}`);
