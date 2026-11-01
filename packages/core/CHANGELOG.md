@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.2.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.2.0...core-v1.2.1) (2026-11-01)
+
+
+### Bug Fixes
+
+* **deps:** patch Dependabot security alerts and judge-fence ReDoS ([6246242](https://github.com/Drift-CI/drift-ci/commit/6246242e9aaa168a4289ff5d096e0b9cc0a201f7))
+* **deps:** patch Dependabot security alerts and judge-fence ReDoS ([abb8f1e](https://github.com/Drift-CI/drift-ci/commit/abb8f1e5249e2723fa603335cb0714cea537e80f))
+
 ## [1.2.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.1.4...core-v1.2.0) (2026-11-01)
 
 
