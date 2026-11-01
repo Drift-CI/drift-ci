@@ -52,12 +52,18 @@ export class BedrockAnthropicProvider implements ProviderAdapter {
     if (config.client) {
       this.client = config.client;
     } else {
-      this.client = new AnthropicBedrock({
-        awsRegion: config.region ?? process.env.AWS_REGION,
-        awsAccessKey: config.awsAccessKey,
-        awsSecretKey: config.awsSecretKey,
-        awsSessionToken: config.awsSessionToken,
-      }) as unknown as AnthropicLike;
+      const { awsAccessKey, awsSecretKey, awsSessionToken } = config;
+      if (!awsAccessKey !== !awsSecretKey) {
+        throw new Error(
+          'BedrockAnthropicProvider: set both `awsAccessKey` and `awsSecretKey`, or neither to use the AWS credential chain.',
+        );
+      }
+      const awsRegion = config.region ?? process.env.AWS_REGION;
+      this.client = (
+        awsAccessKey && awsSecretKey
+          ? new AnthropicBedrock({ awsRegion, awsAccessKey, awsSecretKey, awsSessionToken })
+          : new AnthropicBedrock({ awsRegion })
+      ) as unknown as AnthropicLike;
     }
   }
 
