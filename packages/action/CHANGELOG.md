@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/Drift-CI/drift-ci/compare/v1.2.1...v1.3.0) (2026-11-02)
+
+
+### Features
+
+* **action:** keyless dashboard sync via GitHub OIDC ([9499cb0](https://github.com/Drift-CI/drift-ci/commit/9499cb0518529027c17ec316624bf63b62289154))
+* **action:** keyless dashboard sync via GitHub OIDC ([99c7b3b](https://github.com/Drift-CI/drift-ci/commit/99c7b3bff35298e91b352fc9afce30ad940a991a))
+
 ## [1.2.1](https://github.com/Drift-CI/drift-ci/compare/v1.2.0...v1.2.1) (2026-11-01)
 
 
