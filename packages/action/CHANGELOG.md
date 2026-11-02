@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.1](https://github.com/Drift-CI/drift-ci/compare/v1.3.0...v1.3.1) (2026-11-02)
+
+
+### Bug Fixes
+
+* **action:** action.yml invalid YAML in 1.3.0 ([272de64](https://github.com/Drift-CI/drift-ci/commit/272de64af1af0c9ce026687536713f94f48e3c0a))
+* **action:** quote dashboard-token description so action.yml parses ([dfffd84](https://github.com/Drift-CI/drift-ci/commit/dfffd84435f15f3588e39a6543110cf991070ae2))
+
 ## [1.3.0](https://github.com/Drift-CI/drift-ci/compare/v1.2.1...v1.3.0) (2026-11-02)
 
 
