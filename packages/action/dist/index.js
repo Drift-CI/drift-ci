@@ -97041,8 +97041,10 @@ function file_command_prepareKeyValueMessage(key, value) {
 var external_path_ = __nccwpck_require__(16928);
 // EXTERNAL MODULE: external "http"
 var external_http_ = __nccwpck_require__(58611);
+var external_http_namespaceObject = /*#__PURE__*/__nccwpck_require__.t(external_http_, 2);
 // EXTERNAL MODULE: external "https"
 var external_https_ = __nccwpck_require__(65692);
+var external_https_namespaceObject = /*#__PURE__*/__nccwpck_require__.t(external_https_, 2);
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/@actions+http-client@4.0.1/node_modules/@actions/http-client/lib/proxy.js
 function getProxyUrl(reqUrl) {
     const usingSsl = reqUrl.protocol === 'https:';
@@ -97135,7 +97137,7 @@ class DecodedURL extends URL {
 }
 //# sourceMappingURL=proxy.js.map
 // EXTERNAL MODULE: ../../node_modules/.pnpm/tunnel@0.0.6/node_modules/tunnel/index.js
-var node_modules_tunnel = __nccwpck_require__(68502);
+var tunnel = __nccwpck_require__(68502);
 // EXTERNAL MODULE: ../../node_modules/.pnpm/undici@6.29.1/node_modules/undici/index.js
 var undici = __nccwpck_require__(14492);
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/@actions+http-client@4.0.1/node_modules/@actions/http-client/lib/index.js
@@ -97213,7 +97215,7 @@ const HttpResponseRetryCodes = [
     HttpCodes.ServiceUnavailable,
     HttpCodes.GatewayTimeout
 ];
-const RetryableHttpVerbs = (/* unused pure expression or super */ null && (['OPTIONS', 'GET', 'DELETE', 'HEAD']));
+const RetryableHttpVerbs = ['OPTIONS', 'GET', 'DELETE', 'HEAD'];
 const ExponentialBackoffCeiling = 10;
 const ExponentialBackoffTimeSlice = 5;
 class HttpClientError extends Error {
@@ -97259,7 +97261,7 @@ function isHttps(requestUrl) {
     const parsedUrl = new URL(requestUrl);
     return parsedUrl.protocol === 'https:';
 }
-class lib_HttpClient {
+class HttpClient {
     constructor(userAgent, handlers, requestOptions) {
         this._ignoreSslError = false;
         this._allowRedirects = true;
@@ -97562,7 +97564,7 @@ class lib_HttpClient {
     }
     getAgentDispatcher(serverUrl) {
         const parsedUrl = new URL(serverUrl);
-        const proxyUrl = pm.getProxyUrl(parsedUrl);
+        const proxyUrl = getProxyUrl(parsedUrl);
         const useProxy = proxyUrl && proxyUrl.hostname;
         if (!useProxy) {
             return;
@@ -97573,7 +97575,7 @@ class lib_HttpClient {
         const info = {};
         info.parsedUrl = requestUrl;
         const usingSsl = info.parsedUrl.protocol === 'https:';
-        info.httpModule = usingSsl ? https : http;
+        info.httpModule = usingSsl ? external_https_namespaceObject : external_http_namespaceObject;
         const defaultPort = usingSsl ? 443 : 80;
         info.options = {};
         info.options.host = info.parsedUrl.hostname;
@@ -97672,7 +97674,7 @@ class lib_HttpClient {
     }
     _getAgent(parsedUrl) {
         let agent;
-        const proxyUrl = pm.getProxyUrl(parsedUrl);
+        const proxyUrl = getProxyUrl(parsedUrl);
         const useProxy = proxyUrl && proxyUrl.hostname;
         if (this._keepAlive && useProxy) {
             agent = this._proxyAgent;
@@ -97687,7 +97689,7 @@ class lib_HttpClient {
         const usingSsl = parsedUrl.protocol === 'https:';
         let maxSockets = 100;
         if (this.requestOptions) {
-            maxSockets = this.requestOptions.maxSockets || http.globalAgent.maxSockets;
+            maxSockets = this.requestOptions.maxSockets || external_http_.globalAgent.maxSockets;
         }
         // This is `useProxy` again, but we need to check `proxyURl` directly for TypeScripts's flow analysis.
         if (proxyUrl && proxyUrl.hostname) {
@@ -97712,7 +97714,7 @@ class lib_HttpClient {
         // if tunneling agent isn't assigned create a new agent
         if (!agent) {
             const options = { keepAlive: this._keepAlive, maxSockets };
-            agent = usingSsl ? new https.Agent(options) : new http.Agent(options);
+            agent = usingSsl ? new external_https_.Agent(options) : new external_http_.Agent(options);
             this._agent = agent;
         }
         if (usingSsl && this._ignoreSslError) {
@@ -97735,7 +97737,7 @@ class lib_HttpClient {
             return proxyAgent;
         }
         const usingSsl = parsedUrl.protocol === 'https:';
-        proxyAgent = new ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
+        proxyAgent = new undici.ProxyAgent(Object.assign({ uri: proxyUrl.href, pipelining: !this._keepAlive ? 0 : 1 }, ((proxyUrl.username || proxyUrl.password) && {
             token: `Basic ${Buffer.from(`${proxyUrl.username}:${proxyUrl.password}`).toString('base64')}`
         })));
         this._proxyAgentDispatcher = proxyAgent;
@@ -97866,7 +97868,7 @@ class BasicCredentialHandler {
         });
     }
 }
-class auth_BearerCredentialHandler {
+class BearerCredentialHandler {
     constructor(token) {
         this.token = token;
     }
@@ -97924,13 +97926,13 @@ var oidc_utils_awaiter = (undefined && undefined.__awaiter) || function (thisArg
 
 
 
-class oidc_utils_OidcClient {
+class OidcClient {
     static createHttpClient(allowRetry = true, maxRetry = 10) {
         const requestOptions = {
             allowRetries: allowRetry,
             maxRetries: maxRetry
         };
-        return new HttpClient('actions/oidc-client', [new BearerCredentialHandler(oidc_utils_OidcClient.getRequestToken())], requestOptions);
+        return new HttpClient('actions/oidc-client', [new BearerCredentialHandler(OidcClient.getRequestToken())], requestOptions);
     }
     static getRequestToken() {
         const token = process.env['ACTIONS_ID_TOKEN_REQUEST_TOKEN'];
@@ -97949,7 +97951,7 @@ class oidc_utils_OidcClient {
     static getCall(id_token_url) {
         return oidc_utils_awaiter(this, void 0, void 0, function* () {
             var _a;
-            const httpclient = oidc_utils_OidcClient.createHttpClient();
+            const httpclient = OidcClient.createHttpClient();
             const res = yield httpclient
                 .getJson(id_token_url)
                 .catch(error => {
@@ -97968,13 +97970,13 @@ class oidc_utils_OidcClient {
         return oidc_utils_awaiter(this, void 0, void 0, function* () {
             try {
                 // New ID Token is requested from action service
-                let id_token_url = oidc_utils_OidcClient.getIDTokenUrl();
+                let id_token_url = OidcClient.getIDTokenUrl();
                 if (audience) {
                     const encodedAudience = encodeURIComponent(audience);
                     id_token_url = `${id_token_url}&audience=${encodedAudience}`;
                 }
                 debug(`ID token url is ${id_token_url}`);
-                const id_token = yield oidc_utils_OidcClient.getCall(id_token_url);
+                const id_token = yield OidcClient.getCall(id_token_url);
                 setSecret(id_token);
                 return id_token;
             }
@@ -99572,8 +99574,8 @@ function exportVariable(name, val) {
  * console.log(`Using token: ${apiToken}`); // Outputs: "Using token: ***"
  * ```
  */
-function core_setSecret(secret) {
-    issueCommand('add-mask', {}, secret);
+function setSecret(secret) {
+    command_issueCommand('add-mask', {}, secret);
 }
 /**
  * Prepends inputPath to the PATH (for this action and future actions)
@@ -99694,8 +99696,8 @@ function isDebug() {
  * Writes debug message to user log
  * @param message debug message
  */
-function core_debug(message) {
-    issueCommand('debug', {}, message);
+function debug(message) {
+    command_issueCommand('debug', {}, message);
 }
 /**
  * Adds an error issue
@@ -168246,6 +168248,34 @@ async function postOrUpdateComment(api, ctx, body) {
     return { action: 'created', id: created.id };
 }
 
+;// CONCATENATED MODULE: ./src/auth.ts
+/**
+ * Decide how to authenticate dashboard sync. An explicit token always wins
+ * (unchanged behaviour). Otherwise, when a dashboard URL is set and GitHub
+ * OIDC is available, request an ID token whose audience is the dashboard origin.
+ */
+async function resolveDashboardAuth(o) {
+    if (o.token)
+        return { kind: 'token', value: o.token };
+    if (!o.url)
+        return { kind: 'none', reason: 'no dashboard-url' };
+    if (!o.env.ACTIONS_ID_TOKEN_REQUEST_URL) {
+        return {
+            kind: 'none',
+            reason: "dashboard-url is set but there's no dashboard-token, and GitHub OIDC isn't available — add `permissions: id-token: write` to the job (or set dashboard-token)",
+        };
+    }
+    try {
+        return { kind: 'oidc', value: await o.getIDToken(new URL(o.url).origin) };
+    }
+    catch (e) {
+        return {
+            kind: 'none',
+            reason: `couldn't get a GitHub OIDC token (${e instanceof Error ? e.message : String(e)}) — check \`permissions: id-token: write\``,
+        };
+    }
+}
+
 ;// CONCATENATED MODULE: ./src/ingest-context.ts
 
 /** The ingest context the action uploads: suite/judge hashes plus the regression verdicts. */
@@ -168259,10 +168289,8 @@ function actionIngestContext(suite, judgeHash, deltas) {
 
 
 
+
 async function runAction(inputs, writers, deps = {}) {
-    if (inputs.dashboardUrl && !inputs.dashboardToken) {
-        writers.warning('drift-ci: dashboard-url is set but dashboard-token is empty. Sync will be skipped.');
-    }
     // Fork-PR safety gate: if we're running against a PR from a forked
     // repo AND no api-key is present, skip cleanly. Posting a friendly
     // comment is kinder than a silent no-op — see arch §8 for the
@@ -168317,18 +168345,34 @@ async function runAction(inputs, writers, deps = {}) {
     // primary artifacts are durable even if the network call hangs. Errors
     // are surfaced as warnings — a downed dashboard must not block a
     // PR check.
-    if (inputs.dashboardUrl && inputs.dashboardToken) {
-        try {
-            const httpStorage = new http_HttpStorage({
-                url: inputs.dashboardUrl,
-                token: inputs.dashboardToken,
-                context: actionIngestContext(suite, judgeHash, deltas),
-            });
-            await httpStorage.saveRun(run);
-            writers.info(`drift-ci: synced run ${run.id} to ${inputs.dashboardUrl}`);
+    if (inputs.dashboardUrl) {
+        // Resolved here (not at start-up) so a keyless OIDC token is fresh.
+        const auth = await resolveDashboardAuth({
+            url: inputs.dashboardUrl,
+            token: inputs.dashboardToken,
+            env: deps.env ?? process.env,
+            getIDToken: deps.getIDToken ??
+                (async () => {
+                    throw new Error('OIDC token requests are not supported in this environment');
+                }),
+        });
+        if (auth.kind === 'none') {
+            writers.warning(`drift-ci: dashboard sync skipped — ${auth.reason}`);
         }
-        catch (err) {
-            writers.warning(`drift-ci: dashboard sync failed — ${err instanceof Error ? err.message : String(err)}`);
+        else {
+            writers.info(`drift-ci: dashboard auth = ${auth.kind === 'oidc' ? 'OIDC' : 'token'}`);
+            try {
+                const httpStorage = new http_HttpStorage({
+                    url: inputs.dashboardUrl,
+                    token: auth.value,
+                    context: actionIngestContext(suite, judgeHash, deltas),
+                });
+                await httpStorage.saveRun(run);
+                writers.info(`drift-ci: synced run ${run.id} to ${inputs.dashboardUrl}`);
+            }
+            catch (err) {
+                writers.warning(`drift-ci: dashboard sync failed — ${err instanceof Error ? err.message : String(err)}`);
+            }
         }
     }
     const baselineChangedFiles = detectBaselineChangedFiles(inputs, deps, writers);
@@ -168602,6 +168646,7 @@ const { prContext, isFork, forkHeadRef, baseRef } = detectPrContext();
 const deps = {
     commentApi: buildCommentApi(),
     gitOps: buildGitOps(),
+    getIDToken: (aud) => getIDToken(aud),
 };
 runAction(readInputs(prContext, isFork, forkHeadRef, baseRef), writers, deps).catch((err) => {
     setFailed(err instanceof Error ? err.message : String(err));
