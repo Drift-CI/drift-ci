@@ -28,6 +28,7 @@ import {
   type CommentApi,
   type PrContext,
 } from './comment.js';
+import { resolveDashboardAuth } from './auth.js';
 import { actionIngestContext } from './ingest-context.js';
 
 export interface RunActionInputs {
@@ -94,6 +95,10 @@ export interface RunActionDeps {
   gitOps?: GitOps;
   /** Octokit-shaped comment API; tests inject a fake. Falls back to no-op when undefined. */
   commentApi?: CommentApi;
+  /** Requests a GitHub OIDC ID token for an audience (core.getIDToken). Tests inject a fake. */
+  getIDToken?: (audience: string) => Promise<string>;
+  /** Environment used to detect OIDC availability. Defaults to process.env. */
+  env?: NodeJS.ProcessEnv;
 }
 
 export async function runAction(
@@ -101,12 +106,6 @@ export async function runAction(
   writers: RunActionWriters,
   deps: RunActionDeps = {},
 ): Promise<RunActionOutputs> {
-  if (inputs.dashboardUrl && !inputs.dashboardToken) {
-    writers.warning(
-      'drift-ci: dashboard-url is set but dashboard-token is empty. Sync will be skipped.',
-    );
-  }
-
   // Fork-PR safety gate: if we're running against a PR from a forked
   // repo AND no api-key is present, skip cleanly. Posting a friendly
   // comment is kinder than a silent no-op — see arch §8 for the
@@ -174,21 +173,37 @@ export async function runAction(
   // primary artifacts are durable even if the network call hangs. Errors
   // are surfaced as warnings — a downed dashboard must not block a
   // PR check.
-  if (inputs.dashboardUrl && inputs.dashboardToken) {
-    try {
-      const httpStorage = new HttpStorage({
-        url: inputs.dashboardUrl,
-        token: inputs.dashboardToken,
-        context: actionIngestContext(suite, judgeHash, deltas),
-      });
-      await httpStorage.saveRun(run);
-      writers.info(
-        `drift-ci: synced run ${run.id} to ${inputs.dashboardUrl}`,
-      );
-    } catch (err) {
-      writers.warning(
-        `drift-ci: dashboard sync failed — ${err instanceof Error ? err.message : String(err)}`,
-      );
+  if (inputs.dashboardUrl) {
+    // Resolved here (not at start-up) so a keyless OIDC token is fresh.
+    const auth = await resolveDashboardAuth({
+      url: inputs.dashboardUrl,
+      token: inputs.dashboardToken,
+      env: deps.env ?? process.env,
+      getIDToken:
+        deps.getIDToken ??
+        (async () => {
+          throw new Error('OIDC token requests are not supported in this environment');
+        }),
+    });
+    if (auth.kind === 'none') {
+      writers.warning(`drift-ci: dashboard sync skipped — ${auth.reason}`);
+    } else {
+      writers.info(`drift-ci: dashboard auth = ${auth.kind === 'oidc' ? 'OIDC' : 'token'}`);
+      try {
+        const httpStorage = new HttpStorage({
+          url: inputs.dashboardUrl,
+          token: auth.value,
+          context: actionIngestContext(suite, judgeHash, deltas),
+        });
+        await httpStorage.saveRun(run);
+        writers.info(
+          `drift-ci: synced run ${run.id} to ${inputs.dashboardUrl}`,
+        );
+      } catch (err) {
+        writers.warning(
+          `drift-ci: dashboard sync failed — ${err instanceof Error ? err.message : String(err)}`,
+        );
+      }
     }
   }
 

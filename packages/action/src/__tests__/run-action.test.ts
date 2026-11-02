@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   existsSync,
   mkdirSync,
@@ -408,10 +408,22 @@ describe('runAction', () => {
     expect(writers.failures).toEqual([]);
   });
 
-  it('warns when dashboard-url is set (Phase 3 hook)', async () => {
+  it('warns with a reason when dashboard-url is set but no token or OIDC is available', async () => {
     const writers = makeWriters();
-    await runAction(makeInputs(ws, { dashboardUrl: 'https://dash.example' }), writers);
-    expect(writers.warnings.some((w) => /dashboard-url/.test(w))).toBe(true);
+    await runAction(makeInputs(ws, { dashboardUrl: 'https://dash.example' }), writers, { env: {} });
+    expect(writers.warnings.some((w) => /dashboard-url.*id-token: write/.test(w))).toBe(true);
+  });
+
+  it('logs the auth kind (never the value) when syncing with OIDC', async () => {
+    const writers = makeWriters();
+    const getIDToken = vi.fn().mockResolvedValue('super-secret-jwt');
+    await runAction(makeInputs(ws, { dashboardUrl: 'http://127.0.0.1:1/x' }), writers, {
+      env: { ACTIONS_ID_TOKEN_REQUEST_URL: 'https://t' },
+      getIDToken,
+    });
+    expect(getIDToken).toHaveBeenCalledWith('http://127.0.0.1:1');
+    expect(writers.infos.some((m) => /dashboard auth = OIDC/.test(m))).toBe(true);
+    expect([...writers.infos, ...writers.warnings].join(' ')).not.toContain('super-secret-jwt');
   });
 
   it('honours a threshold input by overriding the config value', async () => {

@@ -157,6 +157,7 @@ const { prContext, isFork, forkHeadRef, baseRef } = detectPrContext();
 const deps: RunActionDeps = {
   commentApi: buildCommentApi(),
   gitOps: buildGitOps(),
+  getIDToken: (aud) => core.getIDToken(aud),
 };
 
 runAction(readInputs(prContext, isFork, forkHeadRef, baseRef), writers, deps).catch(
