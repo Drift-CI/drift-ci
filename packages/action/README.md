@@ -52,6 +52,33 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
+## Keyless dashboard sync (drift-ci.com)
+
+Connect your repo to drift-ci.com through the GitHub App and the Action authenticates with GitHub OIDC: no `DRIFT_PROJECT_TOKEN` secret to create or rotate. Just grant the job `id-token: write` and set `dashboard-url`:
+
+```yaml
+permissions:
+  contents: read
+  pull-requests: write
+  id-token: write      # lets the Action request a GitHub OIDC token
+steps:
+  - uses: actions/checkout@v6
+  - uses: Drift-CI/drift-ci@v1
+    with:
+      provider: anthropic
+      api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+      dashboard-url: https://drift-ci.com
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+```
+
+The OIDC token's audience is the origin of `dashboard-url`. If `dashboard-token` is set it always takes precedence, so token-based setups (other dashboards, self-hosted) are unchanged:
+
+```yaml
+      dashboard-url: https://drift.example.com
+      dashboard-token: ${{ secrets.DRIFT_PROJECT_TOKEN }}
+```
+
 ## Inputs
 
 | Input              | Default              | Notes |
@@ -65,7 +92,7 @@ jobs:
 | `baseline-source`  | `branch`             | `branch` (PR head) or `main` (origin/main). |
 | `fail-on-regression` | `true`             | Exit non-zero if any case regressed. |
 | `post-comment`     | `true`               | Post / update a PR comment via `GITHUB_TOKEN`. |
-| `dashboard-url` / `dashboard-token` | — | Sync results to a self-hosted dashboard. |
+| `dashboard-url` / `dashboard-token` | — | Sync results to a dashboard. `dashboard-token` is optional on drift-ci.com with the GitHub App (keyless, see below). |
 
 ## Outputs
 

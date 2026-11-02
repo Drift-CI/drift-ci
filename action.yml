@@ -38,7 +38,7 @@ inputs:
     description: URL of a self-hosted dashboard to sync results to.
     required: false
   dashboard-token:
-    description: API token for dashboard sync.
+    description: API token for dashboard sync. Optional when the job has `permissions: id-token: write` and the repo is connected to drift-ci.com via the GitHub App (keyless).
     required: false
 
 outputs:
