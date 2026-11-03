@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.3.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.2.1...core-v1.3.0) (2026-11-03)
+
+
+### Features
+
+* **core:** carry the partial run on RunAbortedTransientError ([bb2ede9](https://github.com/Drift-CI/drift-ci/commit/bb2ede9eb8daf925c6730cad44042a4a11a900f0))
+* sync runs aborted for transient errors ([dd8bb05](https://github.com/Drift-CI/drift-ci/commit/dd8bb05c01c7ecec01bc4cdb02e93190b41742cb))
+
 ## [1.2.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.2.0...core-v1.2.1) (2026-11-01)
 
 
