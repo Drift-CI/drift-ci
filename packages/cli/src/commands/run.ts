@@ -15,10 +15,13 @@ import {
   loadConfigFromFile,
   loadSuiteFromFile,
   Runner,
+  RunAbortedTransientError,
   renderJUnitXml,
   type DeltaReport,
   type DriftConfig,
   type ProviderAdapter,
+  type RunResult,
+  type StorageAdapter,
 } from '@drift-ci/core';
 
 import { createReporter, type ReporterKind } from '../reporters/index.js';
@@ -110,6 +113,26 @@ export async function executeRun(
   }
 }
 
+/**
+ * When a run aborts for transient provider errors, still upload the partial
+ * run to the dashboard (no delta: it must not open/regress/improve issues).
+ * A sync failure only logs; it never replaces the abort error.
+ */
+export async function syncAbortedRun(
+  err: unknown,
+  storage: StorageAdapter,
+): Promise<void> {
+  if (!(err instanceof RunAbortedTransientError) || !err.run) return;
+  if (!(storage instanceof HttpStorage)) return;
+  try {
+    await storage.saveRun(err.run);
+  } catch (syncErr) {
+    console.error(
+      `drift-ci: dashboard sync failed — ${syncErr instanceof Error ? syncErr.message : String(syncErr)}`,
+    );
+  }
+}
+
 async function runWithStorage(
   suite: ReturnType<typeof loadSuiteFromFile>,
   provider: ProviderAdapter,
@@ -147,7 +170,13 @@ async function runWithStorage(
     },
   });
 
-  const run = await runner.run(suite);
+  let run: RunResult;
+  try {
+    run = await runner.run(suite);
+  } catch (err) {
+    await syncAbortedRun(err, storage);
+    throw err;
+  }
 
   let deltas: DeltaReport | null = null;
   if (opts.baseline !== false) {

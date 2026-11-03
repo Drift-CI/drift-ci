@@ -10,7 +10,14 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { executeRun } from '../run.js';
+import {
+  HttpStorage,
+  MemoryStorage,
+  RunAbortedTransientError,
+  type RunResult,
+} from '@drift-ci/core';
+
+import { executeRun, syncAbortedRun } from '../run.js';
 
 const SUITE_YAML = `version: 1
 id: r-suite
@@ -310,5 +317,62 @@ suite: .drift/suite.yaml
       config: ws.config,
     });
     expect(readFileSync(join(ws.baselineDir, 'math.json'), 'utf8')).toMatch(/"suiteId":\s*"r-suite"/);
+  });
+});
+
+describe('syncAbortedRun', () => {
+  const run = {
+    id: 'r1',
+    suiteId: 's',
+    provider: 'p',
+    startedAt: new Date(),
+    completedAt: new Date(),
+    cases: [],
+    summary: {
+      total: 0, passed: 0, transient: 0, evaluatorErrors: 0,
+      failed: 0, regressions: 0, avgScore: 0, avgLatencyMs: 0,
+    },
+  } as RunResult;
+  const abort = () => new RunAbortedTransientError(3, 3, run);
+
+  it('saves the partial run once for HttpStorage', async () => {
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 201 }));
+    const storage = new HttpStorage({
+      url: 'https://dash.example',
+      token: 't',
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+    await syncAbortedRun(abort(), storage);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it('does nothing for other storage or other errors', async () => {
+    const mem = new MemoryStorage();
+    await syncAbortedRun(abort(), mem);
+    expect(await mem.listRuns()).toHaveLength(0);
+
+    const fetchMock = vi.fn();
+    const http = new HttpStorage({
+      url: 'https://dash.example',
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+    await syncAbortedRun(new Error('boom'), http);
+    await syncAbortedRun(new RunAbortedTransientError(3, 3), http);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('swallows a sync error', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const http = new HttpStorage({
+      url: 'https://dash.example',
+      token: 'secret-token',
+      fetch: (async () => {
+        throw new Error('network down');
+      }) as unknown as typeof fetch,
+    });
+    await expect(syncAbortedRun(abort(), http)).resolves.toBeUndefined();
+    expect(spy.mock.calls.join(' ')).toContain('dashboard sync failed');
+    expect(spy.mock.calls.join(' ')).not.toContain('secret-token');
+    spy.mockRestore();
   });
 });
