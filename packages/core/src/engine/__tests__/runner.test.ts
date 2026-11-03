@@ -86,20 +86,22 @@ describe('Runner', () => {
         return e;
       },
     });
+    const storage = new MemoryStorage();
     const runner = new Runner({
       provider,
       evaluator: chainOf(new ExactMatchEvaluator()),
-      storage: new MemoryStorage(),
+      storage,
     });
 
-    await expect(
-      runner.run({
-        version: 1,
-        id: 's',
-        name: 'Big',
-        cases,
-      }),
-    ).rejects.toMatchObject({ code: RUN_ABORTED_TRANSIENT });
+    const err = await runner
+      .run({ version: 1, id: 's', name: 'Big', cases })
+      .catch((e) => e);
+    expect(err).toMatchObject({ code: RUN_ABORTED_TRANSIENT });
+    expect(err.run.cases).toHaveLength(20);
+    expect(err.run.summary.transient).toBe(20);
+    expect(err.run.suiteId).toBe('s');
+    expect(err.run.id).toMatch(/^[0-9a-f-]{36}$/);
+    expect(await storage.listRuns()).toHaveLength(0);
   });
 
   it('treats an evaluator throw as evaluator-error, not a regression', async () => {

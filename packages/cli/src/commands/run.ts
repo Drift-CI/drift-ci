@@ -14,11 +14,15 @@ import {
   judgeHashForProvider,
   loadConfigFromFile,
   loadSuiteFromFile,
+  MemoryStorage,
   Runner,
+  RUN_ABORTED_TRANSIENT,
   renderJUnitXml,
   type DeltaReport,
   type DriftConfig,
   type ProviderAdapter,
+  type RunResult,
+  type StorageAdapter,
 } from '@drift-ci/core';
 
 import { createReporter, type ReporterKind } from '../reporters/index.js';
@@ -110,6 +114,33 @@ export async function executeRun(
   }
 }
 
+/**
+ * When a run aborts for transient provider errors, still upload the partial
+ * run to the dashboard (no delta: it must not open/regress/improve issues).
+ * A sync failure only logs; it never replaces the abort error.
+ */
+export async function syncAbortedRun(
+  err: unknown,
+  storage: StorageAdapter,
+): Promise<void> {
+  const aborted = err as { code?: unknown; run?: unknown };
+  if (
+    aborted.code !== RUN_ABORTED_TRANSIENT ||
+    typeof aborted.run !== 'object' ||
+    aborted.run === null
+  ) {
+    return;
+  }
+  if (!(storage instanceof HttpStorage)) return;
+  try {
+    await storage.saveRun(aborted.run as RunResult);
+  } catch (syncErr) {
+    console.error(
+      `drift-ci: dashboard sync failed — ${syncErr instanceof Error ? syncErr.message : String(syncErr)}`,
+    );
+  }
+}
+
 async function runWithStorage(
   suite: ReturnType<typeof loadSuiteFromFile>,
   provider: ProviderAdapter,
@@ -138,7 +169,9 @@ async function runWithStorage(
   const runner = new Runner({
     provider,
     evaluator: evaluatorForCase,
-    storage,
+    // The real storage is written once below, after the delta is known; the
+    // Runner would otherwise save first (without a delta).
+    storage: new MemoryStorage(),
     concurrency: loaded.config.concurrency,
     timeoutMs: loaded.config.timeoutMs,
     defaultThreshold: loaded.config.thresholds.regression,
@@ -147,7 +180,13 @@ async function runWithStorage(
     },
   });
 
-  const run = await runner.run(suite);
+  let run: RunResult;
+  try {
+    run = await runner.run(suite);
+  } catch (err) {
+    await syncAbortedRun(err, storage);
+    throw err;
+  }
 
   let deltas: DeltaReport | null = null;
   if (opts.baseline !== false) {
@@ -158,8 +197,8 @@ async function runWithStorage(
     });
     run.summary.regressions = deltas.regressions.length;
     if (storage instanceof HttpStorage) storage.setDelta(buildDeltaContext(deltas));
-    await storage.saveRun(run);
   }
+  await storage.saveRun(run);
 
   await reporter.onRunEnd({ suite, run, deltas, loaded });
 

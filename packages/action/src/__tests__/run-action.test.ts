@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 
 import { runAction, resolveJudgeProvider, type RunActionInputs, type RunActionWriters } from '../run-action.js';
-import type { DriftConfig, ProviderAdapter } from '@drift-ci/core';
+import { MockProvider, type DriftConfig, type ProviderAdapter } from '@drift-ci/core';
 
 const SUITE_YAML = `version: 1
 id: act-suite
@@ -414,16 +414,103 @@ describe('runAction', () => {
     expect(writers.warnings.some((w) => /dashboard-url.*id-token: write/.test(w))).toBe(true);
   });
 
+  it('syncs a normal run to the dashboard with delta data', async () => {
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 201 }));
+    const writers = makeWriters();
+    await runAction(
+      makeInputs(ws, { dashboardUrl: 'https://dash.example', dashboardToken: 't' }),
+      writers,
+      { env: {}, fetch: fetchMock as unknown as typeof fetch },
+    );
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(writers.infos.some((m) => /synced run/.test(m))).toBe(true);
+    const init = fetchMock.mock.calls[0][1] as unknown as RequestInit;
+    const body = JSON.parse(init.body as string);
+    expect(body.context.delta).toBeDefined();
+  });
+
   it('logs the auth kind (never the value) when syncing with OIDC', async () => {
     const writers = makeWriters();
     const getIDToken = vi.fn().mockResolvedValue('super-secret-jwt');
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 201 }));
     await runAction(makeInputs(ws, { dashboardUrl: 'http://127.0.0.1:1/x' }), writers, {
       env: { ACTIONS_ID_TOKEN_REQUEST_URL: 'https://t' },
       getIDToken,
+      fetch: fetchMock as unknown as typeof fetch,
     });
     expect(getIDToken).toHaveBeenCalledWith('http://127.0.0.1:1');
     expect(writers.infos.some((m) => /dashboard auth = OIDC/.test(m))).toBe(true);
     expect([...writers.infos, ...writers.warnings].join(' ')).not.toContain('super-secret-jwt');
+  });
+
+  describe('aborted runs (transient provider errors)', () => {
+    function abortingDeps(fetchImpl: typeof fetch) {
+      writeFileSync(
+        ws.suite,
+        `version: 1
+id: act-suite
+name: Action Suite
+evaluators:
+  - exact-match
+cases:
+  - { id: a, input: "qa", expected: "a" }
+  - { id: b, input: "qb", expected: "b" }
+  - { id: c, input: "qc", expected: "c" }
+  - { id: d, input: "qd", expected: "d" }
+`,
+      );
+      const provider = new MockProvider({
+        responder: () => {
+          const e = new Error('rate limit') as Error & { status: number };
+          e.status = 429;
+          return e;
+        },
+      });
+      return { providerFor: () => provider, fetch: fetchImpl, env: {} };
+    }
+
+    it('syncs the aborted run to the dashboard without delta data, and still rejects', async () => {
+      const fetchMock = vi.fn(
+        async () => new Response(JSON.stringify({ id: 'x' }), { status: 201 }),
+      );
+      const writers = makeWriters();
+      await expect(
+        runAction(
+          makeInputs(ws, { dashboardUrl: 'https://dash.example', dashboardToken: 't' }),
+          writers,
+          abortingDeps(fetchMock as unknown as typeof fetch),
+        ),
+      ).rejects.toMatchObject({ code: 'RUN_ABORTED_TRANSIENT' });
+      expect(fetchMock).toHaveBeenCalledTimes(1);
+      const init = fetchMock.mock.calls[0][1] as unknown as RequestInit;
+      const body = JSON.parse(init.body as string);
+      expect(body.run.cases.length).toBe(4);
+      expect(body.context).toBeDefined();
+      expect(body.context.delta).toBeUndefined();
+    });
+
+    it('does not sync when no dashboard-url is set', async () => {
+      const fetchMock = vi.fn();
+      await expect(
+        runAction(makeInputs(ws), makeWriters(), abortingDeps(fetchMock as unknown as typeof fetch)),
+      ).rejects.toMatchObject({ code: 'RUN_ABORTED_TRANSIENT' });
+      expect(fetchMock).not.toHaveBeenCalled();
+    });
+
+    it('warns, and still rejects with the abort error, when the dashboard sync fails', async () => {
+      const fetchMock = vi.fn(async () => {
+        throw new Error('network down');
+      });
+      const writers = makeWriters();
+      await expect(
+        runAction(
+          makeInputs(ws, { dashboardUrl: 'https://dash.example', dashboardToken: 't' }),
+          writers,
+          abortingDeps(fetchMock as unknown as typeof fetch),
+        ),
+      ).rejects.toMatchObject({ code: 'RUN_ABORTED_TRANSIENT' });
+      expect(writers.warnings.some((w) => /dashboard sync failed/.test(w))).toBe(true);
+    });
   });
 
   it('honours a threshold input by overriding the config value', async () => {

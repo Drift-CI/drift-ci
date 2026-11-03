@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   existsSync,
+  readdirSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -10,7 +11,34 @@ import {
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
-import { executeRun } from '../run.js';
+import {
+  HttpStorage,
+  MemoryStorage,
+  RunAbortedTransientError,
+  type RunResult,
+} from '@drift-ci/core';
+
+const forced = vi.hoisted(() => ({ rateLimit: false }));
+vi.mock('@drift-ci/core', async (importOriginal) => {
+  const actual = await importOriginal<typeof import('@drift-ci/core')>();
+  return {
+    ...actual,
+    createProvider: (cfg: Parameters<typeof actual.createProvider>[0]) => {
+      if (forced.rateLimit) {
+        return new actual.MockProvider({
+          responder: () => {
+            const e = new Error('rate limit') as Error & { status: number };
+            e.status = 429;
+            return e;
+          },
+        });
+      }
+      return actual.createProvider(cfg);
+    },
+  };
+});
+
+import { executeRun, syncAbortedRun } from '../run.js';
 
 const SUITE_YAML = `version: 1
 id: r-suite
@@ -310,5 +338,158 @@ suite: .drift/suite.yaml
       config: ws.config,
     });
     expect(readFileSync(join(ws.baselineDir, 'math.json'), 'utf8')).toMatch(/"suiteId":\s*"r-suite"/);
+  });
+});
+
+describe('syncAbortedRun', () => {
+  const run = {
+    id: 'r1',
+    suiteId: 's',
+    provider: 'p',
+    startedAt: new Date(),
+    completedAt: new Date(),
+    cases: [],
+    summary: {
+      total: 0, passed: 0, transient: 0, evaluatorErrors: 0,
+      failed: 0, regressions: 0, avgScore: 0, avgLatencyMs: 0,
+    },
+  } as RunResult;
+  const abort = () => new RunAbortedTransientError(3, 3, run);
+
+  it('saves the partial run once for HttpStorage', async () => {
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 201 }));
+    const storage = new HttpStorage({
+      url: 'https://dash.example',
+      token: 't',
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+    await syncAbortedRun(abort(), storage);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1];
+    expect(JSON.parse(init.body as string).context?.delta).toBeUndefined();
+  });
+
+  it('does nothing for other storage or other errors', async () => {
+    const mem = new MemoryStorage();
+    await syncAbortedRun(abort(), mem);
+    expect(await mem.listRuns()).toHaveLength(0);
+
+    const fetchMock = vi.fn();
+    const http = new HttpStorage({
+      url: 'https://dash.example',
+      fetch: fetchMock as unknown as typeof fetch,
+    });
+    await syncAbortedRun(new Error('boom'), http);
+    await syncAbortedRun(new RunAbortedTransientError(3, 3), http);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it('swallows a sync error', async () => {
+    const spy = vi.spyOn(console, 'error').mockImplementation(() => {});
+    const http = new HttpStorage({
+      url: 'https://dash.example',
+      token: 'secret-token',
+      fetch: (async () => {
+        throw new Error('network down');
+      }) as unknown as typeof fetch,
+    });
+    await expect(syncAbortedRun(abort(), http)).resolves.toBeUndefined();
+    expect(spy.mock.calls.join(' ')).toContain('dashboard sync failed');
+    expect(spy.mock.calls.join(' ')).not.toContain('secret-token');
+    spy.mockRestore();
+  });
+});
+
+describe('executeRun with json-file storage', () => {
+  it('saves the run exactly once', async () => {
+    const ws = setupWs();
+    process.env.DRIFT_ENABLE_MOCK_PROVIDER = 'true';
+    const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    try {
+      await executeRun(undefined, opts(ws));
+      expect(readdirSync(ws.runsDir).filter((f) => f.endsWith('.json'))).toHaveLength(1);
+      const ws2 = ws;
+      await executeRun(undefined, opts(ws2, { baseline: false, runsDir: join(ws.workdir, 'runs2') }));
+      expect(readdirSync(join(ws.workdir, 'runs2')).filter((f) => f.endsWith('.json'))).toHaveLength(1);
+    } finally {
+      out.mockRestore();
+      err.mockRestore();
+      rmSync(ws.workdir, { recursive: true, force: true });
+    }
+  });
+});
+
+describe('executeRun with http storage', () => {
+  let ws: Ws;
+  let fetchMock: ReturnType<typeof vi.fn>;
+  const originalEnv = process.env.DRIFT_ENABLE_MOCK_PROVIDER;
+
+  beforeEach(() => {
+    process.env.DRIFT_ENABLE_MOCK_PROVIDER = 'true';
+    ws = setupWs();
+    writeFileSync(
+      ws.config,
+      readFileSync(ws.config, 'utf8').replace(
+        'type: json-file',
+        'type: http\n  url: https://dash.example\n  token: t',
+      ),
+    );
+    fetchMock = vi.fn(async () => new Response('{}', { status: 201 }));
+    vi.stubGlobal('fetch', fetchMock);
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
+    vi.restoreAllMocks();
+    forced.rateLimit = false;
+    rmSync(ws.workdir, { recursive: true, force: true });
+    if (originalEnv === undefined) delete process.env.DRIFT_ENABLE_MOCK_PROVIDER;
+    else process.env.DRIFT_ENABLE_MOCK_PROVIDER = originalEnv;
+  });
+
+  function bodyOf(i: number) {
+    const init = fetchMock.mock.calls[i][1] as RequestInit;
+    return JSON.parse(init.body as string);
+  }
+
+  it('syncs an aborted run once, without delta, and still rejects', async () => {
+    forced.rateLimit = true;
+    writeFileSync(
+      ws.suite,
+      `version: 1
+id: r-suite
+name: Run Suite
+evaluators:
+  - exact-match
+cases:
+  - { id: a, input: "qa", expected: "a" }
+  - { id: b, input: "qb", expected: "b" }
+  - { id: c, input: "qc", expected: "c" }
+  - { id: d, input: "qd", expected: "d" }
+`,
+    );
+    await expect(executeRun(undefined, opts(ws))).rejects.toMatchObject({
+      code: 'RUN_ABORTED_TRANSIENT',
+    });
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const body = bodyOf(0);
+    expect(body.context.suiteHashes).toBeDefined();
+    expect(body.context.delta).toBeUndefined();
+  });
+
+  it('sends a normal run once, with the delta', async () => {
+    const code = await executeRun(undefined, opts(ws));
+    expect(code).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(bodyOf(0).context.delta).toBeDefined();
+  });
+
+  it('still saves the run once with --no-baseline', async () => {
+    await executeRun(undefined, opts(ws, { baseline: false }));
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(bodyOf(0).context.delta).toBeUndefined();
   });
 });
