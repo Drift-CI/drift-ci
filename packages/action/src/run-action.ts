@@ -15,7 +15,7 @@ import {
   buildIngestContext,
   renderJUnitXml,
   Runner,
-  RunAbortedTransientError,
+  RUN_ABORTED_TRANSIENT,
   type DeltaReport,
   type DriftConfig,
   type IngestContext,
@@ -164,9 +164,21 @@ export async function runAction(
   try {
     run = await runner.run(suite);
   } catch (err) {
-    if (err instanceof RunAbortedTransientError && err.run && inputs.dashboardUrl) {
+    const aborted = err as { code?: unknown; run?: unknown };
+    if (
+      aborted.code === RUN_ABORTED_TRANSIENT &&
+      typeof aborted.run === 'object' &&
+      aborted.run !== null &&
+      inputs.dashboardUrl
+    ) {
       // Sync the aborted run without delta data: provider errors must not open/regress/improve issues.
-      await syncToDashboard(err.run, buildIngestContext(suite, judgeHash), inputs, writers, deps);
+      await syncToDashboard(
+        aborted.run as RunResult,
+        () => buildIngestContext(suite, judgeHash),
+        inputs,
+        writers,
+        deps,
+      );
     }
     throw err;
   }
@@ -188,7 +200,7 @@ export async function runAction(
   // are surfaced as warnings — a downed dashboard must not block a
   // PR check.
   if (inputs.dashboardUrl) {
-    await syncToDashboard(run, actionIngestContext(suite, judgeHash, deltas), inputs, writers, deps);
+    await syncToDashboard(run, () => actionIngestContext(suite, judgeHash, deltas), inputs, writers, deps);
   }
 
   const baselineChangedFiles = detectBaselineChangedFiles(inputs, deps, writers);
@@ -263,7 +275,7 @@ export async function runAction(
  */
 async function syncToDashboard(
   run: RunResult,
-  context: IngestContext,
+  buildContext: () => IngestContext,
   inputs: RunActionInputs,
   writers: RunActionWriters,
   deps: RunActionDeps,
@@ -289,7 +301,7 @@ async function syncToDashboard(
     const httpStorage = new HttpStorage({
       url: inputs.dashboardUrl,
       token: auth.value,
-      context,
+      context: buildContext(),
       fetch: deps.fetch,
     });
     await httpStorage.saveRun(run);

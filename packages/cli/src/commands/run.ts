@@ -15,7 +15,7 @@ import {
   loadConfigFromFile,
   loadSuiteFromFile,
   Runner,
-  RunAbortedTransientError,
+  RUN_ABORTED_TRANSIENT,
   renderJUnitXml,
   type DeltaReport,
   type DriftConfig,
@@ -122,10 +122,17 @@ export async function syncAbortedRun(
   err: unknown,
   storage: StorageAdapter,
 ): Promise<void> {
-  if (!(err instanceof RunAbortedTransientError) || !err.run) return;
+  const aborted = err as { code?: unknown; run?: unknown };
+  if (
+    aborted.code !== RUN_ABORTED_TRANSIENT ||
+    typeof aborted.run !== 'object' ||
+    aborted.run === null
+  ) {
+    return;
+  }
   if (!(storage instanceof HttpStorage)) return;
   try {
-    await storage.saveRun(err.run);
+    await storage.saveRun(aborted.run as RunResult);
   } catch (syncErr) {
     console.error(
       `drift-ci: dashboard sync failed — ${syncErr instanceof Error ? syncErr.message : String(syncErr)}`,
