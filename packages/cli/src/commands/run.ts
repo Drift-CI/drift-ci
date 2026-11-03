@@ -14,6 +14,7 @@ import {
   judgeHashForProvider,
   loadConfigFromFile,
   loadSuiteFromFile,
+  MemoryStorage,
   Runner,
   RUN_ABORTED_TRANSIENT,
   renderJUnitXml,
@@ -168,7 +169,9 @@ async function runWithStorage(
   const runner = new Runner({
     provider,
     evaluator: evaluatorForCase,
-    storage,
+    // The real storage is written once below, after the delta is known; the
+    // Runner would otherwise save first (without a delta).
+    storage: new MemoryStorage(),
     concurrency: loaded.config.concurrency,
     timeoutMs: loaded.config.timeoutMs,
     defaultThreshold: loaded.config.thresholds.regression,
@@ -194,8 +197,8 @@ async function runWithStorage(
     });
     run.summary.regressions = deltas.regressions.length;
     if (storage instanceof HttpStorage) storage.setDelta(buildDeltaContext(deltas));
-    await storage.saveRun(run);
   }
+  await storage.saveRun(run);
 
   await reporter.onRunEnd({ suite, run, deltas, loaded });
 

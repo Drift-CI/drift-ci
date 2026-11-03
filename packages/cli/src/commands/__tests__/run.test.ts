@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   existsSync,
+  readdirSync,
   mkdirSync,
   mkdtempSync,
   readFileSync,
@@ -399,6 +400,26 @@ describe('syncAbortedRun', () => {
   });
 });
 
+describe('executeRun with json-file storage', () => {
+  it('saves the run exactly once', async () => {
+    const ws = setupWs();
+    process.env.DRIFT_ENABLE_MOCK_PROVIDER = 'true';
+    const out = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const err = vi.spyOn(process.stderr, 'write').mockImplementation(() => true);
+    try {
+      await executeRun(undefined, opts(ws));
+      expect(readdirSync(ws.runsDir).filter((f) => f.endsWith('.json'))).toHaveLength(1);
+      const ws2 = ws;
+      await executeRun(undefined, opts(ws2, { baseline: false, runsDir: join(ws.workdir, 'runs2') }));
+      expect(readdirSync(join(ws.workdir, 'runs2')).filter((f) => f.endsWith('.json'))).toHaveLength(1);
+    } finally {
+      out.mockRestore();
+      err.mockRestore();
+      rmSync(ws.workdir, { recursive: true, force: true });
+    }
+  });
+});
+
 describe('executeRun with http storage', () => {
   let ws: Ws;
   let fetchMock: ReturnType<typeof vi.fn>;
@@ -457,6 +478,13 @@ cases:
     const body = bodyOf(0);
     expect(body.context.suiteHashes).toBeDefined();
     expect(body.context.delta).toBeUndefined();
+  });
+
+  it('sends a normal run once, with the delta', async () => {
+    const code = await executeRun(undefined, opts(ws));
+    expect(code).toBe(0);
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    expect(bodyOf(0).context.delta).toBeDefined();
   });
 
   it('still saves the run once with --no-baseline', async () => {
