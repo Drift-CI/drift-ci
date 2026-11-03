@@ -34,6 +34,7 @@ export class RunAbortedTransientError extends Error {
   constructor(
     public transientCount: number,
     public totalCount: number,
+    public run?: RunResult,
   ) {
     super(
       `drift-ci: aborting run — ${transientCount}/${totalCount} cases failed with transient errors. ` +
@@ -81,10 +82,6 @@ export class Runner {
       3,
       Math.floor(results.length * ratio),
     );
-    if (transientCount >= transientThreshold) {
-      throw new RunAbortedTransientError(transientCount, results.length);
-    }
-
     const run: RunResult = {
       id: runId,
       suiteId: suite.id,
@@ -94,6 +91,10 @@ export class Runner {
       cases: results,
       summary: this.summarise(results),
     };
+
+    if (transientCount >= transientThreshold) {
+      throw new RunAbortedTransientError(transientCount, results.length, run);
+    }
 
     await this.opts.storage.saveRun(run);
     return run;
