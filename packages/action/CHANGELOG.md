@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.4.0](https://github.com/Drift-CI/drift-ci/compare/v1.3.1...v1.4.0) (2026-11-03)
+
+
+### Features
+
+* **action:** sync runs aborted for transient errors to the dashboard ([e17f73a](https://github.com/Drift-CI/drift-ci/commit/e17f73a9807cb169459385c01d991b6fab67d9b3))
+* sync runs aborted for transient errors ([dd8bb05](https://github.com/Drift-CI/drift-ci/commit/dd8bb05c01c7ecec01bc4cdb02e93190b41742cb))
+
+
+### Bug Fixes
+
+* **action,cli:** harden aborted-run sync ([6f0d2c6](https://github.com/Drift-CI/drift-ci/commit/6f0d2c6d4f3091069f58e81bf6c81ddc48bc0522))
+
 ## [1.3.1](https://github.com/Drift-CI/drift-ci/compare/v1.3.0...v1.3.1) (2026-11-02)
 
 
