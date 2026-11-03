@@ -1,5 +1,19 @@
 # Changelog
 
+## [1.3.0](https://github.com/Drift-CI/drift-ci/compare/cli-v1.2.1...cli-v1.3.0) (2026-11-03)
+
+
+### Features
+
+* **cli:** sync runs aborted for transient errors to the dashboard ([2f28089](https://github.com/Drift-CI/drift-ci/commit/2f280891124e67fde4ddfb227f84a785c4f454fb))
+* sync runs aborted for transient errors ([dd8bb05](https://github.com/Drift-CI/drift-ci/commit/dd8bb05c01c7ecec01bc4cdb02e93190b41742cb))
+
+
+### Bug Fixes
+
+* **action,cli:** harden aborted-run sync ([6f0d2c6](https://github.com/Drift-CI/drift-ci/commit/6f0d2c6d4f3091069f58e81bf6c81ddc48bc0522))
+* **cli:** send dashboard runs once, with the delta ([d753b13](https://github.com/Drift-CI/drift-ci/commit/d753b135bcfdf4401a9333d053b9bf30e6f63b07))
+
 ## [1.2.1](https://github.com/Drift-CI/drift-ci/compare/cli-v1.2.0...cli-v1.2.1) (2026-11-01)
 
 
