@@ -163295,12 +163295,14 @@ const RUN_ABORTED_TRANSIENT = 'RUN_ABORTED_TRANSIENT';
 class RunAbortedTransientError extends Error {
     transientCount;
     totalCount;
+    run;
     code = RUN_ABORTED_TRANSIENT;
-    constructor(transientCount, totalCount) {
+    constructor(transientCount, totalCount, run) {
         super(`drift-ci: aborting run — ${transientCount}/${totalCount} cases failed with transient errors. ` +
             'This is likely a provider/network issue, not a behaviour regression.');
         this.transientCount = transientCount;
         this.totalCount = totalCount;
+        this.run = run;
         this.name = 'RunAbortedTransientError';
     }
 }
@@ -163329,9 +163331,6 @@ class Runner {
         const transientCount = results.filter((r) => TRANSIENT_STATUSES.has(r.status)).length;
         const ratio = this.opts.transientAbortRatio ?? 0.2;
         const transientThreshold = Math.max(3, Math.floor(results.length * ratio));
-        if (transientCount >= transientThreshold) {
-            throw new RunAbortedTransientError(transientCount, results.length);
-        }
         const run = {
             id: runId,
             suiteId: suite.id,
@@ -163341,6 +163340,9 @@ class Runner {
             cases: results,
             summary: this.summarise(results),
         };
+        if (transientCount >= transientThreshold) {
+            throw new RunAbortedTransientError(transientCount, results.length, run);
+        }
         await this.opts.storage.saveRun(run);
         return run;
     }
@@ -168330,7 +168332,21 @@ async function runAction(inputs, writers, deps = {}) {
         defaultThreshold: regressionThreshold,
     });
     writers.info(`drift-ci: running ${suite.cases.length} case(s) against ${provider.name} (threshold=${regressionThreshold})`);
-    const run = await runner.run(suite);
+    let run;
+    try {
+        run = await runner.run(suite);
+    }
+    catch (err) {
+        const aborted = err;
+        if (aborted.code === RUN_ABORTED_TRANSIENT &&
+            typeof aborted.run === 'object' &&
+            aborted.run !== null &&
+            inputs.dashboardUrl) {
+            // Sync the aborted run without delta data: provider errors must not open/regress/improve issues.
+            await syncToDashboard(aborted.run, () => buildIngestContext(suite, judgeHash), inputs, writers, deps);
+        }
+        throw err;
+    }
     const baselineRoot = resolveBaselineRoot(inputs, deps, writers);
     const baselineStore = new FileBaselineStore(baselineRoot);
     const deltas = await computeDeltas(run, suite, baselineStore, {
@@ -168346,34 +168362,7 @@ async function runAction(inputs, writers, deps = {}) {
     // are surfaced as warnings — a downed dashboard must not block a
     // PR check.
     if (inputs.dashboardUrl) {
-        // Resolved here (not at start-up) so a keyless OIDC token is fresh.
-        const auth = await resolveDashboardAuth({
-            url: inputs.dashboardUrl,
-            token: inputs.dashboardToken,
-            env: deps.env ?? process.env,
-            getIDToken: deps.getIDToken ??
-                (async () => {
-                    throw new Error('OIDC token requests are not supported in this environment');
-                }),
-        });
-        if (auth.kind === 'none') {
-            writers.warning(`drift-ci: dashboard sync skipped — ${auth.reason}`);
-        }
-        else {
-            writers.info(`drift-ci: dashboard auth = ${auth.kind === 'oidc' ? 'OIDC' : 'token'}`);
-            try {
-                const httpStorage = new http_HttpStorage({
-                    url: inputs.dashboardUrl,
-                    token: auth.value,
-                    context: actionIngestContext(suite, judgeHash, deltas),
-                });
-                await httpStorage.saveRun(run);
-                writers.info(`drift-ci: synced run ${run.id} to ${inputs.dashboardUrl}`);
-            }
-            catch (err) {
-                writers.warning(`drift-ci: dashboard sync failed — ${err instanceof Error ? err.message : String(err)}`);
-            }
-        }
+        await syncToDashboard(run, () => actionIngestContext(suite, judgeHash, deltas), inputs, writers, deps);
     }
     const baselineChangedFiles = detectBaselineChangedFiles(inputs, deps, writers);
     const baselineChanged = baselineChangedFiles.length > 0;
@@ -168425,6 +168414,42 @@ async function runAction(inputs, writers, deps = {}) {
         run,
         skipped: false,
     };
+}
+/**
+ * Uploads a run to the dashboard. Never throws: failures (including auth
+ * resolution) are surfaced as warnings so they can't replace the real outcome.
+ */
+async function syncToDashboard(run, buildContext, inputs, writers, deps) {
+    if (!inputs.dashboardUrl)
+        return;
+    try {
+        // Resolved here (not at start-up) so a keyless OIDC token is fresh.
+        const auth = await resolveDashboardAuth({
+            url: inputs.dashboardUrl,
+            token: inputs.dashboardToken,
+            env: deps.env ?? process.env,
+            getIDToken: deps.getIDToken ??
+                (async () => {
+                    throw new Error('OIDC token requests are not supported in this environment');
+                }),
+        });
+        if (auth.kind === 'none') {
+            writers.warning(`drift-ci: dashboard sync skipped — ${auth.reason}`);
+            return;
+        }
+        writers.info(`drift-ci: dashboard auth = ${auth.kind === 'oidc' ? 'OIDC' : 'token'}`);
+        const httpStorage = new http_HttpStorage({
+            url: inputs.dashboardUrl,
+            token: auth.value,
+            context: buildContext(),
+            fetch: deps.fetch,
+        });
+        await httpStorage.saveRun(run);
+        writers.info(`drift-ci: synced run ${run.id} to ${inputs.dashboardUrl}`);
+    }
+    catch (err) {
+        writers.warning(`drift-ci: dashboard sync failed — ${err instanceof Error ? err.message : String(err)}`);
+    }
 }
 function resolveBaselineRoot(inputs, deps, writers) {
     if (inputs.baselineSource !== 'main')
