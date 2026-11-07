@@ -43,7 +43,7 @@ importers:
         version: 8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)
       vitest:
         specifier: ^4.1.12
-        version: 4.1.12(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+        version: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   packages/action:
     dependencies:
@@ -80,7 +80,7 @@ importers:
         version: 8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)
       vitest:
         specifier: ^4.1.12
-        version: 4.1.12(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+        version: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   packages/cli:
     dependencies:
@@ -126,16 +126,16 @@ importers:
         version: 8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)
       vitest:
         specifier: ^4.1.12
-        version: 4.1.12(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+        version: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   packages/core:
     dependencies:
       '@anthropic-ai/bedrock-sdk':
-        specifier: ^0.30.2
-        version: 0.30.2
+        specifier: ^1.1.1
+        version: 1.1.1(zod@4.6.7)
       '@anthropic-ai/sdk':
-        specifier: ^0.104.2
-        version: 0.104.2(zod@4.6.7)
+        specifier: ^1.3.0
+        version: 1.6.0(zod@4.6.7)
       '@google/genai':
         specifier: ^2.32.0
         version: 2.32.0
@@ -152,8 +152,8 @@ importers:
         specifier: ^5.4.1
         version: 5.5.0
       openai:
-        specifier: ^6.42.0
-        version: 6.42.0(ws@8.21.0)(zod@4.6.7)
+        specifier: ^7.45.1
+        version: 7.53.0(@aws-sdk/credential-provider-node@3.972.36)(google-auth-library@10.6.2)(undici@6.29.1)(ws@8.21.0)(zod@4.6.7)
       p-limit:
         specifier: ^7.3.3
         version: 7.3.3
@@ -184,7 +184,7 @@ importers:
         version: 8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)
       vitest:
         specifier: ^4.1.12
-        version: 4.1.12(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+        version: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
     optionalDependencies:
       better-sqlite3:
         specifier: ^12.11.1
@@ -203,10 +203,10 @@ importers:
         version: 3.0.3
       drizzle-orm:
         specifier: ^0.45.2
-        version: 0.45.2(@types/better-sqlite3@7.6.13)(better-sqlite3@12.11.1)(gel@2.2.0)(postgres@3.4.9)
+        version: 0.45.2(@opentelemetry/api@1.10.0)(@types/better-sqlite3@7.6.13)(better-sqlite3@12.11.1)(gel@2.2.0)(postgres@3.4.9)
       next:
         specifier: ^16.4.3
-        version: 16.4.3(@types/node@25.9.3)(react-dom@19.2.7(react@19.3.1))(react@19.3.1)
+        version: 16.4.3(@opentelemetry/api@1.10.0)(@types/node@25.9.3)(react-dom@19.2.7(react@19.3.1))(react@19.3.1)
       postgres:
         specifier: ^3.4.5
         version: 3.4.9
@@ -255,7 +255,7 @@ importers:
         version: 8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)
       vitest:
         specifier: ^4.1.12
-        version: 4.1.12(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+        version: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
 packages:
 
@@ -285,21 +285,17 @@ packages:
     resolution: {integrity: sha512-UrcABB+4bUrFABwbluTIBErXwvbsU/V7TZWfmbgJfbkwiBuziS9gxdODUyuiecfdGQ85jglMW6juS3+z5TsKLw==}
     engines: {node: '>=10'}
 
-  '@anthropic-ai/bedrock-sdk@0.30.2':
-    resolution: {integrity: sha512-4CSqbJN9UfKxPCut2y8PyNP32Pj2omUE6//lVVpiVRgYgml8QRm/Q+HknOSJgcr7b+YKXW8/+oVuKA93f08ShQ==}
+  '@anthropic-ai/bedrock-sdk@1.1.1':
+    resolution: {integrity: sha512-o6NdU+NWaGlFxDI7Kzu7rCXbwu9QalXU0vIZ8AGzk1ESoX8qeIZtDS+aJRm7P3LC7p0WPX0IMcg6aUUNIhdhOw==}
 
-  '@anthropic-ai/sdk@0.104.2':
-    resolution: {integrity: sha512-s1wEVDAtEwkS7Ajgep6PZKJLFqybRkmD3Byz+iVVsSpbDY0gjROXE9aOft6V3PMqynn3NTcycV5whga9tCzmKA==}
+  '@anthropic-ai/sdk@1.6.0':
+    resolution: {integrity: sha512-XqiO/46n8S6So8jQ/6/uNCkHntyW6QHHs1gZ+hlwTx1fWDr929g4VmwIXfdMVk7SuBWNdQvAlwyi1G3t6SEIuQ==}
     hasBin: true
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
     peerDependenciesMeta:
       zod:
         optional: true
-
-  '@anthropic-ai/sdk@0.60.0':
-    resolution: {integrity: sha512-9zu/TXaUy8BZhXedDtt1wT3H4LOlpKDO1/ftiFpeR3N1PCr3KJFKkxxlQWWt1NNp08xSwUNJ3JNY8yhl8av6eQ==}
-    hasBin: true
 
   '@aws-crypto/crc32@3.0.0':
     resolution: {integrity: sha512-IzSgsrxUcsrejQbPVilIKy16kAT52EwB6zSaI+M3xxIhKh5+aldEyvI+z6erM7TCLB2BJsFrtHjp6/4/sr+3dA==}
@@ -1125,6 +1121,10 @@ packages:
   '@octokit/types@16.0.0':
     resolution: {integrity: sha512-sKq+9r1Mm4efXW1FCk7hFSeJo4QKreL/tTbR0rz/qx/r1Oa2VV83LTA/H/MuCOX7uCIJmQVRKBcbmWoySjAnSg==}
 
+  '@opentelemetry/api@1.10.0':
+    resolution: {integrity: sha512-lMkyes8iHrG+mk6WH7X70MdCLI2RS0FwNBY1PyQ8UemaijE2m5mv5A0Niy3HtbYTFrgkUEQjFMXmSAk2hQDuPQ==}
+    engines: {node: '>=8.0.0'}
+
   '@oxc-project/types@0.156.0':
     resolution: {integrity: sha512-1Duyg48TdJNdyhEB8Xn1L36bT9Pv6GUtlKjHxOys8xkaF/rQq3XJE+bAurSK/AgIz5mGFsb77cn9Pb20+WCScw==}
 
@@ -1438,7 +1438,9 @@ packages:
   '@smithy/smithy-client@4.12.13':
     resolution: {integrity: sha512-y/Pcj1V9+qG98gyu1gvftHB7rDpdh+7kIBIggs55yGm3JdtBV8GT8IFF3a1qxZ79QnaJHX9GXzvBG6tAd+czJA==}
     engines: {node: '>=18.0.0'}
-    deprecated: Deprecated due to a bug in custom logger data redaction. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
+    deprecated: |-
+      Deprecated due to a bug in custom logger data redaction. Upgrade to the latest version. If you used a custom logger with
+        this version, review your logs and rotate any credentials or other secrets. See https://github.com/aws/aws-sdk-js-v3/issues/8393.
 
   '@smithy/types@2.12.0':
     resolution: {integrity: sha512-QwYgloJ0sVNBeBuBs65cIkTbfzV/Q6ZNPCJ99EICFEdJYG50nGIY/uYXp+TbsdJReIuPr0a0kXmCvren3MbRRw==}
@@ -2544,12 +2546,28 @@ packages:
   onnxruntime-web@1.14.0:
     resolution: {integrity: sha512-Kcqf43UMfW8mCydVGcX9OMXI2VN17c0p6XvR7IPSZzBf/6lteBzXHvcEVWDPmCKuGombl997HgLqj91F11DzXw==}
 
-  openai@6.42.0:
-    resolution: {integrity: sha512-1WFEt/uXMXOLhYRNkgJWo08Y2YNvNwpVU72K7ibrWgWpNOXd4VojXLbe6SQ4bLiUQ3Y8jz4IiyVkylJCL1DtZg==}
+  openai@7.53.0:
+    resolution: {integrity: sha512-PXiIZraFYMb2QYgTtWqDA16Oszj4fWRZNn7qLIAddmiJxM5uQPWBFaxp9O8MhLfTUOQ+iQsnFSRJhLPecsGovQ==}
+    engines: {node: '>=22.0.0'}
     peerDependencies:
+      '@aws-sdk/credential-provider-node': '>=3.972.0 <4'
+      '@smithy/hash-node': '>=4.3.0 <5'
+      '@smithy/signature-v4': '>=5.4.0 <6'
+      google-auth-library: '>=9.15.1 <12'
+      undici: ^6.29.1
       ws: ^8.21.0
       zod: ^3.25 || ^4.0
     peerDependenciesMeta:
+      '@aws-sdk/credential-provider-node':
+        optional: true
+      '@smithy/hash-node':
+        optional: true
+      '@smithy/signature-v4':
+        optional: true
+      google-auth-library:
+        optional: true
+      undici:
+        optional: true
       ws:
         optional: true
       zod:
@@ -2758,9 +2776,6 @@ packages:
   strip-json-comments@2.0.1:
     resolution: {integrity: sha512-4gB8na07fecVVkOI6Rs4e7T6NOTki5EmL7TUduTs6bu3EdnSycntVJ4re8kgZA+wx9IueI2Y11bfbgwtzuE0KQ==}
     engines: {node: '>=0.10.0'}
-
-  strnum@2.2.3:
-    resolution: {integrity: sha512-oKx6RUCuHfT3oyVjtnrmn19H1SiCqgJSg+54XqURKp5aCMbrXrhLjRN9TjuwMjiYstZ0MzDrHqkGZ5dFTKd+zg==}
 
   strnum@2.5.1:
     resolution: {integrity: sha512-UM4nTLWzQiDBseVxUGxN0wJzIk0UU89Qi7pKXz9qISo+lhviJikTuikBsK/oFRlpvYHvSdz0TVoLyQ+sEpYwxA==}
@@ -3049,12 +3064,13 @@ snapshots:
 
   '@alloc/quick-lru@5.2.0': {}
 
-  '@anthropic-ai/bedrock-sdk@0.30.2':
+  '@anthropic-ai/bedrock-sdk@1.1.1(zod@4.6.7)':
     dependencies:
-      '@anthropic-ai/sdk': 0.60.0
+      '@anthropic-ai/sdk': 1.6.0(zod@4.6.7)
       '@aws-crypto/sha256-js': 4.0.0
       '@aws-sdk/client-bedrock-runtime': 3.1037.0
       '@aws-sdk/credential-providers': 3.1037.0
+      '@opentelemetry/api': 1.10.0
       '@smithy/eventstream-serde-node': 2.2.0
       '@smithy/fetch-http-handler': 5.3.17
       '@smithy/protocol-http': 3.3.0
@@ -3064,15 +3080,15 @@ snapshots:
       '@smithy/util-base64': 2.3.0
     transitivePeerDependencies:
       - aws-crt
+      - zod
 
-  '@anthropic-ai/sdk@0.104.2(zod@4.6.7)':
+  '@anthropic-ai/sdk@1.6.0(zod@4.6.7)':
     dependencies:
+      '@opentelemetry/api': 1.10.0
       json-schema-to-ts: 3.1.1
       standardwebhooks: 1.1.1
     optionalDependencies:
       zod: 4.6.7
-
-  '@anthropic-ai/sdk@0.60.0': {}
 
   '@aws-crypto/crc32@3.0.0':
     dependencies:
@@ -4013,6 +4029,8 @@ snapshots:
     dependencies:
       '@octokit/openapi-types': 27.0.0
 
+  '@opentelemetry/api@1.10.0': {}
+
   '@oxc-project/types@0.156.0': {}
 
   '@petamoriken/float16@3.9.3':
@@ -4704,7 +4722,7 @@ snapshots:
       obug: 2.1.2
       std-env: 4.1.0
       tinyrainbow: 3.1.0
-      vitest: 4.1.12(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
+      vitest: 4.1.12(@opentelemetry/api@1.10.0)(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
 
   '@vitest/expect@4.1.12':
     dependencies:
@@ -4892,8 +4910,9 @@ snapshots:
       esbuild: 0.25.12
       tsx: 4.23.15
 
-  drizzle-orm@0.45.2(@types/better-sqlite3@7.6.13)(better-sqlite3@12.11.1)(gel@2.2.0)(postgres@3.4.9):
+  drizzle-orm@0.45.2(@opentelemetry/api@1.10.0)(@types/better-sqlite3@7.6.13)(better-sqlite3@12.11.1)(gel@2.2.0)(postgres@3.4.9):
     optionalDependencies:
+      '@opentelemetry/api': 1.10.0
       '@types/better-sqlite3': 7.6.13
       better-sqlite3: 12.11.1
       gel: 2.2.0
@@ -5015,8 +5034,8 @@ snapshots:
     dependencies:
       '@nodable/entities': 2.1.0
       fast-xml-builder: 1.2.0
-      path-expression-matcher: 1.5.0
-      strnum: 2.2.3
+      path-expression-matcher: 1.6.2
+      strnum: 2.5.1
 
   fdir@6.5.0(picomatch@4.0.4):
     optionalDependencies:
@@ -5350,7 +5369,7 @@ snapshots:
 
   napi-build-utils@2.0.0: {}
 
-  next@16.4.3(@types/node@25.9.3)(react-dom@19.2.7(react@19.3.1))(react@19.3.1):
+  next@16.4.3(@opentelemetry/api@1.10.0)(@types/node@25.9.3)(react-dom@19.2.7(react@19.3.1))(react@19.3.1):
     dependencies:
       '@next/env': 16.4.3
       '@swc/helpers': 0.5.23
@@ -5369,6 +5388,7 @@ snapshots:
       '@next/swc-linux-x64-musl': 16.4.3
       '@next/swc-win32-arm64-msvc': 16.4.3
       '@next/swc-win32-x64-msvc': 16.4.3
+      '@opentelemetry/api': 1.10.0
       sharp: 0.35.5(@types/node@25.9.3)
     transitivePeerDependencies:
       - '@babel/core'
@@ -5417,8 +5437,11 @@ snapshots:
       onnxruntime-common: 1.14.0
       platform: 1.3.6
 
-  openai@6.42.0(ws@8.21.0)(zod@4.6.7):
+  openai@7.53.0(@aws-sdk/credential-provider-node@3.972.36)(google-auth-library@10.6.2)(undici@6.29.1)(ws@8.21.0)(zod@4.6.7):
     optionalDependencies:
+      '@aws-sdk/credential-provider-node': 3.972.36
+      google-auth-library: 10.6.2
+      undici: 6.29.1
       ws: 8.21.0
       zod: 4.6.7
 
@@ -5660,8 +5683,6 @@ snapshots:
 
   strip-json-comments@2.0.1: {}
 
-  strnum@2.2.3: {}
-
   strnum@2.5.1:
     dependencies:
       anynum: 1.0.1
@@ -5769,7 +5790,7 @@ snapshots:
       jiti: 2.7.0
       tsx: 4.23.15
 
-  vitest@4.1.12(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)):
+  vitest@4.1.12(@opentelemetry/api@1.10.0)(@types/node@25.9.3)(@vitest/coverage-v8@4.1.12)(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)):
     dependencies:
       '@vitest/expect': 4.1.12
       '@vitest/mocker': 4.1.12(vite@8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15))
@@ -5792,6 +5813,7 @@ snapshots:
       vite: 8.3.5(@types/node@25.9.3)(esbuild@0.28.2)(jiti@2.7.0)(tsx@4.23.15)
       why-is-node-running: 2.3.0
     optionalDependencies:
+      '@opentelemetry/api': 1.10.0
       '@types/node': 25.9.3
       '@vitest/coverage-v8': 4.1.12(vitest@4.1.12)
     transitivePeerDependencies:
