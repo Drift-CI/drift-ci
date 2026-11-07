@@ -20,7 +20,7 @@
     "bcryptjs": "^3.0.3",
     "drizzle-orm": "^0.45.2",
     "next": "^16.4.5",
-    "postgres": "^3.4.5",
+    "postgres": "^4.0.0",
     "react": "^19.3.1",
     "react-dom": "^19.2.7",
     "zod": "^4.6.6"
