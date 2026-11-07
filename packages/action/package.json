@@ -20,7 +20,7 @@
     "@vercel/ncc": "^0.45.0",
     "@vitest/coverage-v8": "^5.0.5",
     "js-yaml": "^5.5.0",
-    "rimraf": "^6.0.0",
+    "rimraf": "^6.1.4",
     "typescript": "^6.0.3",
     "vite": "^8.3.5",
     "vitest": "^5.0.5"
