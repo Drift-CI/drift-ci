@@ -30,7 +30,7 @@
     "@types/node": "^25.9.3",
     "@types/react": "^19.3.0",
     "@types/react-dom": "^19.2.3",
-    "@vitest/coverage-v8": "^4.1.12",
+    "@vitest/coverage-v8": "^5.1.0",
     "drizzle-kit": "^0.31.11",
     "postcss": "^8.5.23",
     "rimraf": "^6.0.0",
