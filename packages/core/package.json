@@ -66,13 +66,13 @@
   },
   "devDependencies": {
     "@types/better-sqlite3": "^7.6.13",
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.6.6",
     "@vitest/coverage-v8": "^4.1.12",
     "fast-xml-parser": "^5.11.2",
     "rimraf": "^6.0.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.5",
-    "vitest": "^4.1.12"
+    "vitest": "^5.1.0"
   },
   "engines": {
     "node": ">=22.13.0"

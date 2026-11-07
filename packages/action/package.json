@@ -16,14 +16,14 @@
     "@drift-ci/core": "workspace:*"
   },
   "devDependencies": {
-    "@types/node": "^25.9.3",
+    "@types/node": "^26.6.6",
     "@vercel/ncc": "^0.44.0",
     "@vitest/coverage-v8": "^4.1.12",
     "js-yaml": "^5.5.0",
     "rimraf": "^6.0.0",
-    "typescript": "^6.0.3",
+    "typescript": "^7.0.2",
     "vite": "^8.3.5",
-    "vitest": "^4.1.12"
+    "vitest": "^5.1.0"
   },
   "engines": {
     "node": ">=22.0.0"
