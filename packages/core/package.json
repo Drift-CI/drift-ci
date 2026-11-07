@@ -79,6 +79,6 @@
   },
   "optionalDependencies": {
     "better-sqlite3": "^12.11.1",
-    "postgres": "^3.4.5"
+    "postgres": "^4.0.0"
   }
 }
