@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.1](https://github.com/Drift-CI/drift-ci/compare/cli-v1.3.0...cli-v1.3.1) (2026-11-07)
+
+
+### Bug Fixes
+
+* **action:** correct baseline accept command in PR comment ([13fe99b](https://github.com/Drift-CI/drift-ci/commit/13fe99b1cae865526457533234112d9a2907dd59))
+* **cli:** correct baseline accept hint in text reporter ([6f69f31](https://github.com/Drift-CI/drift-ci/commit/6f69f316d7452d34ccefc007a68e0d9c2787c1f6))
+* **cli:** correct baseline init hints ([65ab1f0](https://github.com/Drift-CI/drift-ci/commit/65ab1f043faa9ec4a517954d97a4c2cfaceac42d))
+
 ## [1.3.0](https://github.com/Drift-CI/drift-ci/compare/cli-v1.2.1...cli-v1.3.0) (2026-11-03)
 
 
