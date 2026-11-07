@@ -231,6 +231,7 @@ export async function runAction(
       const body = renderComment({
         run,
         suite,
+        suitePath: inputs.suite,
         deltas,
         threshold: regressionThreshold,
         baselineSource: inputs.baselineSource,

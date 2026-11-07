@@ -16,6 +16,8 @@ const TRANSIENT_STATUSES: ReadonlySet<CaseResult['status']> = new Set([
 export interface RenderCommentInput {
   run: RunResult;
   suite: Suite;
+  /** Suite path the action ran with; rendered into copy-paste `baseline accept` commands. */
+  suitePath: string;
   deltas: DeltaReport;
   threshold: number;
   baselineSource: 'branch' | 'main';
@@ -83,10 +85,10 @@ export function renderComment(input: RenderCommentInput): string {
   ];
 
   if (staleSet.size > 0) {
-    sections.push('', renderStaleBaselines([...staleSet], input.baselineHashes));
+    sections.push('', renderStaleBaselines([...staleSet], input.suitePath, input.baselineHashes));
   }
   if (staleJudgeSet.size > 0) {
-    sections.push('', renderStaleJudges([...staleJudgeSet], input.baselineHashes));
+    sections.push('', renderStaleJudges([...staleJudgeSet], input.suitePath, input.baselineHashes));
   }
   if (transientCases.length > 0) {
     sections.push('', renderTransientBadge(transientCases));
@@ -105,7 +107,7 @@ export function renderComment(input: RenderCommentInput): string {
   sections.push('', renderInfoFooter(run, threshold, baselineSource, dashboardUrl));
 
   if (regressionSet.size > 0) {
-    sections.push('', renderAcceptFooter([...regressionSet]));
+    sections.push('', renderAcceptFooter([...regressionSet], input.suitePath));
   }
 
   sections.push('', renderRegressionExplainer(threshold));
@@ -157,6 +159,7 @@ function renderRow(
 
 function renderStaleBaselines(
   caseIds: string[],
+  suitePath: string,
   hashes: RenderCommentInput['baselineHashes'],
 ): string {
   // Canonical per-arch §6 ("Stale-baseline warning (canonical)"). One block
@@ -173,7 +176,7 @@ function renderStaleBaselines(
       '> ⚠️ **Stale baseline.**',
       `> Baseline for \`${escapeMd(id)}\` was captured against a different suite definition${hashLine}.`,
       `> Review the input/expected/criteria/evaluators/threshold diff, then either revert the suite change or run:`,
-      `>     drift-ci baseline accept --cases ${id}`,
+      `>     ${acceptCommand(suitePath, id)}`,
       '> and commit the refreshed baseline in this PR.',
     ].join('\n');
   });
@@ -182,6 +185,7 @@ function renderStaleBaselines(
 
 function renderStaleJudges(
   caseIds: string[],
+  suitePath: string,
   hashes: RenderCommentInput['baselineHashes'],
 ): string {
   // Canonical per arch §6 / v1.3 D1 — judge-provider drift is informational,
@@ -198,7 +202,7 @@ function renderStaleJudges(
       '> ℹ️ **Stale judge.**',
       `> Baseline for \`${escapeMd(id)}\` was captured against a different judge provider${hashLine}.`,
       `> The score is informational — re-baseline when the swap is intentional:`,
-      `>     drift-ci baseline accept --cases ${id}`,
+      `>     ${acceptCommand(suitePath, id)}`,
     ].join('\n');
   });
   return blocks.join('\n>\n');
@@ -239,7 +243,7 @@ function renderInfoFooter(
   ].join('\n');
 }
 
-function renderAcceptFooter(regressedCaseIds: string[]): string {
+function renderAcceptFooter(regressedCaseIds: string[], suitePath: string): string {
   const csv = regressedCaseIds.join(',');
   return [
     '<details>',
@@ -248,7 +252,7 @@ function renderAcceptFooter(regressedCaseIds: string[]): string {
     'Each baseline lives at `.drift/baseline/<case-id>.json`. Run locally to update them, then commit:',
     '',
     '```bash',
-    `npx drift-ci baseline accept --cases ${csv}`,
+    acceptCommand(suitePath, csv),
     'git add .drift/baseline/',
     'git commit -m "Update baseline: <describe the intended behavior change>"',
     'git push',
@@ -271,6 +275,13 @@ function renderRegressionExplainer(threshold: number): string {
     '',
     '</details>',
   ].join('\n');
+}
+
+function acceptCommand(suitePath: string, caseIds: string): string {
+  const arg = /^[\w@%+=:,./-]+$/.test(suitePath)
+    ? suitePath
+    : "'" + suitePath.replace(/'/g, "'\\''") + "'";
+  return `npx @drift-ci/cli baseline accept ${arg} --cases ${caseIds}`;
 }
 
 function shortHash(h?: string): string | undefined {
