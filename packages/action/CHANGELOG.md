@@ -1,5 +1,13 @@
 # Changelog
 
+## [1.4.1](https://github.com/Drift-CI/drift-ci/compare/v1.4.0...v1.4.1) (2026-11-07)
+
+
+### Bug Fixes
+
+* **action:** correct baseline accept command in PR comment ([13fe99b](https://github.com/Drift-CI/drift-ci/commit/13fe99b1cae865526457533234112d9a2907dd59))
+* **action:** correct baseline accept command in PR comment ([5d82f89](https://github.com/Drift-CI/drift-ci/commit/5d82f899c84648fb7491a7be9de8704c466ec9c8))
+
 ## [1.4.0](https://github.com/Drift-CI/drift-ci/compare/v1.3.1...v1.4.0) (2026-11-03)
 
 
