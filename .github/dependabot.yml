@@ -23,6 +23,13 @@ updates:
       # undefined (reading 'fileExists')"), so the action can't bundle. Drop once ncc supports TS 7.
       - dependency-name: typescript
         versions: ["7.x"]
+      # SDK 1.x moves to Anthropic API version 2026-10-21, which rejects `temperature` on every
+      # model (400 "Extra inputs are not permitted"); drift-ci sends temperature 0 for repeatable
+      # scores. Revisit when the old API version gets a retirement date. Bedrock SDK 1.x needs SDK 1.x.
+      - dependency-name: "@anthropic-ai/sdk"
+        versions: [">=1.0.0"]
+      - dependency-name: "@anthropic-ai/bedrock-sdk"
+        versions: [">=1.0.0"]
     groups:
       typescript-tooling:
         patterns:
