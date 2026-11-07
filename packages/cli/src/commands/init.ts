@@ -96,10 +96,15 @@ export function executeInit(opts: InitOptions): void {
   for (const p of written) console.log(`  wrote   ${p}`);
   for (const p of skipped) console.log(`  skipped ${p} (already exists; pass --force to overwrite)`);
 
+  const suitePath = join(opts.dir, 'suite.yaml').replace(/\\/g, '/');
+  const suiteArg = /^[\w@%+=:,./-]+$/.test(suitePath)
+    ? suitePath
+    : "'" + suitePath.replace(/'/g, "'\\''") + "'";
+
   console.log('\nNext steps:');
   console.log('  1. Edit .drift/suite.yaml with your own cases.');
   console.log('  2. Set ANTHROPIC_API_KEY (or your provider equivalent).');
   console.log('  3. drift-ci run');
-  console.log('  4. drift-ci baseline init   # once scores look right');
+  console.log(`  4. npx @drift-ci/cli baseline init ${suiteArg}   # once scores look right`);
   console.log('  5. git add .drift/baseline && git commit');
 }

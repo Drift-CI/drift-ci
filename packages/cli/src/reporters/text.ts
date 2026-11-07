@@ -72,7 +72,7 @@ export function renderSummary(
       emit('');
       emit(
         `\u2139 ${deltas.missingBaselines.length} case(s) have no baseline yet. ` +
-          `Run: drift-ci baseline init`,
+          `Run: npx @drift-ci/cli baseline init ${shellArg(suitePath)}`,
       );
     }
     if (deltas.staleBaselines.length > 0) {
@@ -137,9 +137,10 @@ function formatCaseLine(
 }
 
 
+function shellArg(s: string): string {
+  return /^[\w@%+=:,./-]+$/.test(s) ? s : "'" + s.replace(/'/g, "'\\''") + "'";
+}
+
 function acceptCommand(suitePath: string, caseIds: readonly string[]): string {
-  const arg = /^[\w@%+=:,./-]+$/.test(suitePath)
-    ? suitePath
-    : "'" + suitePath.replace(/'/g, "'\\''") + "'";
-  return `npx @drift-ci/cli baseline accept ${arg} --cases ${caseIds.join(',')}`;
+  return `npx @drift-ci/cli baseline accept ${shellArg(suitePath)} --cases ${caseIds.join(',')}`;
 }

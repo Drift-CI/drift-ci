@@ -174,7 +174,10 @@ describe('TextReporter', () => {
       }),
     );
     expect(stream.written).toContain('no baseline yet');
-    expect(stream.written).toContain('drift-ci baseline init');
+    expect(stream.written).toContain(
+      'Run: npx @drift-ci/cli baseline init .drift/suite.yaml',
+    );
+    expect(stream.written).not.toContain('Run: drift-ci baseline init');
   });
 
 });
