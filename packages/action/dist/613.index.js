@@ -1,13 +1,13 @@
-export const id = 770;
-export const ids = [770,839,713,673,391];
+export const id = 613;
+export const ids = [613,48,606,970,348];
 export const modules = {
 
-/***/ 53489:
+/***/ 12930:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var propertyProvider = __webpack_require__(1269);
+var propertyProvider = __webpack_require__(32178);
 
 function resolveLogins(logins) {
     return Promise.all(Object.keys(logins).reduce((arr, name) => {
@@ -28,7 +28,7 @@ function resolveLogins(logins) {
 function fromCognitoIdentity(parameters) {
     return async (awsIdentityProperties) => {
         parameters.logger?.debug("@aws-sdk/credential-provider-cognito-identity - fromCognitoIdentity");
-        const { GetCredentialsForIdentityCommand, CognitoIdentityClient } = await Promise.resolve().then(function () { return __webpack_require__(63450); });
+        const { GetCredentialsForIdentityCommand, CognitoIdentityClient } = await Promise.resolve().then(function () { return __webpack_require__(64747); });
         const fromConfigs = (property) => parameters.clientConfig?.[property] ??
             parameters.parentClientConfig?.[property] ??
             awsIdentityProperties?.callerClientConfig?.[property];
@@ -166,7 +166,7 @@ function fromCognitoIdentityPool({ accountId, cache = localStorage(), client, cl
         ? `aws:cognito-identity-credentials:${identityPoolId}:${userIdentifier}`
         : undefined;
     let provider = async (awsIdentityProperties) => {
-        const { GetIdCommand, CognitoIdentityClient } = await Promise.resolve().then(function () { return __webpack_require__(63450); });
+        const { GetIdCommand, CognitoIdentityClient } = await Promise.resolve().then(function () { return __webpack_require__(64747); });
         const fromConfigs = (property) => clientConfig?.[property] ??
             parentClientConfig?.[property] ??
             awsIdentityProperties?.callerClientConfig?.[property];
@@ -213,12 +213,12 @@ exports.fromCognitoIdentityPool = fromCognitoIdentityPool;
 
 /***/ }),
 
-/***/ 63450:
+/***/ 64747:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var cognitoIdentity = __webpack_require__(26008);
+var cognitoIdentity = __webpack_require__(40245);
 
 
 
@@ -229,13 +229,13 @@ exports.GetIdCommand = cognitoIdentity.GetIdCommand;
 
 /***/ }),
 
-/***/ 63345:
+/***/ 65806:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.checkUrl = void 0;
-const property_provider_1 = __webpack_require__(1269);
+const property_provider_1 = __webpack_require__(32178);
 const LOOPBACK_CIDR_IPv4 = "127.0.0.0/8";
 const LOOPBACK_CIDR_IPv6 = "::1/128";
 const ECS_CONTAINER_HOST = "169.254.170.2";
@@ -282,20 +282,20 @@ exports.checkUrl = checkUrl;
 
 /***/ }),
 
-/***/ 86756:
+/***/ 99531:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromHttp = void 0;
-const tslib_1 = __webpack_require__(54847);
-const client_1 = __webpack_require__(55076);
-const node_http_handler_1 = __webpack_require__(52681);
-const property_provider_1 = __webpack_require__(1269);
+const tslib_1 = __webpack_require__(43532);
+const client_1 = __webpack_require__(12201);
+const node_http_handler_1 = __webpack_require__(65192);
+const property_provider_1 = __webpack_require__(32178);
 const promises_1 = tslib_1.__importDefault(__webpack_require__(51455));
-const checkUrl_1 = __webpack_require__(63345);
-const requestHelpers_1 = __webpack_require__(35710);
-const retry_wrapper_1 = __webpack_require__(4566);
+const checkUrl_1 = __webpack_require__(65806);
+const requestHelpers_1 = __webpack_require__(86589);
+const retry_wrapper_1 = __webpack_require__(59647);
 const AWS_CONTAINER_CREDENTIALS_RELATIVE_URI = "AWS_CONTAINER_CREDENTIALS_RELATIVE_URI";
 const DEFAULT_LINK_LOCAL_HOST = "http://169.254.170.2";
 const AWS_CONTAINER_CREDENTIALS_FULL_URI = "AWS_CONTAINER_CREDENTIALS_FULL_URI";
@@ -359,17 +359,17 @@ exports.fromHttp = fromHttp;
 
 /***/ }),
 
-/***/ 35710:
+/***/ 86589:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.createGetRequest = createGetRequest;
 exports.getCredentials = getCredentials;
-const property_provider_1 = __webpack_require__(1269);
-const protocol_http_1 = __webpack_require__(43825);
-const smithy_client_1 = __webpack_require__(26529);
-const util_stream_1 = __webpack_require__(25950);
+const property_provider_1 = __webpack_require__(32178);
+const protocol_http_1 = __webpack_require__(97470);
+const smithy_client_1 = __webpack_require__(57212);
+const util_stream_1 = __webpack_require__(11921);
 function createGetRequest(url) {
     return new protocol_http_1.HttpRequest({
         protocol: url.protocol,
@@ -419,7 +419,7 @@ async function getCredentials(response, logger) {
 
 /***/ }),
 
-/***/ 4566:
+/***/ 59647:
 /***/ ((__unused_webpack_module, exports) => {
 
 
@@ -443,28 +443,28 @@ exports.retryWrapper = retryWrapper;
 
 /***/ }),
 
-/***/ 46713:
+/***/ 20606:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromHttp = void 0;
-var fromHttp_1 = __webpack_require__(86756);
+var fromHttp_1 = __webpack_require__(99531);
 Object.defineProperty(exports, "fromHttp", ({ enumerable: true, get: function () { return fromHttp_1.fromHttp; } }));
 
 
 /***/ }),
 
-/***/ 21673:
+/***/ 81970:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var sharedIniFileLoader = __webpack_require__(41267);
-var propertyProvider = __webpack_require__(1269);
+var sharedIniFileLoader = __webpack_require__(76290);
+var propertyProvider = __webpack_require__(32178);
 var node_child_process = __webpack_require__(31421);
 var node_util = __webpack_require__(57975);
-var client = __webpack_require__(55076);
+var client = __webpack_require__(12201);
 
 const getValidatedProcessCredentials = (profileName, data, profiles) => {
     if (data.Version !== 1) {
@@ -541,17 +541,17 @@ exports.fromProcess = fromProcess;
 
 /***/ }),
 
-/***/ 69260:
+/***/ 82607:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromTokenFile = void 0;
-const client_1 = __webpack_require__(55076);
-const property_provider_1 = __webpack_require__(1269);
-const shared_ini_file_loader_1 = __webpack_require__(41267);
+const client_1 = __webpack_require__(12201);
+const property_provider_1 = __webpack_require__(32178);
+const shared_ini_file_loader_1 = __webpack_require__(76290);
 const node_fs_1 = __webpack_require__(73024);
-const fromWebToken_1 = __webpack_require__(84140);
+const fromWebToken_1 = __webpack_require__(50645);
 const ENV_TOKEN_FILE = "AWS_WEB_IDENTITY_TOKEN_FILE";
 const ENV_ROLE_ARN = "AWS_ROLE_ARN";
 const ENV_ROLE_SESSION_NAME = "AWS_ROLE_SESSION_NAME";
@@ -582,7 +582,7 @@ exports.fromTokenFile = fromTokenFile;
 
 /***/ }),
 
-/***/ 84140:
+/***/ 50645:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -626,7 +626,7 @@ const fromWebToken = (init) => async (awsIdentityProperties) => {
     const { roleArn, roleSessionName, webIdentityToken, providerId, policyArns, policy, durationSeconds } = init;
     let { roleAssumerWithWebIdentity } = init;
     if (!roleAssumerWithWebIdentity) {
-        const { getDefaultRoleAssumerWithWebIdentity } = await Promise.resolve().then(() => __importStar(__webpack_require__(80180)));
+        const { getDefaultRoleAssumerWithWebIdentity } = await Promise.resolve().then(() => __importStar(__webpack_require__(89643)));
         roleAssumerWithWebIdentity = getDefaultRoleAssumerWithWebIdentity({
             ...init.clientConfig,
             credentialProviderLogger: init.logger,
@@ -651,13 +651,13 @@ exports.fromWebToken = fromWebToken;
 
 /***/ }),
 
-/***/ 78391:
+/***/ 33348:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var fromTokenFile = __webpack_require__(69260);
-var fromWebToken = __webpack_require__(84140);
+var fromTokenFile = __webpack_require__(82607);
+var fromWebToken = __webpack_require__(50645);
 
 
 
@@ -685,13 +685,13 @@ Object.keys(fromWebToken).forEach(function (k) {
 
 /***/ }),
 
-/***/ 41780:
+/***/ 68139:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.propertyProviderChain = exports.createCredentialChain = void 0;
-const property_provider_1 = __webpack_require__(1269);
+const property_provider_1 = __webpack_require__(32178);
 const createCredentialChain = (...credentialProviders) => {
     let expireAfter = -1;
     const baseFunction = async (awsIdentityProperties) => {
@@ -737,13 +737,13 @@ exports.propertyProviderChain = propertyProviderChain;
 
 /***/ }),
 
-/***/ 39071:
+/***/ 66800:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromCognitoIdentity = void 0;
-const credential_provider_cognito_identity_1 = __webpack_require__(53489);
+const credential_provider_cognito_identity_1 = __webpack_require__(12930);
 const fromCognitoIdentity = (options) => (0, credential_provider_cognito_identity_1.fromCognitoIdentity)({
     ...options,
 });
@@ -752,13 +752,13 @@ exports.fromCognitoIdentity = fromCognitoIdentity;
 
 /***/ }),
 
-/***/ 47553:
+/***/ 6554:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromCognitoIdentityPool = void 0;
-const credential_provider_cognito_identity_1 = __webpack_require__(53489);
+const credential_provider_cognito_identity_1 = __webpack_require__(12930);
 const fromCognitoIdentityPool = (options) => (0, credential_provider_cognito_identity_1.fromCognitoIdentityPool)({
     ...options,
 });
@@ -767,13 +767,13 @@ exports.fromCognitoIdentityPool = fromCognitoIdentityPool;
 
 /***/ }),
 
-/***/ 38676:
+/***/ 96211:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromContainerMetadata = void 0;
-const credential_provider_imds_1 = __webpack_require__(92839);
+const credential_provider_imds_1 = __webpack_require__(82048);
 const fromContainerMetadata = (init) => {
     init?.logger?.debug("@smithy/credential-provider-imds", "fromContainerMetadata");
     return (0, credential_provider_imds_1.fromContainerMetadata)(init);
@@ -783,26 +783,26 @@ exports.fromContainerMetadata = fromContainerMetadata;
 
 /***/ }),
 
-/***/ 28405:
+/***/ 91126:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromEnv = void 0;
-const credential_provider_env_1 = __webpack_require__(80965);
+const credential_provider_env_1 = __webpack_require__(30346);
 const fromEnv = (init) => (0, credential_provider_env_1.fromEnv)(init);
 exports.fromEnv = fromEnv;
 
 
 /***/ }),
 
-/***/ 21588:
+/***/ 6195:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromIni = void 0;
-const credential_provider_ini_1 = __webpack_require__(91359);
+const credential_provider_ini_1 = __webpack_require__(86668);
 const fromIni = (init = {}) => (0, credential_provider_ini_1.fromIni)({
     ...init,
 });
@@ -811,14 +811,14 @@ exports.fromIni = fromIni;
 
 /***/ }),
 
-/***/ 5994:
+/***/ 2943:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromInstanceMetadata = void 0;
-const client_1 = __webpack_require__(55076);
-const credential_provider_imds_1 = __webpack_require__(92839);
+const client_1 = __webpack_require__(12201);
+const credential_provider_imds_1 = __webpack_require__(82048);
 const fromInstanceMetadata = (init) => {
     init?.logger?.debug("@smithy/credential-provider-imds", "fromInstanceMetadata");
     return async () => (0, credential_provider_imds_1.fromInstanceMetadata)(init)().then((creds) => (0, client_1.setCredentialFeature)(creds, "CREDENTIALS_IMDS", "0"));
@@ -828,13 +828,13 @@ exports.fromInstanceMetadata = fromInstanceMetadata;
 
 /***/ }),
 
-/***/ 7093:
+/***/ 82484:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromLoginCredentials = void 0;
-const credential_provider_login_1 = __webpack_require__(12917);
+const credential_provider_login_1 = __webpack_require__(9014);
 const fromLoginCredentials = (init) => (0, credential_provider_login_1.fromLoginCredentials)({
     ...init,
 });
@@ -843,13 +843,13 @@ exports.fromLoginCredentials = fromLoginCredentials;
 
 /***/ }),
 
-/***/ 49696:
+/***/ 68111:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromNodeProviderChain = void 0;
-const credential_provider_node_1 = __webpack_require__(85158);
+const credential_provider_node_1 = __webpack_require__(78153);
 const fromNodeProviderChain = (init = {}) => (0, credential_provider_node_1.defaultProvider)({
     ...init,
 });
@@ -858,26 +858,26 @@ exports.fromNodeProviderChain = fromNodeProviderChain;
 
 /***/ }),
 
-/***/ 97195:
+/***/ 48404:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromProcess = void 0;
-const credential_provider_process_1 = __webpack_require__(21673);
+const credential_provider_process_1 = __webpack_require__(81970);
 const fromProcess = (init) => (0, credential_provider_process_1.fromProcess)(init);
 exports.fromProcess = fromProcess;
 
 
 /***/ }),
 
-/***/ 14313:
+/***/ 13054:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromSSO = void 0;
-const credential_provider_sso_1 = __webpack_require__(91737);
+const credential_provider_sso_1 = __webpack_require__(14338);
 const fromSSO = (init = {}) => {
     return (0, credential_provider_sso_1.fromSSO)({ ...init });
 };
@@ -886,7 +886,7 @@ exports.fromSSO = fromSSO;
 
 /***/ }),
 
-/***/ 83092:
+/***/ 44051:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -925,8 +925,8 @@ var __importStar = (this && this.__importStar) || (function () {
 })();
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromTemporaryCredentials = void 0;
-const core_1 = __webpack_require__(70010);
-const property_provider_1 = __webpack_require__(1269);
+const core_1 = __webpack_require__(38603);
+const property_provider_1 = __webpack_require__(32178);
 const ASSUME_ROLE_DEFAULT_REGION = "us-east-1";
 const fromTemporaryCredentials = (options, credentialDefaultProvider, regionProvider) => {
     let stsClient;
@@ -945,7 +945,7 @@ const fromTemporaryCredentials = (options, credentialDefaultProvider, regionProv
             }
             params.TokenCode = await options.mfaCodeProvider(params?.SerialNumber);
         }
-        const { AssumeRoleCommand, STSClient } = await Promise.resolve().then(() => __importStar(__webpack_require__(61758)));
+        const { AssumeRoleCommand, STSClient } = await Promise.resolve().then(() => __importStar(__webpack_require__(63102)));
         if (!stsClient) {
             const defaultCredentialsOrError = typeof credentialDefaultProvider === "function" ? credentialDefaultProvider() : undefined;
             const credentialSources = [
@@ -1048,16 +1048,16 @@ const coalesce = (args) => {
 
 /***/ }),
 
-/***/ 16487:
+/***/ 72366:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromTemporaryCredentials = void 0;
-const config_resolver_1 = __webpack_require__(16810);
-const node_config_provider_1 = __webpack_require__(93400);
-const fromNodeProviderChain_1 = __webpack_require__(49696);
-const fromTemporaryCredentials_base_1 = __webpack_require__(83092);
+const config_resolver_1 = __webpack_require__(93649);
+const node_config_provider_1 = __webpack_require__(28787);
+const fromNodeProviderChain_1 = __webpack_require__(68111);
+const fromTemporaryCredentials_base_1 = __webpack_require__(44051);
 const fromTemporaryCredentials = (options) => {
     return (0, fromTemporaryCredentials_base_1.fromTemporaryCredentials)(options, fromNodeProviderChain_1.fromNodeProviderChain, async ({ profile = process.env.AWS_PROFILE }) => (0, node_config_provider_1.loadConfig)({
         environmentVariableSelector: (env) => env.AWS_REGION,
@@ -1072,13 +1072,13 @@ exports.fromTemporaryCredentials = fromTemporaryCredentials;
 
 /***/ }),
 
-/***/ 64197:
+/***/ 60178:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromTokenFile = void 0;
-const credential_provider_web_identity_1 = __webpack_require__(78391);
+const credential_provider_web_identity_1 = __webpack_require__(33348);
 const fromTokenFile = (init = {}) => (0, credential_provider_web_identity_1.fromTokenFile)({
     ...init,
 });
@@ -1087,13 +1087,13 @@ exports.fromTokenFile = fromTokenFile;
 
 /***/ }),
 
-/***/ 7995:
+/***/ 70682:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromWebToken = void 0;
-const credential_provider_web_identity_1 = __webpack_require__(78391);
+const credential_provider_web_identity_1 = __webpack_require__(33348);
 const fromWebToken = (init) => (0, credential_provider_web_identity_1.fromWebToken)({
     ...init,
 });
@@ -1102,54 +1102,54 @@ exports.fromWebToken = fromWebToken;
 
 /***/ }),
 
-/***/ 67770:
+/***/ 96613:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.fromHttp = void 0;
-const tslib_1 = __webpack_require__(54847);
-tslib_1.__exportStar(__webpack_require__(41780), exports);
-tslib_1.__exportStar(__webpack_require__(39071), exports);
-tslib_1.__exportStar(__webpack_require__(47553), exports);
-tslib_1.__exportStar(__webpack_require__(38676), exports);
-tslib_1.__exportStar(__webpack_require__(28405), exports);
-var credential_provider_http_1 = __webpack_require__(46713);
+const tslib_1 = __webpack_require__(43532);
+tslib_1.__exportStar(__webpack_require__(68139), exports);
+tslib_1.__exportStar(__webpack_require__(66800), exports);
+tslib_1.__exportStar(__webpack_require__(6554), exports);
+tslib_1.__exportStar(__webpack_require__(96211), exports);
+tslib_1.__exportStar(__webpack_require__(91126), exports);
+var credential_provider_http_1 = __webpack_require__(20606);
 Object.defineProperty(exports, "fromHttp", ({ enumerable: true, get: function () { return credential_provider_http_1.fromHttp; } }));
-tslib_1.__exportStar(__webpack_require__(21588), exports);
-tslib_1.__exportStar(__webpack_require__(5994), exports);
-tslib_1.__exportStar(__webpack_require__(7093), exports);
-tslib_1.__exportStar(__webpack_require__(49696), exports);
-tslib_1.__exportStar(__webpack_require__(97195), exports);
-tslib_1.__exportStar(__webpack_require__(14313), exports);
-tslib_1.__exportStar(__webpack_require__(16487), exports);
-tslib_1.__exportStar(__webpack_require__(64197), exports);
-tslib_1.__exportStar(__webpack_require__(7995), exports);
+tslib_1.__exportStar(__webpack_require__(6195), exports);
+tslib_1.__exportStar(__webpack_require__(2943), exports);
+tslib_1.__exportStar(__webpack_require__(82484), exports);
+tslib_1.__exportStar(__webpack_require__(68111), exports);
+tslib_1.__exportStar(__webpack_require__(48404), exports);
+tslib_1.__exportStar(__webpack_require__(13054), exports);
+tslib_1.__exportStar(__webpack_require__(72366), exports);
+tslib_1.__exportStar(__webpack_require__(60178), exports);
+tslib_1.__exportStar(__webpack_require__(70682), exports);
 
 
 /***/ }),
 
-/***/ 61758:
+/***/ 63102:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.STSClient = exports.AssumeRoleCommand = void 0;
-const sts_1 = __webpack_require__(80180);
+const sts_1 = __webpack_require__(89643);
 Object.defineProperty(exports, "AssumeRoleCommand", ({ enumerable: true, get: function () { return sts_1.AssumeRoleCommand; } }));
 Object.defineProperty(exports, "STSClient", ({ enumerable: true, get: function () { return sts_1.STSClient; } }));
 
 
 /***/ }),
 
-/***/ 38531:
+/***/ 94758:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolveHttpAuthSchemeConfig = exports.defaultCognitoIdentityHttpAuthSchemeProvider = exports.defaultCognitoIdentityHttpAuthSchemeParametersProvider = void 0;
-const httpAuthSchemes_1 = __webpack_require__(83239);
-const util_middleware_1 = __webpack_require__(53409);
+const httpAuthSchemes_1 = __webpack_require__(97452);
+const util_middleware_1 = __webpack_require__(26454);
 const defaultCognitoIdentityHttpAuthSchemeParametersProvider = async (config, context, input) => {
     return {
         operation: (0, util_middleware_1.getSmithyContext)(context).operation,
@@ -1209,13 +1209,13 @@ exports.resolveHttpAuthSchemeConfig = resolveHttpAuthSchemeConfig;
 
 /***/ }),
 
-/***/ 32666:
+/***/ 99037:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.bdd = void 0;
-const util_endpoints_1 = __webpack_require__(5175);
+const util_endpoints_1 = __webpack_require__(43790);
 const m = "ref";
 const a = -1, b = true, c = "isSet", d = "PartitionResult", e = "booleanEquals", f = "getAttr", g = "stringEquals", h = { [m]: "Endpoint" }, i = { [m]: d }, j = { [m]: "Region" }, k = {}, l = [j];
 const _data = {
@@ -1316,15 +1316,15 @@ exports.bdd = util_endpoints_1.BinaryDecisionDiagram.from(nodes, root, _data.con
 
 /***/ }),
 
-/***/ 98013:
+/***/ 58976:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.defaultEndpointResolver = void 0;
-const util_endpoints_1 = __webpack_require__(25167);
-const util_endpoints_2 = __webpack_require__(5175);
-const bdd_1 = __webpack_require__(32666);
+const util_endpoints_1 = __webpack_require__(5734);
+const util_endpoints_2 = __webpack_require__(43790);
+const bdd_1 = __webpack_require__(99037);
 const cache = new util_endpoints_2.EndpointCache({
     size: 50,
     params: ["Endpoint", "Region", "UseDualStack", "UseFIPS"],
@@ -1341,29 +1341,29 @@ util_endpoints_2.customEndpointFunctions.aws = util_endpoints_1.awsEndpointFunct
 
 /***/ }),
 
-/***/ 26008:
+/***/ 40245:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var middlewareHostHeader = __webpack_require__(26750);
-var middlewareLogger = __webpack_require__(87814);
-var middlewareRecursionDetection = __webpack_require__(69565);
-var middlewareUserAgent = __webpack_require__(36607);
-var configResolver = __webpack_require__(16810);
-var core = __webpack_require__(70010);
-var schema = __webpack_require__(88722);
-var middlewareContentLength = __webpack_require__(77789);
-var middlewareEndpoint = __webpack_require__(50363);
-var middlewareRetry = __webpack_require__(63074);
-var smithyClient = __webpack_require__(26529);
-var httpAuthSchemeProvider = __webpack_require__(38531);
-var runtimeConfig = __webpack_require__(12922);
-var regionConfigResolver = __webpack_require__(48427);
-var protocolHttp = __webpack_require__(43825);
-var schemas_0 = __webpack_require__(75628);
-var errors = __webpack_require__(17152);
-var CognitoIdentityServiceException = __webpack_require__(78498);
+var middlewareHostHeader = __webpack_require__(24285);
+var middlewareLogger = __webpack_require__(36321);
+var middlewareRecursionDetection = __webpack_require__(89182);
+var middlewareUserAgent = __webpack_require__(16980);
+var configResolver = __webpack_require__(93649);
+var core = __webpack_require__(38603);
+var schema = __webpack_require__(61439);
+var middlewareContentLength = __webpack_require__(9250);
+var middlewareEndpoint = __webpack_require__(55376);
+var middlewareRetry = __webpack_require__(86019);
+var smithyClient = __webpack_require__(57212);
+var httpAuthSchemeProvider = __webpack_require__(94758);
+var runtimeConfig = __webpack_require__(94207);
+var regionConfigResolver = __webpack_require__(94508);
+var protocolHttp = __webpack_require__(97470);
+var schemas_0 = __webpack_require__(19125);
+var errors = __webpack_require__(43977);
+var CognitoIdentityServiceException = __webpack_require__(55317);
 
 const resolveClientEndpointParameters = (options) => {
     return Object.assign(options, {
@@ -1522,13 +1522,13 @@ Object.keys(errors).forEach(function (k) {
 
 /***/ }),
 
-/***/ 78498:
+/***/ 55317:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.CognitoIdentityServiceException = exports.__ServiceException = void 0;
-const smithy_client_1 = __webpack_require__(26529);
+const smithy_client_1 = __webpack_require__(57212);
 Object.defineProperty(exports, "__ServiceException", ({ enumerable: true, get: function () { return smithy_client_1.ServiceException; } }));
 class CognitoIdentityServiceException extends smithy_client_1.ServiceException {
     constructor(options) {
@@ -1541,13 +1541,13 @@ exports.CognitoIdentityServiceException = CognitoIdentityServiceException;
 
 /***/ }),
 
-/***/ 17152:
+/***/ 43977:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.LimitExceededException = exports.TooManyRequestsException = exports.ResourceNotFoundException = exports.ResourceConflictException = exports.NotAuthorizedException = exports.InvalidParameterException = exports.InvalidIdentityPoolConfigurationException = exports.InternalErrorException = exports.ExternalServiceException = void 0;
-const CognitoIdentityServiceException_1 = __webpack_require__(78498);
+const CognitoIdentityServiceException_1 = __webpack_require__(55317);
 class ExternalServiceException extends CognitoIdentityServiceException_1.CognitoIdentityServiceException {
     name = "ExternalServiceException";
     $fault = "client";
@@ -1669,27 +1669,27 @@ exports.LimitExceededException = LimitExceededException;
 
 /***/ }),
 
-/***/ 12922:
+/***/ 94207:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getRuntimeConfig = void 0;
-const tslib_1 = __webpack_require__(54847);
+const tslib_1 = __webpack_require__(43532);
 const package_json_1 = tslib_1.__importDefault(__webpack_require__(87166));
-const client_1 = __webpack_require__(55076);
-const httpAuthSchemes_1 = __webpack_require__(83239);
-const util_user_agent_node_1 = __webpack_require__(23323);
-const config_resolver_1 = __webpack_require__(16810);
-const hash_node_1 = __webpack_require__(65617);
-const middleware_retry_1 = __webpack_require__(63074);
-const node_config_provider_1 = __webpack_require__(93400);
-const node_http_handler_1 = __webpack_require__(52681);
-const smithy_client_1 = __webpack_require__(26529);
-const util_body_length_node_1 = __webpack_require__(77201);
-const util_defaults_mode_node_1 = __webpack_require__(60381);
-const util_retry_1 = __webpack_require__(1445);
-const runtimeConfig_shared_1 = __webpack_require__(7587);
+const client_1 = __webpack_require__(12201);
+const httpAuthSchemes_1 = __webpack_require__(97452);
+const util_user_agent_node_1 = __webpack_require__(23576);
+const config_resolver_1 = __webpack_require__(93649);
+const hash_node_1 = __webpack_require__(81822);
+const middleware_retry_1 = __webpack_require__(86019);
+const node_config_provider_1 = __webpack_require__(28787);
+const node_http_handler_1 = __webpack_require__(65192);
+const smithy_client_1 = __webpack_require__(57212);
+const util_body_length_node_1 = __webpack_require__(74120);
+const util_defaults_mode_node_1 = __webpack_require__(63034);
+const util_retry_1 = __webpack_require__(49644);
+const runtimeConfig_shared_1 = __webpack_require__(87820);
 const getRuntimeConfig = (config) => {
     (0, smithy_client_1.emitWarningIfUnsupportedVersion)(process.version);
     const defaultsMode = (0, util_defaults_mode_node_1.resolveDefaultsModeConfig)(config);
@@ -1730,22 +1730,22 @@ exports.getRuntimeConfig = getRuntimeConfig;
 
 /***/ }),
 
-/***/ 7587:
+/***/ 87820:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getRuntimeConfig = void 0;
-const httpAuthSchemes_1 = __webpack_require__(83239);
-const protocols_1 = __webpack_require__(63820);
-const core_1 = __webpack_require__(70010);
-const smithy_client_1 = __webpack_require__(26529);
-const url_parser_1 = __webpack_require__(22923);
-const util_base64_1 = __webpack_require__(92287);
-const util_utf8_1 = __webpack_require__(83576);
-const httpAuthSchemeProvider_1 = __webpack_require__(38531);
-const endpointResolver_1 = __webpack_require__(98013);
-const schemas_0_1 = __webpack_require__(75628);
+const httpAuthSchemes_1 = __webpack_require__(97452);
+const protocols_1 = __webpack_require__(59487);
+const core_1 = __webpack_require__(38603);
+const smithy_client_1 = __webpack_require__(57212);
+const url_parser_1 = __webpack_require__(35388);
+const util_base64_1 = __webpack_require__(90318);
+const util_utf8_1 = __webpack_require__(33565);
+const httpAuthSchemeProvider_1 = __webpack_require__(94758);
+const endpointResolver_1 = __webpack_require__(58976);
+const schemas_0_1 = __webpack_require__(19125);
 const getRuntimeConfig = (config) => {
     return {
         apiVersion: "2014-06-30",
@@ -1787,7 +1787,7 @@ exports.getRuntimeConfig = getRuntimeConfig;
 
 /***/ }),
 
-/***/ 75628:
+/***/ 19125:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -1828,9 +1828,9 @@ const _m = "message";
 const _s = "smithy.ts.sdk.synthetic.com.amazonaws.cognitoidentity";
 const _se = "server";
 const n0 = "com.amazonaws.cognitoidentity";
-const schema_1 = __webpack_require__(88722);
-const CognitoIdentityServiceException_1 = __webpack_require__(78498);
-const errors_1 = __webpack_require__(17152);
+const schema_1 = __webpack_require__(61439);
+const CognitoIdentityServiceException_1 = __webpack_require__(55317);
+const errors_1 = __webpack_require__(43977);
 const _s_registry = schema_1.TypeRegistry.for(_s);
 exports.CognitoIdentityServiceException$ = [-3, _s, "CognitoIdentityServiceException", 0, [], []];
 _s_registry.registerError(exports.CognitoIdentityServiceException$, CognitoIdentityServiceException_1.CognitoIdentityServiceException);
@@ -1904,17 +1904,17 @@ exports.GetId$ = [9, n0, _GI, 0, () => exports.GetIdInput$, () => exports.GetIdR
 
 /***/ }),
 
-/***/ 92839:
+/***/ 82048:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var propertyProvider = __webpack_require__(1269);
+var propertyProvider = __webpack_require__(32178);
 var url = __webpack_require__(87016);
 var buffer = __webpack_require__(20181);
 var http = __webpack_require__(58611);
-var nodeConfigProvider = __webpack_require__(93400);
-var urlParser = __webpack_require__(22923);
+var nodeConfigProvider = __webpack_require__(28787);
+var urlParser = __webpack_require__(35388);
 
 function httpRequest(options) {
     return new Promise((resolve, reject) => {

@@ -19,6 +19,10 @@ updates:
       # our engines allow Node 22. Drop this once a fixed 13.x ships.
       - dependency-name: better-sqlite3
         versions: ["13.x"]
+      # TypeScript 7 (native compiler) breaks @vercel/ncc's ts-loader ("Cannot read properties of
+      # undefined (reading 'fileExists')"), so the action can't bundle. Drop once ncc supports TS 7.
+      - dependency-name: typescript
+        versions: ["7.x"]
     groups:
       typescript-tooling:
         patterns:
