@@ -84840,7 +84840,7 @@ __exportStar(__nccwpck_require__(22190), exports);
 
 /***/ }),
 
-/***/ 46474:
+/***/ 96545:
 /***/ ((module, exports, __nccwpck_require__) => {
 
 /* module decorator */ module = __nccwpck_require__.nmd(module);
@@ -97389,7 +97389,7 @@ module.exports = /*#__PURE__*/JSON.parse('{"name":"google-auth-library","version
 /************************************************************************/
 var __webpack_exports__ = {};
 
-// NAMESPACE OBJECT: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-state-browser.mjs
+// NAMESPACE OBJECT: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-state-browser.mjs
 var x509_transport_state_browser_namespaceObject = {};
 __nccwpck_require__.r(x509_transport_state_browser_namespaceObject);
 __nccwpck_require__.d(x509_transport_state_browser_namespaceObject, {
@@ -114915,7 +114915,7 @@ async function safeReadText(res) {
     }
 }
 //# sourceMappingURL=ollama.js.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/tslib.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/tslib.mjs
 function __classPrivateFieldSet(receiver, state, value, kind, f) {
     if (kind === "m")
         throw new TypeError("Private method is not writable");
@@ -114939,7 +114939,7 @@ function __classPrivateFieldIn(state, receiver) {
 }
 
 
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/uuid.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/uuid.mjs
 /**
  * https://stackoverflow.com/a/2117523
  */
@@ -114954,7 +114954,7 @@ let uuid_uuid4 = function () {
     return '10000000-1000-4000-8000-100000000000'.replace(/[018]/g, (c) => (+c ^ (randomByte() & (15 >> (+c / 4)))).toString(16));
 };
 //# sourceMappingURL=uuid.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/errors.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/errors.mjs
 function src_isAbortError(err) {
     return (typeof err === 'object' &&
         err !== null &&
@@ -114991,7 +114991,7 @@ const castToError = (err) => {
     return new Error(err);
 };
 //# sourceMappingURL=errors.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/error.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/error.mjs
 
 class error_OpenAIError extends Error {
 }
@@ -115140,7 +115140,7 @@ class SubjectTokenProviderError extends error_OpenAIError {
     }
 }
 //# sourceMappingURL=error.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/values.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/values.mjs
 
 // https://url.spec.whatwg.org/#url-scheme-string
 const startsWithSchemeRegexp = /^[a-z][a-z0-9+.-]*:/i;
@@ -115234,7 +115234,7 @@ const src_safeJSON = (text) => {
     }
 };
 //# sourceMappingURL=values.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/sleep.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/sleep.mjs
 const sleep = (ms, ...signals) => new Promise((resolve, reject) => {
     const activeSignals = [...new Set(signals.filter((signal) => signal != null))];
     let timeout;
@@ -115287,7 +115287,7 @@ const sleep = (ms, ...signals) => new Promise((resolve, reject) => {
     }
 });
 //# sourceMappingURL=sleep.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/abort.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/abort.mjs
 // Keep these optional runtime features out of the SDK's ES2020 type requirements.
 // SAFETY: These host features are optional and checked before use; the structural view avoids requiring newer ambient library declarations.
 const weakGlobals = globalThis;
@@ -115378,7 +115378,7 @@ function addRequestAbortListener(signal, abort, requestSignal) {
     return cleanup;
 }
 //# sourceMappingURL=abort.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/shims.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/shims.mjs
 /**
  * This module provides internal shims and utility functions for environments where certain Node.js or global types may not be available.
  *
@@ -115469,7 +115469,7 @@ async function CancelReadableStream(stream) {
     await cancelPromise;
 }
 //# sourceMappingURL=shims.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/bytes.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/bytes.mjs
 /** Copies byte arrays into one contiguous `Uint8Array` while preserving their order. */
 function bytes_concatBytes(buffers) {
     let length = 0;
@@ -115501,7 +115501,7 @@ function decodeUTF8(bytes) {
         ((decoder = new globalThis.TextDecoder()), (decodeUTF8_ = decoder.decode.bind(decoder))))(bytes);
 }
 //# sourceMappingURL=bytes.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/decoders/line.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/decoders/line.mjs
 var _LineDecoder_instances, _LineDecoder_buffer, _LineDecoder_start, _LineDecoder_end, _LineDecoder_searchIndex, _LineDecoder_skipLeadingLF, _LineDecoder_append;
 
 
@@ -115696,7 +115696,7 @@ function lineEndingLength(buffer, index) {
     return 0;
 }
 //# sourceMappingURL=line.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/log.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/log.mjs
 
 const levelNumbers = {
     off: 0,
@@ -115841,7 +115841,7 @@ const formatRequestDetails = (details) => {
     return details;
 };
 //# sourceMappingURL=log.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/streaming.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/streaming.mjs
 var _Stream_instances, _Stream_client, _Stream_isTeeBranch, _Stream_cancelIterator;
 
 
@@ -115914,13 +115914,10 @@ class src_Stream {
      * Decodes an SSE response into parsed JSON events.
      *
      * The resulting stream can be consumed only once, ignores events after `[DONE]`, and
-     * surfaces API error payloads as `APIError` instances in the default `legacy` mode.
-     * In `events` mode, every parsed JSON payload remains a stream item. When
+     * surfaces API error payloads as `APIError` instances. When
      * `synthesizeEventData` is enabled, each item also includes its SSE event name.
-     * Custom factories that wrap this method should forward the optional fifth
-     * argument to preserve the selected delivery mode.
      */
-    static fromSSEResponse(response, controller, client, synthesizeEventData, streamMode = 'legacy') {
+    static fromSSEResponse(response, controller, client, synthesizeEventData) {
         let consumed = false;
         const logger = client ? loggerFor(client) : console;
         async function* iterator() {
@@ -115945,20 +115942,15 @@ class src_Stream {
                         receivedCompletionSentinel = true;
                         break;
                     }
-                    let data;
-                    try {
-                        data = JSON.parse(sse.data);
-                    }
-                    catch {
-                        logger.error(`Could not parse message into JSON:`);
-                        logger.error(`From chunk:`);
-                        throw new SyntaxError('Error reading response: malformed server-sent event JSON.');
-                    }
-                    if (streamMode === 'legacy') {
-                        if (sse.event?.startsWith('thread.')) {
-                            // SAFETY: Named SSE events use the public stream's event/data envelope; Item is the caller-selected API event contract.
-                            yield { event: sse.event, data };
-                            continue;
+                    if (sse.event === null || !sse.event.startsWith('thread.')) {
+                        let data;
+                        try {
+                            data = JSON.parse(sse.data);
+                        }
+                        catch {
+                            logger.error(`Could not parse message into JSON:`);
+                            logger.error(`From chunk:`);
+                            throw new SyntaxError('Error reading response: malformed server-sent event JSON.');
                         }
                         if (sse.event === 'error') {
                             throw new APIError(undefined, data?.error ?? data, undefined, response.headers);
@@ -115966,8 +115958,21 @@ class src_Stream {
                         if (data && data.error) {
                             throw new APIError(undefined, data.error, undefined, response.headers);
                         }
+                        yield synthesizeEventData ? { event: sse.event, data } : data;
                     }
-                    yield synthesizeEventData ? { event: sse.event, data } : data;
+                    else {
+                        let data;
+                        try {
+                            data = JSON.parse(sse.data);
+                        }
+                        catch {
+                            logger.error(`Could not parse message into JSON:`);
+                            logger.error(`From chunk:`);
+                            throw new SyntaxError('Error reading response: malformed server-sent event JSON.');
+                        }
+                        // SAFETY: Named SSE events use the public stream's event/data envelope; Item is the caller-selected API event contract.
+                        yield { event: sse.event, data };
+                    }
                 }
                 done = true;
             }
@@ -116496,7 +116501,7 @@ function partition(str, delimiter) {
     return [str, '', ''];
 }
 //# sourceMappingURL=streaming.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/parse.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/parse.mjs
 
 
 
@@ -116509,9 +116514,9 @@ async function defaultParseResponse(client, props) {
             // Note: there is an invariant here that isn't represented in the type system
             // that if you set `stream: true` the response type must also be `Stream<T>`
             if (props.options.__streamClass) {
-                return props.options.__streamClass.fromSSEResponse(response, props.controller, client, props.options.__synthesizeEventData, props.options.__streamMode);
+                return props.options.__streamClass.fromSSEResponse(response, props.controller, client, props.options.__synthesizeEventData);
             }
-            return src_Stream.fromSSEResponse(response, props.controller, client, props.options.__synthesizeEventData, props.options.__streamMode);
+            return src_Stream.fromSSEResponse(response, props.controller, client, props.options.__synthesizeEventData);
         }
         // fetch refuses to read the body when the status code is 204.
         if (response.status === 204) {
@@ -116577,11 +116582,11 @@ function addRequestID(value, response) {
     });
 }
 //# sourceMappingURL=parse.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/version.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/version.mjs
 /** Version of the installed OpenAI SDK package. */
-const openai_version_VERSION = '7.53.0'; // x-release-please-version
+const openai_version_VERSION = '7.50.0'; // x-release-please-version
 //# sourceMappingURL=version.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/detect-platform.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/detect-platform.mjs
 
 const isRunningInBrowser = () => {
     return (
@@ -116738,7 +116743,7 @@ const getPlatformHeaders = () => {
     return (_platformHeaders ?? (_platformHeaders = getPlatformProperties()));
 };
 //# sourceMappingURL=detect-platform.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/request-options.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/request-options.mjs
 const jsonRequestBodyObservers = new WeakMap();
 /** Observes values produced by the actual JSON request serializer without changing them. */
 function observeJSONRequestBody(body, observer) {
@@ -116789,7 +116794,7 @@ const FallbackEncoder = ({ headers, body }) => {
     };
 };
 //# sourceMappingURL=request-options.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/qs/formats.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/qs/formats.mjs
 const default_format = 'RFC3986';
 const default_formatter = String;
 const formatters = {
@@ -116799,7 +116804,7 @@ const formatters = {
 const RFC1738 = 'RFC1738';
 const RFC3986 = 'RFC3986';
 //# sourceMappingURL=formats.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/qs/utils.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/qs/utils.mjs
 
 
 // oxlint-disable-next-line anti-slop/no-object-parameters -- The cached own-property predicate accepts arrays, callable objects, and records.
@@ -117335,7 +117340,7 @@ function maybe_map(val, fn) {
     return fn(val);
 }
 //# sourceMappingURL=utils.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/qs/stringify.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/qs/stringify.mjs
 
 
 
@@ -117347,7 +117352,9 @@ const array_prefix_generators = {
     indices(prefix, key) {
         return String(prefix) + '[' + key + ']';
     },
-    repeat: String,
+    repeat(prefix) {
+        return String(prefix);
+    },
 };
 const push_to_array = function push_to_array(arr, value_or_array) {
     Array.prototype.push.apply(arr, values_isArray(value_or_array) ? value_or_array : [value_or_array]);
@@ -117617,13 +117624,13 @@ function stringify(object, opts = {}) {
     return joined.length > 0 ? prefix + joined : '';
 }
 //# sourceMappingURL=stringify.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/query.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/query.mjs
 
 function stringifyQuery(query) {
     return stringify(query, { arrayFormat: 'brackets' });
 }
 //# sourceMappingURL=query.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/data-residency.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/data-residency.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -117632,9 +117639,6 @@ const endpoints = new Map([
     ['us', 'https://us.api.openai.com/v1'],
     ['eu', 'https://eu.api.openai.com/v1'],
     ['ae', 'https://ae.api.openai.com/v1'],
-    ['au', 'https://au.api.openai.com/v1'],
-    ['in', 'https://in.api.openai.com/v1'],
-    ['jp', 'https://jp.api.openai.com/v1'],
 ]);
 /** Resolves an explicit residency selection before client options are inherited. */
 function resolveDataResidency(options) {
@@ -117646,7 +117650,7 @@ function resolveDataResidency(options) {
     }
     const endpoint = endpoints.get(options.dataResidency);
     if (endpoint === undefined) {
-        throw new error_OpenAIError('Invalid `dataResidency`; expected one of: global, us, eu, ae, au, in, jp.');
+        throw new error_OpenAIError('Invalid `dataResidency`; expected one of: global, us, eu, ae.');
     }
     return endpoint;
 }
@@ -117657,7 +117661,7 @@ function assertNoDataResidency(dataResidency, clientName) {
     }
 }
 //# sourceMappingURL=data-residency.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/api-promise.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/api-promise.mjs
 var _APIPromise_client;
 
 
@@ -117729,7 +117733,7 @@ class APIPromise extends Promise {
 }
 _APIPromise_client = new WeakMap();
 //# sourceMappingURL=api-promise.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/pagination.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/pagination.mjs
 var _AbstractPage_client;
 
 
@@ -117937,7 +117941,7 @@ class TokenPage extends AbstractPage {
     }
 }
 //# sourceMappingURL=pagination.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/auth/workload-identity-auth.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/auth/workload-identity-auth.mjs
 
 
 const SUBJECT_TOKEN_TYPES = {
@@ -118189,7 +118193,7 @@ class WorkloadIdentityAuth {
     }
 }
 //# sourceMappingURL=workload-identity-auth.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-api-origin.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-api-origin.mjs
 
 
 /** Sole API authority approved for OpenAI X.509 workload-identity federation. */
@@ -118214,7 +118218,7 @@ function assertX509APIOrigin(value) {
     return target;
 }
 //# sourceMappingURL=x509-api-origin.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/headers.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/headers.mjs
 
 const brand_privateNullableHeaders = /* @__PURE__ */ Symbol('brand.privateNullableHeaders');
 const httpTokenHeaderName = /^[!#$%&'*+\-.^_`|~0-9A-Za-z]+$/;
@@ -118291,7 +118295,7 @@ const isEmptyHeaders = (headers) => {
     return true;
 };
 //# sourceMappingURL=headers.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-state-browser.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-state-browser.mjs
 /** Browser-safe capability state keeps CommonJS outside the ordinary SDK ESM graph. */
 const registeredX509Transports = new WeakMap();
 const transientX509ConnectionErrors = new WeakSet();
@@ -118324,10 +118328,10 @@ const rememberX509Credential = WeakMap.prototype.set.bind(approvedX509Credential
 /** Resolves only credentials registered by the optional Node authentication helper. */
 const findX509Credential = WeakMap.prototype.get.bind(approvedX509Credentials);
 //# sourceMappingURL=x509-transport-state-browser.mjs.map
-// EXTERNAL MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-state.js
-var x509_transport_state = __nccwpck_require__(46474);
+// EXTERNAL MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-state.js
+var x509_transport_state = __nccwpck_require__(96545);
 var x509_transport_state_namespaceObject = /*#__PURE__*/__nccwpck_require__.t(x509_transport_state, 2);
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-state.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-state.mjs
 
 
 
@@ -118349,7 +118353,7 @@ const {
   findX509Credential: x509_transport_state_findX509Credential,
 } = state;
 
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-registry.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-transport-registry.mjs
 
 
 const transientX509TransportCodes = new Set([
@@ -118398,7 +118402,7 @@ function resolveX509Transport(value) {
     return registered;
 }
 //# sourceMappingURL=x509-transport-registry.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-workload-identity-auth.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-workload-identity-auth.mjs
 var _X509WorkloadIdentityAuth_instances, x509_workload_identity_auth_a, _X509WorkloadIdentityAuth_identityProviderId, _X509WorkloadIdentityAuth_serviceAccountId, _X509WorkloadIdentityAuth_configuredRefreshBufferMs, _X509WorkloadIdentityAuth_configuredRefreshBufferSeconds, _X509WorkloadIdentityAuth_organization, _X509WorkloadIdentityAuth_project, _X509WorkloadIdentityAuth_transport, _X509WorkloadIdentityAuth_refreshBufferMs, _X509WorkloadIdentityAuth_cachedToken, _X509WorkloadIdentityAuth_refresh, _X509WorkloadIdentityAuth_tokenGeneration, _X509WorkloadIdentityAuth_cancelRequestBody, _X509WorkloadIdentityAuth_assignToken, _X509WorkloadIdentityAuth_recoverRefreshFailure, _X509WorkloadIdentityAuth_fallbackToken, _X509WorkloadIdentityAuth_retireRefresh, _X509WorkloadIdentityAuth_beginRefresh, _X509WorkloadIdentityAuth_refreshToken, _X509WorkloadIdentityAuth_preflight, _X509WorkloadIdentityAuth_scope, _X509WorkloadIdentityAuth_assertTenantHeaders;
 
 
@@ -119177,7 +119181,7 @@ x509_workload_identity_auth_a = X509WorkloadIdentityAuth, _X509WorkloadIdentityA
     }
 };
 //# sourceMappingURL=x509-workload-identity-auth.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-credential-options.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/auth/x509-credential-options.mjs
 
 
 
@@ -119299,7 +119303,7 @@ function prepareX509ClientClone(inherited, overrides, credential, currentlyX509)
     return { credential: nextCredential, provider: prepareProviderClone(inherited, overrides) };
 }
 //# sourceMappingURL=x509-credential-options.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/uploads.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/uploads.mjs
 
 
 
@@ -119820,7 +119824,7 @@ const addFormValue = async (form, key, value, options) => {
     }
 };
 //# sourceMappingURL=uploads.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/to-file.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/to-file.mjs
 
 /**
  * This check adds the arrayBuffer() method type because it is available and used at runtime
@@ -119932,18 +119936,18 @@ function propsForError(value) {
     return `; props: [${props.map((p) => `"${p}"`).join(', ')}]`;
 }
 //# sourceMappingURL=to-file.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/uploads.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/uploads.mjs
 
 
 //# sourceMappingURL=uploads.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/resource.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/core/resource.mjs
 class APIResource {
     constructor(client) {
         this._client = client;
     }
 }
 //# sourceMappingURL=resource.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/path.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/path.mjs
 
 /**
  * Percent-encodes a single URI path parameter while preserving RFC 3986 path characters.
@@ -120038,7 +120042,7 @@ const createPathTagFunction = (pathEncoder = encodeURIPath) => function path(sta
  */
 const path_path = /* @__PURE__ */ createPathTagFunction(encodeURIPath);
 //# sourceMappingURL=path.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/completions/messages.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/completions/messages.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -120066,7 +120070,6 @@ const normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -120118,11 +120121,11 @@ class Messages extends APIResource {
     }
 }
 //# sourceMappingURL=messages.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/error.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/error.mjs
 /** @deprecated Import from ./core/error instead */
 
 //# sourceMappingURL=error.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/parser.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/parser.mjs
 
 /** Returns whether an optional chat completion tool contains a function-tool definition. */
 function isChatCompletionFunctionTool(tool) {
@@ -120383,7 +120386,7 @@ function validateInputTools(tools) {
     }
 }
 //# sourceMappingURL=parser.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/chatCompletionUtils.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/chatCompletionUtils.mjs
 /** Returns whether a conversation message was produced by the assistant. */
 const isAssistantMessage = (message) => message?.role === 'assistant';
 /** Returns whether a conversation message contains the result of a tool call. */
@@ -120393,7 +120396,7 @@ function isPresent(obj) {
     return obj != null;
 }
 //# sourceMappingURL=chatCompletionUtils.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/EventStream.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/EventStream.mjs
 var _EventStream_instances, _EventStream_connectedPromise, _EventStream_resolveConnectedPromise, _EventStream_rejectConnectedPromise, _EventStream_endPromise, _EventStream_resolveEndPromise, _EventStream_rejectEndPromise, _EventStream_listeners, _EventStream_abortListeners, _EventStream_emittedListenerRegistrations, _EventStream_pendingListenerCleanup, _EventStream_pendingBufferedEventChecks, _EventStream_listenerDispatchDepth, _EventStream_ended, _EventStream_errored, _EventStream_aborted, _EventStream_catchingPromiseCreated, _EventStream_terminalFailure, _EventStream_abortFromSignal, _EventStream_removeAbortListeners, _EventStream_onceForEmitted, _EventStream_removeEmittedListener, _EventStream_cleanupEmittedListeners, _EventStream_handleError, _EventStream_settleTerminalEvent;
 
 
@@ -121472,7 +121475,6 @@ class EventStream {
         // references to `this` before the `super()` constructor call returns.
         setTimeout(() => {
             let failed = false;
-            // oxlint-disable-next-line promise/catch-or-return -- Executor errors go through #handleError; exceptions thrown by user listeners must remain observable.
             Promise.resolve()
                 .then(executor)
                 .catch((error) => {
@@ -122032,7 +122034,6 @@ _EventStream_connectedPromise = new WeakMap(), _EventStream_resolveConnectedProm
         const error = args[0];
         __classPrivateFieldSet(this, _EventStream_terminalFailure, __classPrivateFieldGet(this, _EventStream_terminalFailure, "f") ?? { kind: 'abort', error }, "f");
         if (!__classPrivateFieldGet(this, _EventStream_catchingPromiseCreated, "f") && !hasListeners) {
-            // oxlint-disable-next-line promise/catch-or-return -- Surface an unobserved stream error as an unhandled rejection.
             Promise.reject(error);
         }
         __classPrivateFieldGet(this, _EventStream_rejectConnectedPromise, "f").call(this, error);
@@ -122052,7 +122053,6 @@ _EventStream_connectedPromise = new WeakMap(), _EventStream_resolveConnectedProm
             // - await runner.done()
             // - await runner.finalChatCompletion()
             // - etc.
-            // oxlint-disable-next-line promise/catch-or-return -- Surface an unobserved stream error as an unhandled rejection.
             Promise.reject(error);
         }
         __classPrivateFieldGet(this, _EventStream_rejectConnectedPromise, "f").call(this, error);
@@ -122061,7 +122061,7 @@ _EventStream_connectedPromise = new WeakMap(), _EventStream_resolveConnectedProm
     }
 };
 //# sourceMappingURL=EventStream.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/RunnableFunction.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/RunnableFunction.mjs
 /** Returns whether a runnable function provides a parser for its raw argument string. */
 function isRunnableFunctionWithParse(fn) {
     return typeof fn.parse === 'function';
@@ -122079,7 +122079,7 @@ class ParsingToolFunction {
     }
 }
 //# sourceMappingURL=RunnableFunction.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/AbstractChatCompletionRunner.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/AbstractChatCompletionRunner.mjs
 var _AbstractChatCompletionRunner_instances, AbstractChatCompletionRunner_a, _AbstractChatCompletionRunner_completionArrivedBeforeAbort, _AbstractChatCompletionRunner_afterCompletionInvoked, _AbstractChatCompletionRunner_getFinalContent, _AbstractChatCompletionRunner_getFinalMessage, _AbstractChatCompletionRunner_getFinalFunctionToolCall, _AbstractChatCompletionRunner_getFinalFunctionToolCallResult, _AbstractChatCompletionRunner_calculateTotalUsage, _AbstractChatCompletionRunner_throwIfAborted, _AbstractChatCompletionRunner_validateParams, _AbstractChatCompletionRunner_stringifyFunctionCallResult;
 
 
@@ -122572,7 +122572,7 @@ AbstractChatCompletionRunner_a = AbstractChatCompletionRunner, _AbstractChatComp
     return JSON.stringify(rawContent);
 };
 //# sourceMappingURL=AbstractChatCompletionRunner.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/ChatCompletionRunner.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/ChatCompletionRunner.mjs
 
 
 /** Executes function tools and follows up with non-streaming chat completion requests. */
@@ -122600,7 +122600,7 @@ class ChatCompletionRunner extends AbstractChatCompletionRunner {
     }
 }
 //# sourceMappingURL=ChatCompletionRunner.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/_vendor/partial-json-parser/parser.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/_vendor/partial-json-parser/parser.mjs
 const STR = 1;
 const NUM = 2;
 const ARR = 4;
@@ -122859,11 +122859,11 @@ const _parseJSON = (jsonString, allow) => {
 const partialParse = (input) => parseJSON(input, Allow.ALL ^ Allow.NUM);
 
 //# sourceMappingURL=parser.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/streaming.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/streaming.mjs
 /** @deprecated Import from ./core/streaming instead */
 
 //# sourceMappingURL=streaming.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/chat-completions/streaming.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/chat-completions/streaming.mjs
 function normalizeChatCompletionChunk(chunk) {
     if (!Array.isArray(chunk?.choices)) {
         // SAFETY: This is an opaque provider record, with no choices to normalize.
@@ -122887,7 +122887,7 @@ function normalizeChatCompletionStream(stream) {
     return stream;
 }
 //# sourceMappingURL=streaming.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/ChatCompletionStream.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/ChatCompletionStream.mjs
 var _ChatCompletionStream_instances, _ChatCompletionStream_params, _ChatCompletionStream_rejectsUnfinishedTurns, _ChatCompletionStream_audioDoneChoiceIndexes, _ChatCompletionStream_choiceEventStates, _ChatCompletionStream_currentChatCompletionSnapshot, _ChatCompletionStream_hasAutoParseableTool, _ChatCompletionStream_partialJSONParseBudget, _ChatCompletionStream_beginRequest, _ChatCompletionStream_getChoiceEventState, _ChatCompletionStream_addChunk, _ChatCompletionStream_emitToolCallDoneEvent, _ChatCompletionStream_emitContentDoneEvents, _ChatCompletionStream_validateStructuredSnapshots, _ChatCompletionStream_endRequest, _ChatCompletionStream_accumulateChatCompletion;
 
 
@@ -124624,7 +124624,7 @@ function ChatCompletionStream_assertNever(_x) {
     return _x;
 }
 //# sourceMappingURL=ChatCompletionStream.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/ChatCompletionStreamingRunner.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/ChatCompletionStreamingRunner.mjs
 
 
 
@@ -124683,7 +124683,7 @@ class ChatCompletionStreamingRunner extends ChatCompletionStream {
     }
 }
 //# sourceMappingURL=ChatCompletionStreamingRunner.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/completions/completions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/completions/completions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -124721,7 +124721,6 @@ const completions_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -124856,7 +124855,7 @@ class Completions extends APIResource {
 
 Completions.Messages = Messages;
 //# sourceMappingURL=completions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/chat.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/chat.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -124869,17 +124868,17 @@ class Chat extends APIResource {
 }
 Chat.Completions = Completions;
 //# sourceMappingURL=chat.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/completions/index.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/completions/index.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
 //# sourceMappingURL=index.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/index.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/chat/index.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
 //# sourceMappingURL=index.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/admin-api-keys.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/admin-api-keys.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -124907,7 +124906,6 @@ const admin_api_keys_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -125008,7 +125006,7 @@ class AdminAPIKeys extends APIResource {
     }
 }
 //# sourceMappingURL=admin-api-keys.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/audit-logs.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/audit-logs.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -125035,7 +125033,6 @@ const audit_logs_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -125098,7 +125095,7 @@ class AuditLogs extends APIResource {
     }
 }
 //# sourceMappingURL=audit-logs.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/certificates.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/certificates.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -125126,7 +125123,6 @@ const certificates_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -125292,7 +125288,7 @@ class Certificates extends APIResource {
     }
 }
 //# sourceMappingURL=certificates.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/data-retention.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/data-retention.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function data_retention_resolveResourceRequestOptions(options, buildOptions) {
@@ -125334,7 +125330,7 @@ class DataRetention extends APIResource {
     }
 }
 //# sourceMappingURL=data-retention.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/external-keys.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/external-keys.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -125362,7 +125358,6 @@ const external_keys_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -125484,7 +125479,7 @@ class ExternalKeys extends APIResource {
     }
 }
 //# sourceMappingURL=external-keys.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/external-storage.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/external-storage.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -125512,7 +125507,6 @@ const external_storage_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -125638,7 +125632,7 @@ class ExternalStorage extends APIResource {
     }
 }
 //# sourceMappingURL=external-storage.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/invites.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/invites.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -125666,7 +125660,6 @@ const invites_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -125769,7 +125762,7 @@ class Invites extends APIResource {
     }
 }
 //# sourceMappingURL=invites.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/roles.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/roles.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -125797,7 +125790,6 @@ const roles_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -125913,7 +125905,7 @@ class Roles extends APIResource {
     }
 }
 //# sourceMappingURL=roles.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/spend-alerts.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/spend-alerts.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -125941,7 +125933,6 @@ const spend_alerts_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -126075,7 +126066,7 @@ class SpendAlerts extends APIResource {
     }
 }
 //# sourceMappingURL=spend-alerts.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/spend-limit.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/spend-limit.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function spend_limit_resolveResourceRequestOptions(options, buildOptions) {
@@ -126134,7 +126125,7 @@ class SpendLimit extends APIResource {
     }
 }
 //# sourceMappingURL=spend-limit.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/usage.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/usage.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function usage_resolveResourceRequestOptions(options, buildOptions) {
@@ -126359,7 +126350,7 @@ class Usage extends APIResource {
     }
 }
 //# sourceMappingURL=usage.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/groups/roles.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/groups/roles.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -126387,7 +126378,6 @@ const groups_roles_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -126493,7 +126483,7 @@ class roles_Roles extends APIResource {
     }
 }
 //# sourceMappingURL=roles.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/groups/users.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/groups/users.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -126521,7 +126511,6 @@ const users_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -126627,7 +126616,7 @@ class Users extends APIResource {
     }
 }
 //# sourceMappingURL=users.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/groups/groups.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/groups/groups.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -126659,7 +126648,6 @@ const groups_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -126783,7 +126771,7 @@ class Groups extends APIResource {
 Groups.Users = Users;
 Groups.Roles = roles_Roles;
 //# sourceMappingURL=groups.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/api-keys.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/api-keys.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -126811,7 +126799,6 @@ const api_keys_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -126944,7 +126931,7 @@ class APIKeys extends APIResource {
     }
 }
 //# sourceMappingURL=api-keys.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/certificates.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/certificates.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -126972,7 +126959,6 @@ const projects_certificates_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -127068,7 +127054,7 @@ class certificates_Certificates extends APIResource {
     }
 }
 //# sourceMappingURL=certificates.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/data-retention.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/data-retention.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127114,7 +127100,7 @@ class data_retention_DataRetention extends APIResource {
     }
 }
 //# sourceMappingURL=data-retention.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/hosted-tool-permissions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/hosted-tool-permissions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127159,7 +127145,7 @@ class HostedToolPermissions extends APIResource {
     }
 }
 //# sourceMappingURL=hosted-tool-permissions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/model-permissions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/model-permissions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127222,7 +127208,7 @@ class ModelPermissions extends APIResource {
     }
 }
 //# sourceMappingURL=model-permissions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/rate-limits.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/rate-limits.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127250,7 +127236,6 @@ const rate_limits_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -127319,7 +127304,7 @@ class RateLimits extends APIResource {
     }
 }
 //# sourceMappingURL=rate-limits.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/roles.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/roles.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127347,7 +127332,6 @@ const projects_roles_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -127473,7 +127457,7 @@ class projects_roles_Roles extends APIResource {
     }
 }
 //# sourceMappingURL=roles.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/service-tier-settings.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/service-tier-settings.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127520,7 +127504,7 @@ class ServiceTierSettings extends APIResource {
     }
 }
 //# sourceMappingURL=service-tier-settings.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/spend-alerts.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/spend-alerts.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127548,7 +127532,6 @@ const projects_spend_alerts_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -127691,7 +127674,7 @@ class spend_alerts_SpendAlerts extends APIResource {
     }
 }
 //# sourceMappingURL=spend-alerts.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/spend-limit.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/spend-limit.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127758,7 +127741,7 @@ class spend_limit_SpendLimit extends APIResource {
     }
 }
 //# sourceMappingURL=spend-limit.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/groups/roles.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/groups/roles.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127849,7 +127832,7 @@ class groups_roles_Roles extends APIResource {
     }
 }
 //# sourceMappingURL=roles.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/groups/groups.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/groups/groups.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -127879,7 +127862,6 @@ const groups_groups_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -127991,7 +127973,7 @@ class groups_Groups extends APIResource {
 }
 groups_Groups.Roles = groups_roles_Roles;
 //# sourceMappingURL=groups.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/service-accounts/api-keys.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/service-accounts/api-keys.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -128021,7 +128003,7 @@ class api_keys_APIKeys extends APIResource {
     }
 }
 //# sourceMappingURL=api-keys.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/service-accounts/service-accounts.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/service-accounts/service-accounts.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -128051,7 +128033,6 @@ const service_accounts_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -128186,7 +128167,7 @@ class ServiceAccounts extends APIResource {
 }
 ServiceAccounts.APIKeys = api_keys_APIKeys;
 //# sourceMappingURL=service-accounts.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/users/roles.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/users/roles.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -128277,7 +128258,7 @@ class users_roles_Roles extends APIResource {
     }
 }
 //# sourceMappingURL=roles.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/users/users.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/users/users.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -128307,7 +128288,6 @@ const users_users_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -128442,7 +128422,7 @@ class users_Users extends APIResource {
 }
 users_Users.Roles = users_roles_Roles;
 //# sourceMappingURL=users.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/projects.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/projects/projects.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -128496,7 +128476,6 @@ const projects_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -128537,7 +128516,6 @@ class Projects extends APIResource {
         this.apiKeys = new APIKeys(this._client);
         this.rateLimits = new RateLimits(this._client);
         this.modelPermissions = new ModelPermissions(this._client);
-        this.serviceTierSettings = new ServiceTierSettings(this._client);
         this.hostedToolPermissions = new HostedToolPermissions(this._client);
         this.groups = new groups_Groups(this._client);
         this.roles = new projects_roles_Roles(this._client);
@@ -128545,6 +128523,7 @@ class Projects extends APIResource {
         this.spendLimit = new spend_limit_SpendLimit(this._client);
         this.spendAlerts = new spend_alerts_SpendAlerts(this._client);
         this.certificates = new certificates_Certificates(this._client);
+        this.serviceTierSettings = new ServiceTierSettings(this._client);
     }
     /**
      * Create a new project in the organization. Projects can be created and archived,
@@ -128637,7 +128616,6 @@ Projects.ServiceAccounts = ServiceAccounts;
 Projects.APIKeys = APIKeys;
 Projects.RateLimits = RateLimits;
 Projects.ModelPermissions = ModelPermissions;
-Projects.ServiceTierSettings = ServiceTierSettings;
 Projects.HostedToolPermissions = HostedToolPermissions;
 Projects.Groups = groups_Groups;
 Projects.Roles = projects_roles_Roles;
@@ -128645,8 +128623,9 @@ Projects.DataRetention = data_retention_DataRetention;
 Projects.SpendLimit = spend_limit_SpendLimit;
 Projects.SpendAlerts = spend_alerts_SpendAlerts;
 Projects.Certificates = certificates_Certificates;
+Projects.ServiceTierSettings = ServiceTierSettings;
 //# sourceMappingURL=projects.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/users/roles.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/users/roles.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -128674,7 +128653,6 @@ const users_roles_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -128780,7 +128758,7 @@ class organization_users_roles_Roles extends APIResource {
     }
 }
 //# sourceMappingURL=roles.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/users/users.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/users/users.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -128810,7 +128788,6 @@ const organization_users_users_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -128911,7 +128888,7 @@ class users_users_Users extends APIResource {
 }
 users_users_Users.Roles = organization_users_roles_Roles;
 //# sourceMappingURL=users.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/workload-identity-providers/federation-rules.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/workload-identity-providers/federation-rules.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -128939,7 +128916,6 @@ const federation_rules_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -129069,7 +129045,7 @@ class FederationRules extends APIResource {
     }
 }
 //# sourceMappingURL=federation-rules.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/workload-identity-providers/workload-identity-providers.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/workload-identity-providers/workload-identity-providers.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129099,7 +129075,6 @@ const workload_identity_providers_normalizeRequestOptionsForQueryKeys = new Set(
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -129228,7 +129203,7 @@ class WorkloadIdentityProviders extends APIResource {
 }
 WorkloadIdentityProviders.FederationRules = FederationRules;
 //# sourceMappingURL=workload-identity-providers.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/organization.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/organization/organization.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129273,12 +129248,12 @@ class Organization extends APIResource {
         this.roles = new Roles(this._client);
         this.dataRetention = new DataRetention(this._client);
         this.externalKeys = new ExternalKeys(this._client);
-        this.workloadIdentityProviders = new WorkloadIdentityProviders(this._client);
         this.externalStorage = new ExternalStorage(this._client);
         this.spendLimit = new SpendLimit(this._client);
         this.spendAlerts = new SpendAlerts(this._client);
         this.certificates = new Certificates(this._client);
         this.projects = new Projects(this._client);
+        this.workloadIdentityProviders = new WorkloadIdentityProviders(this._client);
     }
 }
 Organization.AuditLogs = AuditLogs;
@@ -129290,14 +129265,14 @@ Organization.Groups = Groups;
 Organization.Roles = Roles;
 Organization.DataRetention = DataRetention;
 Organization.ExternalKeys = ExternalKeys;
-Organization.WorkloadIdentityProviders = WorkloadIdentityProviders;
 Organization.ExternalStorage = ExternalStorage;
 Organization.SpendLimit = SpendLimit;
 Organization.SpendAlerts = SpendAlerts;
 Organization.Certificates = Certificates;
 Organization.Projects = Projects;
+Organization.WorkloadIdentityProviders = WorkloadIdentityProviders;
 //# sourceMappingURL=organization.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/admin.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/admin/admin.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129310,7 +129285,7 @@ class Admin extends APIResource {
 }
 Admin.Organization = Organization;
 //# sourceMappingURL=admin.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/speech.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/speech.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129357,7 +129332,7 @@ class Speech extends APIResource {
     }
 }
 //# sourceMappingURL=speech.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/transcriptions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/transcriptions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129381,7 +129356,7 @@ class Transcriptions extends APIResource {
     }
 }
 //# sourceMappingURL=transcriptions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/translations.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/translations.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129401,7 +129376,7 @@ class Translations extends APIResource {
     }
 }
 //# sourceMappingURL=translations.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/voice-consents.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/voice-consents.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129430,7 +129405,6 @@ const voice_consents_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -129541,7 +129515,7 @@ class VoiceConsents extends APIResource {
     }
 }
 //# sourceMappingURL=voice-consents.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/voices.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/voices.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129600,7 +129574,7 @@ class Voices extends APIResource {
     }
 }
 //# sourceMappingURL=voices.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/audio.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/audio/audio.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129629,7 +129603,7 @@ Audio.Speech = Speech;
 Audio.Voices = Voices;
 Audio.VoiceConsents = VoiceConsents;
 //# sourceMappingURL=audio.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/batches.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/batches.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129657,7 +129631,6 @@ const batches_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -129733,7 +129706,7 @@ class Batches extends APIResource {
     }
 }
 //# sourceMappingURL=batches.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/assistants.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/assistants.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129762,7 +129735,6 @@ const assistants_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -129865,7 +129837,7 @@ class Assistants extends APIResource {
     }
 }
 //# sourceMappingURL=assistants.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/automations/invocations.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/automations/invocations.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -129894,7 +129866,6 @@ const invocations_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -129982,7 +129953,7 @@ class Invocations extends APIResource {
     }
 }
 //# sourceMappingURL=invocations.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/automations/automations.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/automations/automations.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -130013,7 +129984,6 @@ const automations_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -130193,7 +130163,7 @@ class Automations extends APIResource {
 }
 Automations.Invocations = Invocations;
 //# sourceMappingURL=automations.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/files.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/files.mjs
 
 
 /** Beta: uploaded file IDs remain available after partial preparation or staging failure. */
@@ -130292,7 +130262,7 @@ async function uploadAgentFile(client, resource, environmentID, params, options)
     }
 }
 //# sourceMappingURL=files.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/environments/files.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/environments/files.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -130359,7 +130329,7 @@ class Files extends APIResource {
     }
 }
 //# sourceMappingURL=files.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/environments/templates.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/environments/templates.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -130388,7 +130358,6 @@ const templates_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -130518,7 +130487,7 @@ class Templates extends APIResource {
     }
 }
 //# sourceMappingURL=templates.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/environments/environments.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/environments/environments.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -130551,7 +130520,6 @@ const environments_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -130663,7 +130631,7 @@ class EnvironmentInfosPage extends CursorPage {
 Environments.Files = Files;
 Environments.Templates = Templates;
 //# sourceMappingURL=environments.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/pages.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/pages.mjs
 
 
 /** Retain server cursor metadata for legacy Agents items with nullable IDs.
@@ -130693,7 +130661,7 @@ async function* agentItems(load) {
     }
 }
 //# sourceMappingURL=pages.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/result-artifacts.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/result-artifacts.mjs
 var _AgentResultArtifacts_resource, _AgentResultArtifacts_sessionID, _AgentResultArtifacts_turnID;
 
 
@@ -130757,7 +130725,7 @@ class AgentResultArtifacts {
 }
 _AgentResultArtifacts_resource = new WeakMap(), _AgentResultArtifacts_sessionID = new WeakMap(), _AgentResultArtifacts_turnID = new WeakMap();
 //# sourceMappingURL=result-artifacts.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/artifacts.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/artifacts.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -130787,7 +130755,6 @@ const artifacts_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -130913,7 +130880,7 @@ class Artifacts extends APIResource {
     }
 }
 //# sourceMappingURL=artifacts.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/events.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/events.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -130990,13 +130957,12 @@ class Events extends APIResource {
                 options?.headers,
             ]),
             stream: true,
-            __streamMode: 'events',
             __security: { bearerAuth: true },
         })));
     }
 }
 //# sourceMappingURL=events.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/items.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/items.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -131025,7 +130991,6 @@ const items_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -131075,7 +131040,7 @@ class Items extends APIResource {
     }
 }
 //# sourceMappingURL=items.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/traces.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/traces.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -131104,7 +131069,6 @@ const traces_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -131154,7 +131118,7 @@ class Traces extends APIResource {
     }
 }
 //# sourceMappingURL=traces.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/subagents/items.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/subagents/items.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -131190,7 +131154,7 @@ class items_Items extends APIResource {
     }
 }
 //# sourceMappingURL=items.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/subagents/turns/items.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/subagents/turns/items.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -131226,7 +131190,7 @@ class turns_items_Items extends APIResource {
     }
 }
 //# sourceMappingURL=items.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/subagents/turns/turns.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/subagents/turns/turns.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -131293,7 +131257,7 @@ class Turns extends APIResource {
 }
 Turns.Items = turns_items_Items;
 //# sourceMappingURL=turns.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/subagents/subagents.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/subagents/subagents.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -131326,7 +131290,6 @@ const subagents_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -131404,7 +131367,7 @@ class Subagents extends APIResource {
 Subagents.Items = items_Items;
 Subagents.Turns = Turns;
 //# sourceMappingURL=subagents.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/turns/items.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/turns/items.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -131441,7 +131404,7 @@ class sessions_turns_items_Items extends APIResource {
     }
 }
 //# sourceMappingURL=items.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/turns/turns.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/turns/turns.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -131472,7 +131435,6 @@ const turns_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -131549,7 +131511,7 @@ class turns_Turns extends APIResource {
 }
 turns_Turns.Items = sessions_turns_items_Items;
 //# sourceMappingURL=turns.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/agents/turn-state.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/agents/turn-state.mjs
 var _TurnState_turnID, _TurnState_turnEnded, _TurnState_eventIDs, _TurnState_calls;
 
 /** Tracks one helper invocation's coordinator turn and duplicate deliveries.
@@ -131608,7 +131570,7 @@ class TurnState {
 }
 _TurnState_turnID = new WeakMap(), _TurnState_turnEnded = new WeakMap(), _TurnState_eventIDs = new WeakMap(), _TurnState_calls = new WeakMap();
 //# sourceMappingURL=turn-state.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/tool-output.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/tool-output.mjs
 
 /**
  * Recognizes supported content blocks without confusing JSON business data with content.
@@ -131632,11 +131594,11 @@ function isInputContent(value) {
     return values_hasOwn(content, 'type') && values_hasOwn(content, field) && typeof content[field] === 'string';
 }
 //# sourceMappingURL=tool-output.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/tool-stages.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/tool-stages.mjs
 /** @internal */
 const toolStages = Symbol.for('openai.beta.agents.toolStages');
 //# sourceMappingURL=tool-stages.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/tool-dispatcher.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/tool-dispatcher.mjs
 var _AgentToolDispatcher_instances, _AgentToolDispatcher_handlers, _AgentToolDispatcher_options, _AgentToolDispatcher_sessions, _AgentToolDispatcher_controller, _AgentToolDispatcher_onToolError, _AgentToolDispatcher_result, _AgentToolDispatcher_checkAbort, _AgentToolDispatcher_abortError, _AgentToolDispatcher_wait, _AgentToolDispatcher_submit;
 
 
@@ -131818,13 +131780,13 @@ _AgentToolDispatcher_handlers = new WeakMap(), _AgentToolDispatcher_options = ne
     }
 };
 //# sourceMappingURL=tool-dispatcher.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/agents/output-text.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/agents/output-text.mjs
 /** Joins output_text blocks in content order, without filtering phase, fetching, or mutating the message. */
 function outputText(message) {
     return message.content.map((block) => (block.type === 'output_text' ? block.text : '')).join('');
 }
 //# sourceMappingURL=output-text.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/agent-turn-result.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/agent-turn-result.mjs
 
 /** Beta: the completed final assistant messages from one hosted root turn. */
 class AgentTurnResult {
@@ -131843,7 +131805,7 @@ class AgentTurnResult {
     }
 }
 //# sourceMappingURL=agent-turn-result.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/parsed-agent-turn-result.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/parsed-agent-turn-result.mjs
 
 /** Beta: a completed hosted turn whose output passed the local parser. */
 class ParsedAgentTurnResult extends AgentTurnResult {
@@ -131854,7 +131816,7 @@ class ParsedAgentTurnResult extends AgentTurnResult {
     }
 }
 //# sourceMappingURL=parsed-agent-turn-result.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/output-parse-error.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/output-parse-error.mjs
 var _AgentOutputParseError_rawResult;
 
 
@@ -131873,7 +131835,7 @@ class AgentOutputParseError extends error_OpenAIError {
 }
 _AgentOutputParseError_rawResult = new WeakMap();
 //# sourceMappingURL=output-parse-error.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/parse-result.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/parse-result.mjs
 
 
 
@@ -131984,7 +131946,7 @@ async function parseAgentResultPromise(result, format) {
     return parseAgentResult(await result, format);
 }
 //# sourceMappingURL=parse-result.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/agent-turn-result-error.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/agent-turn-result-error.mjs
 
 /** Beta: final collection failed; partial state is evidence, not a successful result. */
 class AgentTurnResultError extends error_OpenAIError {
@@ -132003,7 +131965,7 @@ class AgentTurnResultError extends error_OpenAIError {
     }
 }
 //# sourceMappingURL=agent-turn-result-error.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/agent-turn-result-collector.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/agent-turn-result-collector.mjs
 var _AgentTurnResultCollector_instances, _AgentTurnResultCollector_sessionID, _AgentTurnResultCollector_turn, _AgentTurnResultCollector_messages, _AgentTurnResultCollector_requiredActions, _AgentTurnResultCollector_checkedActionsFor, _AgentTurnResultCollector_sessionFailed, _AgentTurnResultCollector_terminal, _AgentTurnResultCollector_idle, _AgentTurnResultCollector_acceptTurn, _AgentTurnResultCollector_acceptOutput, _AgentTurnResultCollector_finalMessages;
 
 
@@ -132107,7 +132069,7 @@ _AgentTurnResultCollector_sessionID = new WeakMap(), _AgentTurnResultCollector_t
         .map(({ message }) => message));
 };
 //# sourceMappingURL=agent-turn-result-collector.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/result-collection.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/result-collection.mjs
 var _ResultCollection_instances, _ResultCollection_iterator, _ResultCollection_ended, _ResultCollection_enabled, _ResultCollection_uncollectedEvents, _ResultCollection_error, _ResultCollection_result, _ResultCollection_source, _ResultCollection_signal, _ResultCollection_canHandle, _ResultCollection_observe, _ResultCollection_collect;
 
 
@@ -132214,7 +132176,7 @@ _ResultCollection_iterator = new WeakMap(), _ResultCollection_ended = new WeakMa
     }
 };
 //# sourceMappingURL=result-collection.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/agents/agent-session-stream.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/agents/agent-session-stream.mjs
 var _AgentSessionStream_instances, _AgentSessionStream_consumed, _AgentSessionStream_format, _AgentSessionStream_parsedResult, _AgentSessionStream_collection, _AgentSessionStream_stream, _AgentSessionStream_response, _AgentSessionStream_reading, _AgentSessionStream_sessions, _AgentSessionStream_sessionID, _AgentSessionStream_input, _AgentSessionStream_dispatcher, _AgentSessionStream_inputKey, _AgentSessionStream_options, _AgentSessionStream_iterate, _AgentSessionStream_checkAbort, _AgentSessionStream_abortError;
 
 
@@ -132386,7 +132348,7 @@ _AgentSessionStream_iterate = async function* _AgentSessionStream_iterate() {
     return error;
 };
 //# sourceMappingURL=agent-session-stream.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/agent-session-create-stream.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/beta/agents/agent-session-create-stream.mjs
 
 
 
@@ -132476,7 +132438,7 @@ function captureCreationTools(body, options) {
     };
 }
 //# sourceMappingURL=agent-session-create-stream.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/sessions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/sessions/sessions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -132523,7 +132485,6 @@ const sessions_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -132574,7 +132535,6 @@ class Sessions extends APIResource {
             ...options,
             headers: headers_buildHeaders([{ 'OpenAI-Beta': 'agents=v1' }, options?.headers]),
             stream: body.stream ?? false,
-            __streamMode: 'events',
             __security: { bearerAuth: true },
         }, { streamFromBody: true })));
         return request(output.body, output.options)._thenUnwrap((data, { options }) => 
@@ -132667,7 +132627,7 @@ Sessions.Events = Events;
 Sessions.Traces = Traces;
 Sessions.Turns = turns_Turns;
 //# sourceMappingURL=sessions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/vaults/credentials.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/vaults/credentials.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -132696,7 +132656,6 @@ const credentials_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -132839,7 +132798,7 @@ class Credentials extends APIResource {
     }
 }
 //# sourceMappingURL=credentials.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/vaults/vaults.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/vaults/vaults.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -132870,7 +132829,6 @@ const vaults_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -132999,7 +132957,7 @@ class Vaults extends APIResource {
 }
 Vaults.Credentials = Credentials;
 //# sourceMappingURL=vaults.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/agents.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/agents/agents.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -133036,7 +132994,6 @@ const agents_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -133167,7 +133124,7 @@ Agents.Environments = Environments;
 Agents.Vaults = Vaults;
 Agents.Sessions = Sessions;
 //# sourceMappingURL=agents.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/chatkit/sessions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/chatkit/sessions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -133216,7 +133173,7 @@ class sessions_Sessions extends APIResource {
     }
 }
 //# sourceMappingURL=sessions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/chatkit/threads.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/chatkit/threads.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -133245,7 +133202,6 @@ const threads_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -133342,7 +133298,7 @@ class Threads extends APIResource {
     }
 }
 //# sourceMappingURL=threads.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/chatkit/chatkit.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/chatkit/chatkit.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -133359,7 +133315,7 @@ class ChatKit extends APIResource {
 ChatKit.Sessions = sessions_Sessions;
 ChatKit.Threads = Threads;
 //# sourceMappingURL=chatkit.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/responses/input-items.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/responses/input-items.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -133388,7 +133344,6 @@ const input_items_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -133445,7 +133400,7 @@ class InputItems extends APIResource {
     }
 }
 //# sourceMappingURL=input-items.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/responses/input-tokens.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/responses/input-tokens.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -133482,7 +133437,7 @@ class InputTokens extends APIResource {
     }
 }
 //# sourceMappingURL=input-tokens.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/responses/responses.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/responses/responses.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -133517,7 +133472,6 @@ const responses_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -133670,7 +133624,7 @@ class Responses extends APIResource {
 Responses.InputItems = InputItems;
 Responses.InputTokens = InputTokens;
 //# sourceMappingURL=responses.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/threads/messages.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/threads/messages.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -133699,7 +133653,6 @@ const messages_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -133807,7 +133760,7 @@ class messages_Messages extends APIResource {
     }
 }
 //# sourceMappingURL=messages.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/threads/runs/steps.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/threads/runs/steps.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -133852,7 +133805,7 @@ class Steps extends APIResource {
     }
 }
 //# sourceMappingURL=steps.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/polling.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/polling.mjs
 
 
 
@@ -133981,7 +133934,7 @@ async function pollWithResponse(retrieve, intermediateStatuses, terminalStatuses
     }
 }
 //# sourceMappingURL=polling.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/assistant-run-polling.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/assistant-run-polling.mjs
 
 /**
  * Polls an assistant run through the resource's retrieve method, preserving the
@@ -133996,7 +133949,7 @@ function pollAssistantRun(resource, runID, params, options) {
     }), ['queued', 'in_progress', 'cancelling'], ['requires_action', 'incomplete', 'cancelled', 'completed', 'failed', 'expired'], options);
 }
 //# sourceMappingURL=assistant-run-polling.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/base64.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/base64.mjs
 
 
 const toBase64 = (data) => {
@@ -134054,7 +134007,7 @@ const toFloat32Array = (base64Str) => {
     }
 };
 //# sourceMappingURL=base64.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/env.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/env.mjs
 /**
  * Read an environment variable.
  *
@@ -134077,7 +134030,7 @@ const env_readEnv = (env) => {
     return undefined;
 };
 //# sourceMappingURL=env.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils.mjs
 
 
 
@@ -134086,7 +134039,7 @@ const env_readEnv = (env) => {
 
 
 //# sourceMappingURL=utils.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/assistant-stream-delta.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/assistant-stream-delta.mjs
 
 
 const MAX_ASSISTANT_STREAM_ARRAY_GROWTH = 1024;
@@ -134395,7 +134348,7 @@ function createAssistantStreamArrayDeltaCommit(accumulator, delta, kind, cacheAr
     return () => commitAssistantStreamArrayProjection(projection);
 }
 //# sourceMappingURL=assistant-stream-delta.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/AssistantStream.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/AssistantStream.mjs
 var _AssistantStream_instances, _AssistantStream_runStepSnapshots, _AssistantStream_runStepIDOwners, _AssistantStream_activeRunStepID, _AssistantStream_messageSnapshots, _AssistantStream_messageIDOwners, _AssistantStream_messageSnapshot, _AssistantStream_activeMessageID, _AssistantStream_finalRun, _AssistantStream_currentContentIndex, _AssistantStream_currentContent, _AssistantStream_currentToolCallIndex, _AssistantStream_currentToolCall, _AssistantStream_currentEvent, _AssistantStream_currentRunSnapshot, _AssistantStream_currentRunStepSnapshot, _AssistantStream_addEvent, _AssistantStream_endRequest, _AssistantStream_validateRunStepEvent, _AssistantStream_reserveRunStepAlias, _AssistantStream_validateMessageEvent, _AssistantStream_reserveMessageAlias, _AssistantStream_handleMessage, _AssistantStream_handleRunStep, _AssistantStream_emitExposed, _AssistantStream_handleEvent, _AssistantStream_accumulateRunStep, _AssistantStream_accumulateMessage, _AssistantStream_accumulateContent, _AssistantStream_handleRun;
 
 
@@ -135116,7 +135069,7 @@ function AssistantStream_assertNever(_x) {
     return _x;
 }
 //# sourceMappingURL=AssistantStream.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/threads/runs/runs.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/threads/runs/runs.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -135152,7 +135105,6 @@ const runs_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -135319,7 +135271,7 @@ class Runs extends APIResource {
 }
 Runs.Steps = Steps;
 //# sourceMappingURL=runs.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/threads/threads.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/threads/threads.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -135425,7 +135377,7 @@ class threads_Threads extends APIResource {
 threads_Threads.Runs = Runs;
 threads_Threads.Messages = messages_Messages;
 //# sourceMappingURL=threads.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/realtime/sessions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/realtime/sessions.mjs
 
 
 class realtime_sessions_Sessions extends APIResource {
@@ -135454,7 +135406,7 @@ class realtime_sessions_Sessions extends APIResource {
     }
 }
 //# sourceMappingURL=sessions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/realtime/transcription-sessions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/realtime/transcription-sessions.mjs
 
 
 class TranscriptionSessions extends APIResource {
@@ -135483,7 +135435,7 @@ class TranscriptionSessions extends APIResource {
     }
 }
 //# sourceMappingURL=transcription-sessions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/realtime/realtime.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/realtime/realtime.mjs
 
 
 
@@ -135502,7 +135454,7 @@ class Realtime extends APIResource {
 Realtime.Sessions = realtime_sessions_Sessions;
 Realtime.TranscriptionSessions = TranscriptionSessions;
 //# sourceMappingURL=realtime.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/beta.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/beta/beta.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -135536,7 +135488,7 @@ Beta.ChatKit = ChatKit;
 Beta.Assistants = Assistants;
 Beta.Threads = threads_Threads;
 //# sourceMappingURL=beta.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/completions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/completions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function resources_completions_resolveResourceRequestOptions(options, buildOptions) {
@@ -135554,7 +135506,7 @@ class completions_Completions extends APIResource {
     }
 }
 //# sourceMappingURL=completions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/containers/files/content.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/containers/files/content.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -135577,7 +135529,7 @@ class Content extends APIResource {
     }
 }
 //# sourceMappingURL=content.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/containers/files/files.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/containers/files/files.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -135612,7 +135564,6 @@ const files_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -135693,7 +135644,7 @@ class files_Files extends APIResource {
 }
 files_Files.Content = Content;
 //# sourceMappingURL=files.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/containers/containers.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/containers/containers.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -135724,7 +135675,6 @@ const containers_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -135804,7 +135754,7 @@ class Containers extends APIResource {
 }
 Containers.Files = files_Files;
 //# sourceMappingURL=containers.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/content-provenance-checks.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/content-provenance-checks.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -135828,7 +135778,7 @@ class ContentProvenanceChecks extends APIResource {
     }
 }
 //# sourceMappingURL=content-provenance-checks.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/conversations/items.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/conversations/items.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -135856,7 +135806,6 @@ const conversations_items_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -135938,7 +135887,7 @@ class conversations_items_Items extends APIResource {
     }
 }
 //# sourceMappingURL=items.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/conversations/conversations.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/conversations/conversations.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -135990,7 +135939,7 @@ class Conversations extends APIResource {
 }
 Conversations.Items = conversations_items_Items;
 //# sourceMappingURL=conversations.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/decisions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/decisions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function decisions_resolveResourceRequestOptions(options, buildOptions) {
@@ -136010,7 +135959,7 @@ class Decisions extends APIResource {
     }
 }
 //# sourceMappingURL=decisions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/embeddings.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/embeddings.mjs
 
 /**
  * Sends the optimized embeddings request while preserving explicit encodings and
@@ -136066,7 +136015,7 @@ function createEmbedding(client, body, options) {
     });
 }
 //# sourceMappingURL=embeddings.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/embeddings.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/embeddings.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136079,7 +136028,7 @@ class Embeddings extends APIResource {
     }
 }
 //# sourceMappingURL=embeddings.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/evals/runs/output-items.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/evals/runs/output-items.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136111,7 +136060,7 @@ class OutputItems extends APIResource {
     }
 }
 //# sourceMappingURL=output-items.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/evals/runs/runs.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/evals/runs/runs.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136141,7 +136090,6 @@ const runs_runs_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -136231,7 +136179,7 @@ class runs_Runs extends APIResource {
 }
 runs_Runs.OutputItems = OutputItems;
 //# sourceMappingURL=runs.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/evals/evals.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/evals/evals.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136261,7 +136209,6 @@ const evals_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -136355,7 +136302,7 @@ class Evals extends APIResource {
 }
 Evals.Runs = runs_Runs;
 //# sourceMappingURL=evals.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/file-processing.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/file-processing.mjs
 
 
 /**
@@ -136384,7 +136331,7 @@ async function waitForFileProcessing(resource, id, pollInterval, maxWait) {
     return file;
 }
 //# sourceMappingURL=file-processing.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/files.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/files.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136415,7 +136362,6 @@ const resources_files_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -136528,13 +136474,13 @@ class resources_files_Files extends APIResource {
     }
 }
 //# sourceMappingURL=files.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/methods.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/methods.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 class Methods extends APIResource {
 }
 //# sourceMappingURL=methods.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/alpha/graders.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/alpha/graders.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function graders_resolveResourceRequestOptions(options, buildOptions) {
@@ -136594,7 +136540,7 @@ class Graders extends APIResource {
     }
 }
 //# sourceMappingURL=graders.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/alpha/alpha.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/alpha/alpha.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136607,7 +136553,7 @@ class Alpha extends APIResource {
 }
 Alpha.Graders = Graders;
 //# sourceMappingURL=alpha.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/checkpoints/permissions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/checkpoints/permissions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136635,7 +136581,6 @@ const permissions_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -136752,7 +136697,7 @@ class Permissions extends APIResource {
     }
 }
 //# sourceMappingURL=permissions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/checkpoints/checkpoints.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/checkpoints/checkpoints.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136765,7 +136710,7 @@ class Checkpoints extends APIResource {
 }
 Checkpoints.Permissions = Permissions;
 //# sourceMappingURL=checkpoints.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/jobs/checkpoints.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/jobs/checkpoints.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136793,7 +136738,6 @@ const checkpoints_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -136845,7 +136789,7 @@ class checkpoints_Checkpoints extends APIResource {
     }
 }
 //# sourceMappingURL=checkpoints.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/jobs/jobs.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/jobs/jobs.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -136875,7 +136819,6 @@ const jobs_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -137023,7 +136966,7 @@ class Jobs extends APIResource {
 }
 Jobs.Checkpoints = checkpoints_Checkpoints;
 //# sourceMappingURL=jobs.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/fine-tuning.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/fine-tuning/fine-tuning.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137048,13 +136991,13 @@ FineTuning.Jobs = Jobs;
 FineTuning.Checkpoints = Checkpoints;
 FineTuning.Alpha = Alpha;
 //# sourceMappingURL=fine-tuning.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/graders/grader-models.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/graders/grader-models.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 class GraderModels extends APIResource {
 }
 //# sourceMappingURL=grader-models.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/graders/graders.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/graders/graders.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137067,7 +137010,7 @@ class graders_Graders extends APIResource {
 }
 graders_Graders.GraderModels = GraderModels;
 //# sourceMappingURL=graders.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/images.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/images.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137111,7 +137054,7 @@ class Images extends APIResource {
     }
 }
 //# sourceMappingURL=images.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/live/sessions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/live/sessions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137235,19 +137178,19 @@ class live_sessions_Sessions extends APIResource {
     }
 }
 //# sourceMappingURL=sessions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/live/forks/forks.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/live/forks/forks.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 class Forks extends APIResource {
 }
 //# sourceMappingURL=forks.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/live/sideband/sideband.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/live/sideband/sideband.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 class Sideband extends APIResource {
 }
 //# sourceMappingURL=sideband.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/live/live.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/live/live.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137290,7 +137233,7 @@ Live.Sideband = Sideband;
 Live.Forks = Forks;
 Live.Sessions = live_sessions_Sessions;
 //# sourceMappingURL=live.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/models.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/models.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137325,7 +137268,7 @@ class Models extends APIResource {
     }
 }
 //# sourceMappingURL=models.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/moderations.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/moderations.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function moderations_resolveResourceRequestOptions(options, buildOptions) {
@@ -137349,7 +137292,7 @@ class Moderations extends APIResource {
     }
 }
 //# sourceMappingURL=moderations.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/multipart-encoding.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/multipart-encoding.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137398,7 +137341,7 @@ async function encodedMultipartFormRequestOptions(options, client, encodings, ra
     };
 }
 //# sourceMappingURL=multipart-encoding.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/calls.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/calls.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137501,7 +137444,7 @@ class Calls extends APIResource {
     }
 }
 //# sourceMappingURL=calls.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/client-secrets.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/client-secrets.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function client_secrets_resolveResourceRequestOptions(options, buildOptions) {
@@ -137540,7 +137483,7 @@ class ClientSecrets extends APIResource {
     }
 }
 //# sourceMappingURL=client-secrets.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/translations/client-secrets.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/translations/client-secrets.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function translations_client_secrets_resolveResourceRequestOptions(options, buildOptions) {
@@ -137576,7 +137519,7 @@ class client_secrets_ClientSecrets extends APIResource {
     }
 }
 //# sourceMappingURL=client-secrets.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/translations/translations.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/translations/translations.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137589,7 +137532,7 @@ class translations_Translations extends APIResource {
 }
 translations_Translations.ClientSecrets = client_secrets_ClientSecrets;
 //# sourceMappingURL=translations.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/realtime.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/realtime/realtime.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137610,7 +137553,7 @@ realtime_Realtime.ClientSecrets = ClientSecrets;
 realtime_Realtime.Calls = Calls;
 realtime_Realtime.Translations = translations_Translations;
 //# sourceMappingURL=realtime.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/responses/input-items.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/responses/input-items.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -137638,7 +137581,6 @@ const responses_input_items_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -137690,7 +137632,7 @@ class input_items_InputItems extends APIResource {
     }
 }
 //# sourceMappingURL=input-items.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/responses/input-tokens.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/responses/input-tokens.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function responses_input_tokens_resolveResourceRequestOptions(options, buildOptions) {
@@ -137720,7 +137662,7 @@ class input_tokens_InputTokens extends APIResource {
     }
 }
 //# sourceMappingURL=input-tokens.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/ResponsesParser.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/ResponsesParser.mjs
 
 
 
@@ -137989,7 +137931,7 @@ function addOutputText(rsp) {
     rsp.output_text = texts.join('');
 }
 //# sourceMappingURL=ResponsesParser.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/responses/output-text-index.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/responses/output-text-index.mjs
 /**
  * Stores output text lengths in a complete binary segment tree.
  *
@@ -138063,7 +138005,7 @@ class OutputTextIndex {
     }
 }
 //# sourceMappingURL=output-text-index.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/responses/canonical-output-text.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/responses/canonical-output-text.mjs
 
 function createCanonicalResponseContext() {
     return {
@@ -138190,7 +138132,7 @@ function updateOutputText(context, snapshot, outputIndex, previousText, nextText
             snapshot.output_text.slice(offset + previousText.length);
 }
 //# sourceMappingURL=canonical-output-text.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/responses/response-accumulator.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/responses/response-accumulator.mjs
 
 
 
@@ -139220,7 +139162,7 @@ function accumulateResponseWithContext(event, snapshot, context, rejectInvalidSh
     return response_accumulator_assertNever(dispatchEvent);
 }
 //# sourceMappingURL=response-accumulator.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/responses/ResponseStream.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/responses/ResponseStream.mjs
 var _ResponseStream_instances, _ResponseStream_params, _ResponseStream_currentResponseSnapshot, _ResponseStream_finalResponse, _ResponseStream_accumulatorContext, _ResponseStream_outputPositions, _ResponseStream_wireByIdentity, _ResponseStream_interimOrderDirty, _ResponseStream_completedOutput, _ResponseStream_unfinishedOutput, _ResponseStream_beginRequest, _ResponseStream_prepareEvent, _ResponseStream_prepareOutputEvent, _ResponseStream_outputAtWireIndex, _ResponseStream_assertComplete, _ResponseStream_recordOutput, _ResponseStream_reorderInterimOutput, _ResponseStream_updateInterimResponse, _ResponseStream_addEvent, _ResponseStream_endRequest;
 
 
@@ -139777,7 +139719,7 @@ function finalizeResponse(snapshot, params, format) {
     return maybeParseResponse(snapshot, params, format);
 }
 //# sourceMappingURL=ResponseStream.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/responses/responses.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/responses/responses.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -139814,7 +139756,6 @@ const responses_responses_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -139952,7 +139893,7 @@ class responses_Responses extends APIResource {
 responses_Responses.InputItems = input_items_InputItems;
 responses_Responses.InputTokens = input_tokens_InputTokens;
 //# sourceMappingURL=responses.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/safety/alerts.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/safety/alerts.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -139968,7 +139909,7 @@ class Alerts extends APIResource {
     }
 }
 //# sourceMappingURL=alerts.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/safety/cases.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/safety/cases.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -139984,7 +139925,7 @@ class Cases extends APIResource {
     }
 }
 //# sourceMappingURL=cases.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/safety/safety.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/safety/safety.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140001,7 +139942,7 @@ class Safety extends APIResource {
 Safety.Cases = Cases;
 Safety.Alerts = Alerts;
 //# sourceMappingURL=safety.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/skills/content.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/skills/content.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140023,7 +139964,7 @@ class content_Content extends APIResource {
     }
 }
 //# sourceMappingURL=content.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/skills/versions/content.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/skills/versions/content.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140046,7 +139987,7 @@ class versions_content_Content extends APIResource {
     }
 }
 //# sourceMappingURL=content.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/skills/versions/versions.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/skills/versions/versions.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140080,7 +140021,6 @@ const versions_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -140154,7 +140094,7 @@ class Versions extends APIResource {
 }
 Versions.Content = versions_content_Content;
 //# sourceMappingURL=versions.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/skills/skills.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/skills/skills.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140190,7 +140130,6 @@ const skills_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -140274,7 +140213,7 @@ class Skills extends APIResource {
 Skills.Content = content_Content;
 Skills.Versions = Versions;
 //# sourceMappingURL=skills.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/uploads/parts.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/uploads/parts.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140305,7 +140244,7 @@ class Parts extends APIResource {
     }
 }
 //# sourceMappingURL=parts.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/uploads/uploads.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/uploads/uploads.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140387,7 +140326,7 @@ class Uploads extends APIResource {
 }
 Uploads.Parts = Parts;
 //# sourceMappingURL=uploads.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/vector-store-polling.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/vector-store-polling.mjs
 
 /**
  * Polls an attached file through the resource's retrieve method until it completes,
@@ -140408,7 +140347,7 @@ function pollVectorStoreFileBatch(resource, vectorStoreID, batchID, options) {
     return pollWithResponse((headers) => resource.retrieve(batchID, { vector_store_id: vectorStoreID }, { ...options, headers }), ['in_progress'], ['failed', 'cancelled', 'completed'], options);
 }
 //# sourceMappingURL=vector-store-polling.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/Util.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/Util.mjs
 /**
  * Like `Promise.allSettled()` but throws an error if any promises are rejected.
  * Rejection reasons remain available on the thrown error's non-enumerable `rejections`
@@ -140434,7 +140373,7 @@ const allSettledWithThrow = async (promises) => {
     return values;
 };
 //# sourceMappingURL=Util.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/vector-store-upload.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/vector-store-upload.mjs
 
 /**
  * Uploads files with a shared iterator, then creates and polls the batch. Every
@@ -140473,7 +140412,7 @@ async function uploadAndPollVectorStoreFileBatch(resource, client, vectorStoreId
     return await resource.createAndPoll(vectorStoreId, { file_ids: allFileIds }, options);
 }
 //# sourceMappingURL=vector-store-upload.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/vector-stores/file-batches.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/vector-stores/file-batches.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140557,7 +140496,7 @@ class FileBatches extends APIResource {
     }
 }
 //# sourceMappingURL=file-batches.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/vector-stores/files.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/vector-stores/files.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140587,7 +140526,6 @@ const vector_stores_files_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -140731,7 +140669,7 @@ class vector_stores_files_Files extends APIResource {
     }
 }
 //# sourceMappingURL=files.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/vector-stores/vector-stores.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/vector-stores/vector-stores.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140764,7 +140702,6 @@ const vector_stores_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -140876,7 +140813,7 @@ class VectorStores extends APIResource {
 VectorStores.Files = vector_stores_files_Files;
 VectorStores.FileBatches = FileBatches;
 //# sourceMappingURL=vector-stores.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/videos.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/videos.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -140909,7 +140846,6 @@ const videos_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -141041,7 +140977,7 @@ class Videos extends APIResource {
     }
 }
 //# sourceMappingURL=videos.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/webhooks/event-types.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/webhooks/event-types.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 function event_types_resolveResourceRequestOptions(options, buildOptions) {
@@ -141062,7 +140998,7 @@ class EventTypes extends APIResource {
     }
 }
 //# sourceMappingURL=event-types.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/webhook-signature.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/lib/webhook-signature.mjs
 
 
 
@@ -141184,7 +141120,7 @@ async function verifyWebhookSignature(payload, signatureHeader, timestamp, webho
     throw new InvalidWebhookSignatureError('The given webhook signature does not match the expected signature');
 }
 //# sourceMappingURL=webhook-signature.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/webhooks/webhooks.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/webhooks/webhooks.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 var _Webhooks_instances, _Webhooks_validateSecret, _Webhooks_getRequiredHeader;
 
@@ -141218,7 +141154,6 @@ const webhooks_normalizeRequestOptionsForQueryKeys = new Set([
     '__binaryRequest',
     '__binaryResponse',
     '__streamClass',
-    '__streamMode',
     '__security',
     '__synthesizeEventData',
 ]);
@@ -141415,7 +141350,7 @@ _Webhooks_instances = new WeakSet(), _Webhooks_validateSecret = function _Webhoo
 };
 Webhooks.EventTypes = EventTypes;
 //# sourceMappingURL=webhooks.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/index.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/resources/index.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 
 
@@ -141446,7 +141381,7 @@ Webhooks.EventTypes = EventTypes;
 
 
 //# sourceMappingURL=index.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/bedrock.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/bedrock.mjs
 
 
 /** Identifies legacy Bedrock clients without importing the client class into WebSocket modules. */
@@ -141871,7 +141806,7 @@ function resolveBedrockBearerAuth(options, { allowEnvironment = true, } = {}) {
     return { factory: undefined, explicit: false };
 }
 //# sourceMappingURL=bedrock.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/ws.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/ws.mjs
 
 
 const webSocketErrors = new WeakMap();
@@ -142303,7 +142238,7 @@ function isRecoverableClose(code) {
     }
 }
 //# sourceMappingURL=ws.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/realtime-credentials.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/realtime-credentials.mjs
 
 
 /** Native Realtime accepts routing metadata through these two server-supported subprotocols. */
@@ -142390,7 +142325,7 @@ async function resolveRealtimeAPIKey(client, deferCache = false) {
     };
 }
 //# sourceMappingURL=realtime-credentials.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/provider.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/provider.mjs
 
 const providerTimeoutKey = Symbol.for('openai.node.providerTimeout.v1');
 /** Preserve timeout classification across SDK copies and CJS/ESM entrypoints. */
@@ -142447,7 +142382,7 @@ function configureProvider(provider) {
     return definition.configure();
 }
 //# sourceMappingURL=provider.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/client.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/client.mjs
 // File generated from our OpenAPI spec by Castiron. See CONTRIBUTING.md for details.
 var _OpenAI_instances, client_a, _OpenAI_encoder, _OpenAI_x509Authentication, _OpenAI_x509Credential, _OpenAI_x509Fetch, _OpenAI_explicitDataResidency, _OpenAI_responseAttempts, _OpenAI_sanitizedLoggers, _OpenAI_baseURLOverridden, _OpenAI_normalizeRetries, _OpenAI_isSensitiveLogKey, _OpenAI_sanitizeLogValue, _OpenAI_sanitizeLogger;
 
@@ -144361,7 +144296,7 @@ function isUndiciDispatcherVersionMismatchError(error) {
     return false;
 }
 //# sourceMappingURL=client.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/runner-diagnostics.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/runner-diagnostics.mjs
 const failureReasons = {
     run: 'invalid_output',
     request: 'api_failed',
@@ -144415,7 +144350,7 @@ function runner_diagnostics_reportDiagnostic(observer, event, started, nativeUsa
     }
 }
 //# sourceMappingURL=runner-diagnostics.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/runner-lifecycle.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/runner-lifecycle.mjs
 
 
 
@@ -144637,7 +144572,7 @@ function runner_lifecycle_protectRunnerJSON(value) {
     }
 }
 //# sourceMappingURL=runner-lifecycle.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/native-response-message.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/native-response-message.mjs
 // oxlint-disable anti-slop/no-unknown-parameters, anti-slop/no-runtime-typeof -- This validates captured provider data at the native replay boundary.
 
 // Native replay values have already been cloned from provider output.
@@ -144812,7 +144747,7 @@ function native_response_message_isNativeResponseReasoning(value) {
         (status === undefined || status === 'completed' || status === 'incomplete' || status === 'in_progress'));
 }
 //# sourceMappingURL=native-response-message.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/helpers/computer.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/helpers/computer.mjs
 
 
 
@@ -145591,7 +145526,7 @@ class ComputerToolset {
     }
 }
 //# sourceMappingURL=computer.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/azure.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/azure.mjs
 
 
 
@@ -145738,7 +145673,7 @@ const _deployments_endpoints = new Set([
     '/images/edits',
 ]);
 //# sourceMappingURL=azure.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/bedrock.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/bedrock.mjs
 var bedrock_a;
 
 
@@ -145908,7 +145843,7 @@ class BedrockOpenAI extends OpenAI {
 }
 bedrock_a = brand_privateBedrockClient;
 //# sourceMappingURL=bedrock.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.53.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/index.mjs
+;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/index.mjs
 
 
 
