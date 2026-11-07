@@ -108,7 +108,7 @@ export async function executeRun(
     httpContext,
   });
   try {
-    return await runWithStorage(suite, provider, judgeProvider, judgeHash, storage, loaded, opts);
+    return await runWithStorage(suite, suitePath, provider, judgeProvider, judgeHash, storage, loaded, opts);
   } finally {
     await storage.close();
   }
@@ -143,6 +143,7 @@ export async function syncAbortedRun(
 
 async function runWithStorage(
   suite: ReturnType<typeof loadSuiteFromFile>,
+  suitePath: string,
   provider: ProviderAdapter,
   judgeProvider: ProviderAdapter | undefined,
   judgeHash: string | undefined,
@@ -200,7 +201,7 @@ async function runWithStorage(
   }
   await storage.saveRun(run);
 
-  await reporter.onRunEnd({ suite, run, deltas, loaded });
+  await reporter.onRunEnd({ suite, suitePath, run, deltas, loaded });
 
   if (opts.junitPath) {
     const absolute = resolve(opts.junitPath);

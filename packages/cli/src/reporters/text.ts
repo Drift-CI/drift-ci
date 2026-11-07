@@ -27,7 +27,7 @@ export class TextReporter implements Reporter {
 }
 
 export function renderSummary(
-  { suite, run, deltas, loaded }: RunEndContext,
+  { suite, suitePath, run, deltas, loaded }: RunEndContext,
   emit: (line: string) => void,
 ): void {
   emit('');
@@ -79,7 +79,7 @@ export function renderSummary(
       emit('');
       emit(
         `\u26A0 ${deltas.staleBaselines.length} baseline(s) are stale (suite definition changed). ` +
-          `Run: drift-ci baseline accept --cases <id>`,
+          `Run: ${acceptCommand(suitePath, deltas.staleBaselines)}`,
       );
     }
     if (deltas.staleJudges.length > 0) {
@@ -93,7 +93,7 @@ export function renderSummary(
       emit('');
       emit(
         `\u2717 ${deltas.regressions.length} regression(s) detected. ` +
-          `Review the diff, then: drift-ci baseline accept --cases <id> if intentional.`,
+          `Review the diff, then: ${acceptCommand(suitePath, deltas.regressions)} if intentional.`,
       );
     }
   }
@@ -136,3 +136,10 @@ function formatCaseLine(
   return `  ${marker} ${c.caseId.padEnd(24)} ${c.status.padEnd(20)} score=${scoreText}${deltaText}${flagText}`;
 }
 
+
+function acceptCommand(suitePath: string, caseIds: readonly string[]): string {
+  const arg = /^[\w@%+=:,./-]+$/.test(suitePath)
+    ? suitePath
+    : "'" + suitePath.replace(/'/g, "'\\''") + "'";
+  return `npx @drift-ci/cli baseline accept ${arg} --cases ${caseIds.join(',')}`;
+}

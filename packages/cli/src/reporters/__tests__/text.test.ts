@@ -63,6 +63,7 @@ function makeCtx(overrides: Partial<RunEndContext> = {}): RunEndContext {
         { id: 'case-b', input: 'b', expected: 'b' },
       ],
     } as unknown as RunEndContext['suite'],
+    suitePath: '.drift/suite.yaml',
     run,
     deltas: null,
     loaded: {
@@ -125,6 +126,35 @@ describe('TextReporter', () => {
     expect(stream.written).toContain('1 regression(s) detected');
     expect(stream.written).toContain('baseline(s) are stale');
     expect(stream.written).toContain('different judge');
+    expect(stream.written).toContain(
+      'Run: npx @drift-ci/cli baseline accept .drift/suite.yaml --cases case-a',
+    );
+    expect(stream.written).toContain(
+      'then: npx @drift-ci/cli baseline accept .drift/suite.yaml --cases case-a if intentional.',
+    );
+    expect(stream.written).not.toMatch(/(?<!cli )baseline accept --cases/);
+  });
+
+  it('quotes suite paths containing spaces in the accept hint', () => {
+    const stream = new CollectingStream();
+    const reporter = new TextReporter({ out: stream });
+    reporter.onRunEnd(
+      makeCtx({
+        suitePath: 'evals/my suite.yaml',
+        deltas: {
+          deltas: { 'case-a': -0.2, 'case-b': 0 },
+          regressions: ['case-a', 'case-b'],
+          improvements: [],
+          missingBaselines: [],
+          staleBaselines: [],
+          staleJudges: [],
+          noScore: [],
+        },
+      }),
+    );
+    expect(stream.written).toContain(
+      "npx @drift-ci/cli baseline accept 'evals/my suite.yaml' --cases case-a,case-b if intentional.",
+    );
   });
 
   it('surfaces missing-baseline hint when any case lacks a baseline', () => {

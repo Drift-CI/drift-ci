@@ -17,7 +17,7 @@ npx @drift-ci/cli --help
 ```sh
 drift-ci init             # scaffold a drift suite
 drift-ci run              # run the suite against your provider
-drift-ci baseline accept  # accept intentional changes
+drift-ci baseline accept .drift/suite.yaml --all  # accept intentional changes
 ```
 
 See the [drift-ci repository](https://github.com/Drift-CI/drift-ci) for full
