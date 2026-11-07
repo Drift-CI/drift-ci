@@ -14,7 +14,7 @@ inputs:
     description: Path to the drift-ci config YAML file.
     default: .drift/config.yaml
   provider:
-    description: LLM provider — anthropic | openai | google | bedrock | ollama.
+    description: LLM provider — one of anthropic, openai, azure, bedrock, google, vertex, ollama.
     required: true
   api-key:
     description: API key for the provider (if required).

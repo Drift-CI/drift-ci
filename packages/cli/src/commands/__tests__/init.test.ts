@@ -91,6 +91,14 @@ describe('executeInit', () => {
     const out = logSpy.mock.calls.map((c) => c.join(' ')).join('\n');
     expect(out).toMatch(/Next steps/);
     expect(out).toMatch(/drift-ci run/);
-    expect(out).toMatch(/baseline init/);
+    expect(out).toMatch(/npx @drift-ci\/cli baseline init \S*suite\.yaml/);
+    expect(out).not.toMatch(/ drift-ci baseline init/);
+  });
+
+  it('uses the scaffolded suite path (respecting --dir) in the baseline init hint', () => {
+    executeInit(makeOpts(join(workdir, 'custom dir')));
+    const out = logSpy.mock.calls.map((c) => c.join(' ')).join('\n');
+    const suitePath = join(workdir, 'custom dir', 'suite.yaml').replace(/\\/g, '/');
+    expect(out).toContain(`npx @drift-ci/cli baseline init '${suitePath}'`);
   });
 });

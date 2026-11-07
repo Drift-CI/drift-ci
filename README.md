@@ -39,7 +39,7 @@ npx @drift-ci/cli init
 npx @drift-ci/cli run
 
 # 3. Inspect the diff, accept intentional changes, and commit them as code
-npx @drift-ci/cli baseline accept
+npx @drift-ci/cli baseline accept .drift/suite.yaml --all
 git add .drift/baseline && git commit -m "accept baseline updates"
 ```
 
@@ -74,7 +74,7 @@ On every pull request, the action runs your suite and posts a regression/improve
 1. **Run** — each case is sent to the configured provider; the response is scored by the evaluator chain.
 2. **Compare** — scores are diffed against the committed baseline at `.drift/baseline/<case-id>.json`.
 3. **Decide** — a regression (a score drop past your threshold) exits `1` and fails the build. A transient-error storm (rate limits, timeouts) exits `2` instead — never mistaken for a regression.
-4. **Accept** — intentional changes are promoted with `drift-ci baseline accept` and committed alongside the code change, reviewed as a diff.
+4. **Accept** — intentional changes are promoted with `drift-ci baseline accept <suite> --cases <ids>` (or `--all`) and committed alongside the code change, reviewed as a diff.
 
 ## Features
 

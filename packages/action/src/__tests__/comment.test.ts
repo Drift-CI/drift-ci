@@ -72,6 +72,7 @@ function baseInput(overrides: Partial<RenderCommentInput> = {}): RenderCommentIn
   return {
     run: makeRun([makeCase('c1'), makeCase('c2')]),
     suite: makeSuite(['c1', 'c2']),
+    suitePath: '.drift/suite.yaml',
     deltas: emptyDeltas(),
     threshold: 0.1,
     baselineSource: 'branch',
@@ -81,6 +82,16 @@ function baseInput(overrides: Partial<RenderCommentInput> = {}): RenderCommentIn
 }
 
 describe('renderComment', () => {
+  it('renders the stale-judge accept command with the CLI package and suite path', () => {
+    const out = renderComment(
+      baseInput({
+        suitePath: 'evals/my suite.yaml',
+        deltas: { ...emptyDeltas(), staleJudges: ['c1'] },
+      }),
+    );
+    expect(out).toContain("npx @drift-ci/cli baseline accept 'evals/my suite.yaml' --cases c1");
+  });
+
   it('starts with the hidden marker so subsequent runs can find it', () => {
     const out = renderComment(baseInput());
     expect(out.startsWith(COMMENT_MARKER)).toBe(true);
@@ -145,7 +156,8 @@ describe('renderComment', () => {
     expect(out).toMatch(
       /captured against a different suite definition.*baseline suiteHash: `abcdef01`.*current suiteHash: `9876fedc`/s,
     );
-    expect(out).toMatch(/drift-ci baseline accept --cases c1/);
+    expect(out).toContain('npx @drift-ci/cli baseline accept .drift/suite.yaml --cases c1');
+    expect(out).not.toMatch(/npx drift-ci/);
   });
 
   it('renders an informational stale-judge block (ℹ️) without flagging regression', () => {
@@ -220,7 +232,8 @@ describe('renderComment', () => {
       }),
     );
     expect(out).toMatch(/✅ If these regressions are intentional/);
-    expect(out).toMatch(/npx drift-ci baseline accept --cases c1,c2/);
+    expect(out).toContain('npx @drift-ci/cli baseline accept .drift/suite.yaml --cases c1,c2');
+    expect(out).not.toMatch(/npx drift-ci/);
     expect(out).toMatch(/git add \.drift\/baseline\//);
   });
 

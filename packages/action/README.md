@@ -85,7 +85,7 @@ The OIDC token's audience is the origin of `dashboard-url`. If `dashboard-token`
 | ------------------ | -------------------- | ----- |
 | `suite`            | `.drift/suite.yaml`  | Path to the suite YAML. |
 | `config`           | `.drift/config.yaml` | Path to the drift-ci config. |
-| `provider`         | _required_           | `anthropic` \| `openai` \| `google` \| `bedrock` \| `ollama`. |
+| `provider`         | _required_           | `anthropic` \| `openai` \| `azure` \| `bedrock` \| `google` \| `vertex` \| `ollama`. |
 | `api-key`          | —                    | Provider API key. Omit for `ollama` local or mock. |
 | `model`            | — (from config)      | Override model name. |
 | `threshold`        | — (from config)      | Regression threshold 0.0–1.0. |
@@ -124,7 +124,7 @@ The OIDC token's audience is the origin of `dashboard-url`. If `dashboard-token`
 
 By default the action uses the baseline committed on the PR branch. This
 is ideal for reviewing intentional behaviour changes: the developer runs
-`drift-ci baseline accept` locally, commits the new baseline in the same
+`npx @drift-ci/cli baseline accept <suite> --cases <ids>` (or `--all`) locally, commits the new baseline in the same
 PR, and the action compares the PR's new scores against the PR's own
 updated baseline (so the check stays green).
 

@@ -13,6 +13,8 @@ export interface RunStartContext {
 
 export interface RunEndContext {
   suite: Suite;
+  /** Suite path the run was loaded from; rendered into `baseline accept` hints. */
+  suitePath: string;
   run: RunResult;
   deltas: DeltaReport | null;
   loaded: ConfigLoadResult;
