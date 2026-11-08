@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.2](https://github.com/Drift-CI/drift-ci/compare/cli-v1.3.1...cli-v1.3.2) (2026-11-08)
+
+
+### Bug Fixes
+
+* **cli:** drift init --dir writes a working config and next steps ([#146](https://github.com/Drift-CI/drift-ci/issues/146)) ([18ce571](https://github.com/Drift-CI/drift-ci/commit/18ce571e7c27def15f97c763aac40dd9a48b0752))
+
 ## [1.3.1](https://github.com/Drift-CI/drift-ci/compare/cli-v1.3.0...cli-v1.3.1) (2026-11-07)
 
 
