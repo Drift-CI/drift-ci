@@ -2,6 +2,7 @@ import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
+import { load } from 'js-yaml';
 
 import { executeInit } from '../init.js';
 
@@ -90,7 +91,7 @@ describe('executeInit', () => {
     executeInit(makeOpts(join(workdir, '.drift')));
     const out = logSpy.mock.calls.map((c) => c.join(' ')).join('\n');
     expect(out).toMatch(/Next steps/);
-    expect(out).toMatch(/drift-ci run/);
+    expect(out).toMatch(/npx @drift-ci\/cli run/);
     expect(out).toMatch(/npx @drift-ci\/cli baseline init \S*suite\.yaml/);
     expect(out).not.toMatch(/ drift-ci baseline init/);
   });
@@ -100,5 +101,51 @@ describe('executeInit', () => {
     const out = logSpy.mock.calls.map((c) => c.join(' ')).join('\n');
     const suitePath = join(workdir, 'custom dir', 'suite.yaml').replace(/\\/g, '/');
     expect(out).toContain(`npx @drift-ci/cli baseline init '${suitePath}'`);
+  });
+
+  it('points the config at the scaffolded suite when --dir is not .drift', () => {
+    const dir = join(workdir, 'evals');
+    executeInit(makeOpts(dir));
+    const cfg = load(readFileSync(join(dir, 'config.yaml'), 'utf8')) as { suite: string };
+    expect(cfg.suite).toBe(join(dir, 'suite.yaml').replace(/\\/g, '/'));
+  });
+
+  it('writes a suite path that YAML parses back exactly, even with special characters', () => {
+    const dir = join(workdir, 'my #evals'); // " #" starts a YAML comment if left unquoted
+    executeInit(makeOpts(dir));
+    const cfg = load(readFileSync(join(dir, 'config.yaml'), 'utf8')) as { suite: string };
+    expect(cfg.suite).toBe(`${dir.replace(/\\/g, '/')}/suite.yaml`);
+  });
+
+  it('keeps the default config suite path for the default directory', () => {
+    const cwd = process.cwd();
+    process.chdir(workdir);
+    try {
+      executeInit(makeOpts('.drift'));
+      expect(readFileSync(join(workdir, '.drift', 'config.yaml'), 'utf8')).toContain('suite: .drift/suite.yaml');
+      const out = logSpy.mock.calls.map((c) => c.join(' ')).join('\n');
+      expect(out).toContain('Edit .drift/suite.yaml');
+      expect(out).toMatch(/npx @drift-ci\/cli run$/m);
+      expect(out).not.toContain('--config');
+    } finally {
+      process.chdir(cwd);
+    }
+  });
+
+  it('tells you to pass --config/--baseline-dir/--runs-dir when --dir is custom', () => {
+    const cwd = process.cwd();
+    process.chdir(workdir);
+    try {
+      executeInit(makeOpts('evals'));
+      const out = logSpy.mock.calls.map((c) => c.join(' ')).join('\n');
+      expect(out).toContain('Edit evals/suite.yaml');
+      const flags = '--config evals/config.yaml --baseline-dir evals/baseline --runs-dir evals/runs';
+      expect(out).toContain(`npx @drift-ci/cli run ${flags}`);
+      expect(out).toContain(`npx @drift-ci/cli baseline init evals/suite.yaml ${flags}`);
+      expect(out).toContain('git add evals/baseline');
+      expect(readFileSync(join(workdir, 'evals', '.gitignore'), 'utf8')).toContain('evals/baseline/');
+    } finally {
+      process.chdir(cwd);
+    }
   });
 });
