@@ -130,6 +130,8 @@ export const SuiteSchema = z.object({
   description: z.string().optional(),
   evaluators: z.array(EvaluatorSpecSchema).optional(),
   default_threshold: z.number().min(0).max(1).optional(),
+  /** Samples per case when a case has no `runs` of its own (1–5). The median score is used. */
+  default_runs: z.number().int().min(1).max(5).optional(),
   cases: z
     .array(TestCaseSchema)
     .min(1)
