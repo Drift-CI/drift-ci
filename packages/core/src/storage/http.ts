@@ -3,19 +3,12 @@ import { computeSuiteHash, type DeltaReport } from '../engine/baseline.js';
 import { stripTrailingSlashes } from '../util/url.js';
 import type { RunFilter, StorageAdapter } from './interface.js';
 
-/**
- * Snapshot of everything the dashboard receiver needs to hydrate
- * `baseline_snapshots` rows that the raw `RunResult` envelope doesn't
- * carry. Built once per run by {@link buildIngestContext} and stuffed
- * into the HttpStorage constructor so `saveRun` can forward the
- * enriched payload without re-touching the suite on every call.
- */
 /** Where a run came from. Sent by the GitHub Action (>= 1.6); the CLI omits it. */
 export interface IngestGit {
   /** owner/name */
   repo: string;
   sha: string;
-  /** Branch name (the PR head branch for pull requests). */
+  /** Branch name (the PR head branch for pull requests; a tag name for tag pushes). */
   ref: string;
   /** pull_request | push | schedule | workflow_dispatch | other */
   event: string;
@@ -23,6 +16,13 @@ export interface IngestGit {
   pr?: { number: number; title: string; url: string };
 }
 
+/**
+ * Snapshot of everything the dashboard receiver needs to hydrate
+ * `baseline_snapshots` rows that the raw `RunResult` envelope doesn't
+ * carry. Built once per run by {@link buildIngestContext} and stuffed
+ * into the HttpStorage constructor so `saveRun` can forward the
+ * enriched payload without re-touching the suite on every call.
+ */
 export interface IngestContext {
   /** Per-case `suiteHash` keyed by case id. */
   suiteHashes: Record<string, string>;

@@ -31,6 +31,12 @@ describe('buildGitContext', () => {
   it('schedule on the default branch', () => {
     expect(buildGitContext(base({ eventName: 'schedule' }))).toMatchObject({ event: 'schedule', isDefaultBranch: true });
   });
+  it('schedule without a repository payload is still the default branch', () => {
+    expect(buildGitContext(base({ eventName: 'schedule', payload: {} }))).toMatchObject({ event: 'schedule', isDefaultBranch: true });
+  });
+  it('workflow_dispatch on a non-default branch', () => {
+    expect(buildGitContext(base({ eventName: 'workflow_dispatch', ref: 'refs/heads/dev' }))).toMatchObject({ event: 'workflow_dispatch', ref: 'dev', isDefaultBranch: false });
+  });
   it('unknown events become "other"', () => {
     expect(buildGitContext(base({ eventName: 'release' }))?.event).toBe('other');
   });

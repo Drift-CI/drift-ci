@@ -28,7 +28,8 @@ export function buildGitContext(ctx: GitHubContextLike): IngestGit | undefined {
     sha: pr?.head?.sha ?? ctx.sha,
     ref,
     event,
-    isDefaultBranch: !pr && !!defaultBranch && ref === defaultBranch,
+    // The schedule payload has no `repository`, but scheduled workflows always run on the default branch.
+    isDefaultBranch: event === 'schedule' || (!pr && !!defaultBranch && ref === defaultBranch),
   };
   if (pr) {
     git.pr = {
