@@ -114299,6 +114299,8 @@ const SuiteSchema = object({
     description: schemas_string().optional(),
     evaluators: array(EvaluatorSpecSchema).optional(),
     default_threshold: schemas_number().min(0).max(1).optional(),
+    /** Samples per case when a case has no `runs` of its own (1–5). The median score is used. */
+    default_runs: schemas_number().int().min(1).max(5).optional(),
     cases: array(TestCaseSchema)
         .min(1)
         .refine((cases) => new Set(cases.map((c) => c.id)).size === cases.length, {
@@ -183356,7 +183358,97 @@ function classifyError(err) {
     return 'evaluator-error';
 }
 //# sourceMappingURL=error-classifier.js.map
+;// CONCATENATED MODULE: ../core/dist/engine/sampling.js
+/** Samples for a case: the case's own `runs`, else the suite's `default_runs`, else 1. */
+function effectiveRuns(caseRuns, suiteDefault) {
+    return caseRuns ?? suiteDefault ?? 1;
+}
+/** Median of a non-empty list; an even count averages the two middle values. */
+function median(values) {
+    const sorted = [...values].sort((a, b) => a - b);
+    const mid = Math.floor(sorted.length / 2);
+    return sorted.length % 2 === 1 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2;
+}
+/** Field-wise sum of the usages that were reported; undefined when none were. */
+function sumUsage(usages) {
+    const present = usages.filter((u) => u !== undefined);
+    if (present.length === 0)
+        return undefined;
+    const total = {
+        inputTokens: present.reduce((a, u) => a + u.inputTokens, 0),
+        outputTokens: present.reduce((a, u) => a + u.outputTokens, 0),
+        totalTokens: present.reduce((a, u) => a + u.totalTokens, 0),
+    };
+    if (present.some((u) => u.cachedInputTokens !== undefined)) {
+        total.cachedInputTokens = present.reduce((a, u) => a + (u.cachedInputTokens ?? 0), 0);
+    }
+    return total;
+}
+function isScored(s) {
+    return s.status === 'pass' && Number.isFinite(s.score);
+}
+/**
+ * Combine N samples of one case into one result (spec: repeated-sampling design).
+ * - 1 sample: returned as-is.
+ * - At least ceil(N/2) scored: median score; output/breakdown/latency from the scored sample closest to it.
+ * - Otherwise: the most common non-scored status (ties → first seen), score NaN.
+ * Token usage is summed over every sample so cost reflects real spend.
+ */
+function aggregateSamples(samples) {
+    if (samples.length === 0)
+        throw new Error('aggregateSamples: no samples');
+    if (samples.length === 1)
+        return samples[0];
+    const records = samples.map((s) => ({
+        score: Number.isFinite(s.score) ? s.score : null,
+        status: s.status,
+    }));
+    const tokenUsage = sumUsage(samples.map((s) => s.tokenUsage));
+    const scored = samples.filter(isScored);
+    let chosen;
+    let score;
+    if (scored.length >= Math.ceil(samples.length / 2)) {
+        score = median(scored.map((s) => s.score));
+        chosen = scored[0];
+        for (const s of scored) {
+            if (Math.abs(s.score - score) < Math.abs(chosen.score - score) - 1e-9)
+                chosen = s;
+        }
+        chosen = { ...chosen, status: 'pass', error: undefined };
+    }
+    else {
+        const failed = samples.filter((s) => !isScored(s));
+        const counts = new Map();
+        for (const s of failed)
+            counts.set(s.status, (counts.get(s.status) ?? 0) + 1);
+        let status = failed[0].status;
+        for (const [st, n] of counts)
+            if (n > (counts.get(status) ?? 0))
+                status = st;
+        chosen = failed.find((s) => s.status === status);
+        score = NaN;
+    }
+    const result = {
+        ...chosen,
+        score,
+        evaluatorBreakdown: { ...(chosen.evaluatorBreakdown ?? {}), samples: records },
+    };
+    if (result.error === undefined)
+        delete result.error;
+    if (tokenUsage)
+        result.tokenUsage = tokenUsage;
+    else
+        delete result.tokenUsage;
+    return result;
+}
+/** How many samples produced this result (1 when it has no `samples` metadata). */
+function sampleCount(c) {
+    const s = c.evaluatorBreakdown?.samples;
+    return Array.isArray(s) && s.length > 0 ? s.length : 1;
+}
+//# sourceMappingURL=sampling.js.map
 ;// CONCATENATED MODULE: ../core/dist/engine/runner.js
+
 
 
 
@@ -183393,7 +183485,7 @@ class Runner {
         const defaultThreshold = this.opts.defaultThreshold ?? suite.default_threshold ?? 0.1;
         const onCaseComplete = this.opts.onCaseComplete;
         const results = await Promise.all(suite.cases.map((tc) => this.limit(async () => {
-            const result = await this.runCase(runId, tc, defaultThreshold);
+            const result = await this.runCase(runId, tc, defaultThreshold, suite.default_runs);
             onCaseComplete?.(result);
             return result;
         })));
@@ -183415,7 +183507,20 @@ class Runner {
         await this.opts.storage.saveRun(run);
         return run;
     }
-    async runCase(runId, tc, defaultThreshold) {
+    /**
+     * Runs the case `runs` times (case → suite default → 1), one sample after another inside the
+     * case's concurrency slot, and combines them with aggregateSamples (median of scored samples).
+     */
+    async runCase(runId, tc, defaultThreshold, suiteRuns) {
+        const n = effectiveRuns(tc.runs, suiteRuns);
+        const samples = [];
+        for (let i = 0; i < n; i++) {
+            samples.push(await this.runSample(runId, tc, defaultThreshold));
+        }
+        return aggregateSamples(samples);
+    }
+    /** One provider call + evaluation (the pre-sampling runCase, unchanged). */
+    async runSample(runId, tc, defaultThreshold) {
         const start = Date.now();
         const threshold = tc.threshold ?? defaultThreshold;
         const timeoutMs = this.opts.timeoutMs ?? 30_000;
@@ -183617,6 +183722,7 @@ function renderTestcase(result, cls, classname) {
 }
 //# sourceMappingURL=junit.js.map
 ;// CONCATENATED MODULE: ../core/dist/engine/index.js
+
 
 
 
@@ -188058,6 +188164,7 @@ function buildDefaultSenders(opts = {}) {
 
 //# sourceMappingURL=index.js.map
 ;// CONCATENATED MODULE: ./src/comment.ts
+
 const COMMENT_MARKER = '<!-- drift-ci-comment -->';
 const comment_TRANSIENT_STATUSES = new Set([
     'provider-rate-limit',
@@ -188142,7 +188249,9 @@ function renderRow(c, state) {
                     : state.improvement
                         ? '🟢'
                         : '🟢';
-    const score = state.noScore ? '—' : formatScore(c.score);
+    const samples = sampleCount(c);
+    const score = (state.noScore ? '—' : formatScore(c.score)) +
+        (samples > 1 ? ` <sub>${state.noScore ? `${samples} samples` : `median of ${samples}`}</sub>` : '');
     let deltaCell;
     if (state.missing) {
         deltaCell = '_no baseline_';
