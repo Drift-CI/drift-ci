@@ -1,5 +1,14 @@
 # Changelog
 
+## [1.3.3](https://github.com/Drift-CI/drift-ci/compare/cli-v1.3.2...cli-v1.3.3) (2026-11-09)
+
+
+### Dependencies
+
+* The following workspace dependencies were updated
+  * dependencies
+    * @drift-ci/core bumped to 1.4.0
+
 ## [1.3.2](https://github.com/Drift-CI/drift-ci/compare/cli-v1.3.1...cli-v1.3.2) (2026-11-08)
 
 
