@@ -19,6 +19,7 @@ import {
   type DeltaReport,
   type DriftConfig,
   type IngestContext,
+  type IngestGit,
   type ProviderAdapter,
   type RunResult,
   type Suite,
@@ -56,6 +57,8 @@ export interface RunActionInputs {
   baseRef?: string;
   dashboardUrl?: string;
   dashboardToken?: string;
+  /** Git/PR context sent with dashboard syncs (alerts, run page). */
+  git?: IngestGit;
 }
 
 export interface RunActionOutputs {
@@ -174,7 +177,7 @@ export async function runAction(
       // Sync the aborted run without delta data: provider errors must not open/regress/improve issues.
       await syncToDashboard(
         aborted.run as RunResult,
-        () => buildIngestContext(suite, judgeHash),
+        () => ({ ...buildIngestContext(suite, judgeHash), aborted: true, git: inputs.git }),
         inputs,
         writers,
         deps,
@@ -200,7 +203,7 @@ export async function runAction(
   // are surfaced as warnings — a downed dashboard must not block a
   // PR check.
   if (inputs.dashboardUrl) {
-    await syncToDashboard(run, () => actionIngestContext(suite, judgeHash, deltas), inputs, writers, deps);
+    await syncToDashboard(run, () => ({ ...actionIngestContext(suite, judgeHash, deltas), git: inputs.git }), inputs, writers, deps);
   }
 
   const baselineChangedFiles = detectBaselineChangedFiles(inputs, deps, writers);
