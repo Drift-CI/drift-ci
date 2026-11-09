@@ -367,6 +367,7 @@ describe('syncAbortedRun', () => {
     expect(fetchMock).toHaveBeenCalledTimes(1);
     const init = (fetchMock.mock.calls[0] as unknown as [string, RequestInit])[1];
     expect(JSON.parse(init.body as string).context?.delta).toBeUndefined();
+    expect(JSON.parse(init.body as string).context?.aborted).toBe(true);
   });
 
   it('does nothing for other storage or other errors', async () => {

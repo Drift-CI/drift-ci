@@ -133,6 +133,7 @@ export async function syncAbortedRun(
   }
   if (!(storage instanceof HttpStorage)) return;
   try {
+    storage.markAborted();
     await storage.saveRun(aborted.run as RunResult);
   } catch (syncErr) {
     console.error(
