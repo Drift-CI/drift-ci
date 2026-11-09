@@ -180,4 +180,21 @@ describe('TextReporter', () => {
     expect(stream.written).not.toContain('Run: drift-ci baseline init');
   });
 
+  it('notes the sample count for cases run more than once', () => {
+    const ctx = makeCtx();
+    ctx.run.cases[0] = {
+      ...ctx.run.cases[0],
+      evaluatorBreakdown: {
+        samples: [
+          { score: 0.9, status: 'pass' },
+          { score: 0.9, status: 'pass' },
+          { score: 0.1, status: 'pass' },
+        ],
+      },
+    } as never;
+    const stream = new CollectingStream();
+    new TextReporter({ out: stream }).onRunEnd(ctx);
+    expect(stream.written).toMatch(/case-a\s+pass\s+score=0\.900 \(median of 3\)/);
+    expect(stream.written).not.toMatch(/case-b.*median of/);
+  });
 });
