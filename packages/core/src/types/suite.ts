@@ -83,6 +83,7 @@ export const TestCaseSchema = z
     tags: z.array(z.string()).optional(),
     systemPrompt: z.string().optional(),
     messages: z.array(MessageParamSchema).optional(),
+    contains: z.array(z.string().min(1)).min(1).optional(),
     schema: z.record(z.string(), z.unknown()).optional(),
     rubric: RubricSpecSchema.optional(),
     rubricQuorum: RubricQuorumSchema.optional(),
@@ -91,6 +92,16 @@ export const TestCaseSchema = z
     message:
       'Each case must define exactly one of `input` or `messages` (not both, not neither).',
   })
+  .refine(
+    (tc) =>
+      !tc.evaluators?.some(
+        (e) => (typeof e === 'string' ? e : e.name) === 'contains',
+      ) || tc.contains !== undefined,
+    {
+      message:
+        'A case using the `contains` evaluator must define a non-empty `contains` field.',
+    },
+  )
   .refine(
     (tc) =>
       !tc.evaluators?.some(

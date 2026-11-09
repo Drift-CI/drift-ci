@@ -114275,12 +114275,16 @@ const TestCaseSchema = object({
     tags: array(schemas_string()).optional(),
     systemPrompt: schemas_string().optional(),
     messages: array(MessageParamSchema).optional(),
+    contains: array(schemas_string().min(1)).min(1).optional(),
     schema: record(schemas_string(), unknown()).optional(),
     rubric: RubricSpecSchema.optional(),
     rubricQuorum: RubricQuorumSchema.optional(),
 })
     .refine((tc) => (tc.input !== undefined) !== (tc.messages !== undefined), {
     message: 'Each case must define exactly one of `input` or `messages` (not both, not neither).',
+})
+    .refine((tc) => !tc.evaluators?.some((e) => (typeof e === 'string' ? e : e.name) === 'contains') || tc.contains !== undefined, {
+    message: 'A case using the `contains` evaluator must define a non-empty `contains` field.',
 })
     .refine((tc) => !tc.evaluators?.some((e) => (typeof e === 'string' ? e : e.name) === 'json-schema') || tc.schema !== undefined, {
     message: 'A case using the `json-schema` evaluator must define a `schema` field.',
@@ -181789,6 +181793,29 @@ class EvaluatorChain {
     }
 }
 //# sourceMappingURL=composite.js.map
+;// CONCATENATED MODULE: ../core/dist/evaluators/contains.js
+class ContainsEvaluator {
+    required;
+    name = 'contains';
+    constructor(required) {
+        this.required = required;
+        if (required.length === 0) {
+            throw new Error('contains evaluator requires a non-empty `contains` field on the test case.');
+        }
+    }
+    async evaluate({ output }) {
+        const normalisedOutput = output.toLowerCase();
+        const missing = this.required.filter((value) => !normalisedOutput.includes(value.toLowerCase()));
+        const score = missing.length === 0 ? 1.0 : 0.0;
+        return {
+            score,
+            reason: score === 1
+                ? 'All required text found'
+                : `Missing required text: ${missing.join(', ')}`,
+        };
+    }
+}
+//# sourceMappingURL=contains.js.map
 ;// CONCATENATED MODULE: ../core/dist/evaluators/exact.js
 class ExactMatchEvaluator {
     name = 'exact-match';
@@ -182584,6 +182611,7 @@ function parseLlamaGuardResponse(text, classifier = 'llama-guard') {
 
 
 
+
 function createEvaluatorChain(specs, ctx) {
     if (!specs || specs.length === 0) {
         throw new Error('At least one evaluator must be configured on the suite or case.');
@@ -182603,6 +182631,8 @@ function factory_build(name, ctx) {
     switch (name) {
         case 'exact-match':
             return new ExactMatchEvaluator();
+        case 'contains':
+            return new ContainsEvaluator(ctx.case?.contains ?? []);
         case 'json-schema':
             return new SchemaEvaluator(ctx.case?.schema);
         case 'cosine-similarity':
@@ -182742,6 +182772,9 @@ function computeSuiteHash(tc) {
         evaluators: tc.evaluators ?? null,
         threshold: tc.threshold ?? null,
         messages: tc.messages ?? null,
+        // Keep hashes for existing suites stable when the new field is absent,
+        // while still invalidating a baseline whenever its requirements change.
+        ...(tc.contains !== undefined ? { contains: tc.contains } : {}),
         schema: tc.schema ?? null,
         systemPrompt: tc.systemPrompt ?? null,
         // Rubric edits / reorders / mode swaps / quorum changes invalidate
@@ -183044,6 +183077,7 @@ function judgeHashForProvider({ provider, promptTemplate, }) {
 }
 //# sourceMappingURL=judge-hash.js.map
 ;// CONCATENATED MODULE: ../core/dist/evaluators/index.js
+
 
 
 

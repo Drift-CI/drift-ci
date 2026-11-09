@@ -102,6 +102,18 @@ describe('computeSuiteHash', () => {
     expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
   });
 
+  it('changes when required contains text changes', () => {
+    const a = makeTestCase({ contains: ['refund'] });
+    const b = makeTestCase({ contains: ['refund', '5 business days'] });
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
+  });
+
+  it('keeps existing suite hashes stable when contains is absent', () => {
+    expect(computeSuiteHash(makeTestCase())).toBe(
+      'sha256:ebf23e1873674af6881761e45790c8a161d6c95c4d4c57a1bf6b6707dfea4286',
+    );
+  });
+
   it('ignores unrelated fields (id, tags, description)', () => {
     const a = makeTestCase({ id: 'alpha', description: 'first' });
     const b = makeTestCase({ id: 'beta', description: 'second' });

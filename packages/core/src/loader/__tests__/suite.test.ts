@@ -76,6 +76,48 @@ cases:
     expect(() => parseSuite(yaml)).toThrow(/json-schema/);
   });
 
+  it('parses a contains evaluator with required substrings', () => {
+    const yaml = `
+version: 1
+id: s
+name: S
+cases:
+  - id: c
+    input: a
+    evaluators: [contains]
+    contains: [refund, 5 business days]
+`;
+    const suite = parseSuite(yaml);
+    expect(suite.cases[0].contains).toEqual(['refund', '5 business days']);
+  });
+
+  it('rejects contains evaluator without a contains field', () => {
+    const yaml = `
+version: 1
+id: s
+name: S
+cases:
+  - id: c
+    input: a
+    evaluators: [contains]
+`;
+    expect(() => parseSuite(yaml)).toThrow(/non-empty .contains. field/);
+  });
+
+  it('rejects an empty contains field', () => {
+    const yaml = `
+version: 1
+id: s
+name: S
+cases:
+  - id: c
+    input: a
+    evaluators: [contains]
+    contains: []
+`;
+    expect(() => parseSuite(yaml)).toThrow();
+  });
+
   it('rejects bad case-id format', () => {
     const yaml = `
 version: 1
