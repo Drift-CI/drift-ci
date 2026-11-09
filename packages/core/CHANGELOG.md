@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.4.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.3.0...core-v1.4.0) (2026-11-09)
+
+
+### Features
+
+* **core:** add contains evaluator ([#154](https://github.com/Drift-CI/drift-ci/issues/154)) ([79ac01b](https://github.com/Drift-CI/drift-ci/commit/79ac01b3f046dd91d875fe3196b464e55699eb09))
+
 ## [1.3.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.2.1...core-v1.3.0) (2026-11-03)
 
 
