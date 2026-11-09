@@ -4,6 +4,7 @@ import type {
   RunResult,
   Suite,
 } from '@drift-ci/core';
+import { sampleCount } from '@drift-ci/core';
 
 export const COMMENT_MARKER = '<!-- drift-ci-comment -->';
 
@@ -139,7 +140,10 @@ function renderRow(
             ? '🟢'
             : '🟢';
 
-  const score = state.noScore ? '—' : formatScore(c.score);
+  const samples = sampleCount(c);
+  const score =
+    (state.noScore ? '—' : formatScore(c.score)) +
+    (samples > 1 ? ` <sub>${state.noScore ? `${samples} samples` : `median of ${samples}`}</sub>` : '');
 
   let deltaCell: string;
   if (state.missing) {

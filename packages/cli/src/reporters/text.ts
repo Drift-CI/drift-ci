@@ -1,4 +1,4 @@
-import type { CaseResult } from '@drift-ci/core';
+import { sampleCount, type CaseResult } from '@drift-ci/core';
 
 import type {
   Reporter,
@@ -126,7 +126,11 @@ function formatCaseLine(
   if (sets.staleJudgeSet.has(c.caseId)) flags.push('stale-judge');
   if (sets.noScoreSet.has(c.caseId)) flags.push('no-score');
 
-  const scoreText = Number.isNaN(c.score) ? '\u2014' : c.score.toFixed(3);
+  const samples = sampleCount(c);
+  const unscored = Number.isNaN(c.score);
+  const scoreText =
+    (unscored ? '—' : c.score.toFixed(3)) +
+    (samples > 1 ? (unscored ? ` (${samples} samples)` : ` (median of ${samples})`) : '');
   const delta = deltas?.deltas[c.caseId];
   const deltaText =
     delta === undefined || delta === 0

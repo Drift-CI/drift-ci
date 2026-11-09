@@ -1,4 +1,9 @@
 import { describe, it, expect } from 'vitest';
+import { mkdtempSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { FileBaselineStore, computeDeltas } from '../baseline.js';
+import { sampleCount } from '../sampling.js';
 import { Runner, RUN_ABORTED_TRANSIENT } from '../runner.js';
 import { MockProvider } from '../../providers/mock.js';
 import { EvaluatorChain } from '../../evaluators/composite.js';
@@ -171,5 +176,102 @@ describe('Runner', () => {
     const byId = Object.fromEntries(result.cases.map((c) => [c.caseId, c]));
     expect(byId.a.threshold).toBe(0.2);
     expect(byId.b.threshold).toBe(0.05);
+  });
+});
+
+describe('Runner repeated sampling', () => {
+  /** Provider answering from a fixed script, one entry per call (Error = thrown failure). */
+  function scripted(script: (string | Error)[]) {
+    let i = 0;
+    return new MockProvider({ responder: () => script[i++] ?? 'hi' });
+  }
+  function rateLimit(): Error {
+    const e = new Error('rate limit exceeded') as Error & { status: number };
+    e.status = 429;
+    return e;
+  }
+  const oneCase = (extra: Partial<Suite['cases'][number]> = {}, suite: Partial<Suite> = {}) =>
+    makeSuite({ cases: [{ id: 'c1', input: 'hi', expected: 'hi', ...extra }], ...suite });
+
+  it('N=1 makes one call and adds no samples metadata', async () => {
+    let calls = 0;
+    const provider = new MockProvider({ responder: () => { calls++; return 'hi'; } });
+    const runner = new Runner({ provider, evaluator: chainOf(new ExactMatchEvaluator()), storage: new MemoryStorage() });
+    const run = await runner.run(oneCase());
+    expect(calls).toBe(1);
+    expect(run.cases[0].evaluatorBreakdown?.samples).toBeUndefined();
+    expect(run.cases[0].score).toBe(1);
+  });
+
+  it('runs: 3 ignores one bad answer and keeps a matching output', async () => {
+    const runner = new Runner({ provider: scripted(['hi', 'nope', 'hi']), evaluator: chainOf(new ExactMatchEvaluator()), storage: new MemoryStorage() });
+    const run = await runner.run(oneCase({ runs: 3 }));
+    const c = run.cases[0];
+    expect(c.score).toBe(1);
+    expect(c.status).toBe('pass');
+    expect(c.output).toBe('hi');
+    expect(sampleCount(c)).toBe(3);
+    expect(c.tokenUsage).toEqual({ inputTokens: 30, outputTokens: 30, totalTokens: 60 });
+  });
+
+  it('suite default_runs applies and a case runs: 1 overrides it', async () => {
+    let calls = 0;
+    const provider = new MockProvider({ responder: () => { calls++; return 'hi'; } });
+    const runner = new Runner({ provider, evaluator: chainOf(new ExactMatchEvaluator()), storage: new MemoryStorage() });
+    const run = await runner.run(
+      makeSuite({
+        default_runs: 3,
+        cases: [
+          { id: 'c1', input: 'hi', expected: 'hi' },
+          { id: 'c2', input: 'hi', expected: 'hi', runs: 1 },
+        ],
+      }),
+    );
+    expect(calls).toBe(4);
+    expect(sampleCount(run.cases.find((c) => c.caseId === 'c1')!)).toBe(3);
+    expect(sampleCount(run.cases.find((c) => c.caseId === 'c2')!)).toBe(1);
+  });
+
+  it('one transient sample out of 3 still scores and is not counted as transient', async () => {
+    const runner = new Runner({ provider: scripted(['hi', rateLimit(), 'hi']), evaluator: chainOf(new ExactMatchEvaluator()), storage: new MemoryStorage() });
+    const run = await runner.run(oneCase({ runs: 3 }));
+    expect(run.cases[0].status).toBe('pass');
+    expect(run.cases[0].score).toBe(1);
+    expect(run.summary.transient).toBe(0);
+    expect(run.summary.passed).toBe(1);
+  });
+
+  it('two transient samples out of 3 make the case transient', async () => {
+    const runner = new Runner({ provider: scripted([rateLimit(), 'hi', rateLimit()]), evaluator: chainOf(new ExactMatchEvaluator()), storage: new MemoryStorage() });
+    const run = await runner.run(oneCase({ runs: 3 }));
+    expect(run.cases[0].status).toBe('provider-rate-limit');
+    expect(Number.isNaN(run.cases[0].score)).toBe(true);
+    expect(run.summary.transient).toBe(1);
+  });
+
+  it('the abort guard counts cases, not samples', async () => {
+    // 2 cases x 3 samples, every sample rate-limited: 2 transient cases, below the floor of 3.
+    const runner = new Runner({ provider: new MockProvider({ responder: () => rateLimit() }), evaluator: chainOf(new ExactMatchEvaluator()), storage: new MemoryStorage() });
+    const run = await runner.run(makeSuite({ default_runs: 3 }));
+    expect(run.summary.transient).toBe(2);
+  });
+
+  it('a 1,1,0 sampled run against a baseline of 1 is not a regression', async () => {
+    const dir = mkdtempSync(join(tmpdir(), 'drift-sampling-'));
+    try {
+      const store = new FileBaselineStore(dir);
+      const suite = oneCase({ runs: 3 });
+      const baselineRunner = new Runner({ provider: scripted(['hi', 'hi', 'hi']), evaluator: chainOf(new ExactMatchEvaluator()), storage: new MemoryStorage() });
+      const baselineRun = await baselineRunner.run(suite);
+      await store.save(FileBaselineStore.fromCaseResult(suite.cases[0], baselineRun.cases[0], baselineRun));
+
+      const runner = new Runner({ provider: scripted(['hi', 'nope', 'hi']), evaluator: chainOf(new ExactMatchEvaluator()), storage: new MemoryStorage() });
+      const run = await runner.run(suite);
+      const report = await computeDeltas(run, suite, store);
+      expect(report.regressions).toEqual([]);
+      expect(report.deltas.c1).toBe(0);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });
