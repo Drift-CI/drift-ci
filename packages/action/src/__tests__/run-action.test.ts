@@ -429,6 +429,20 @@ describe('runAction', () => {
     expect(body.context.delta).toBeDefined();
   });
 
+  it('sends git context with a normal dashboard sync and does not flag it aborted', async () => {
+    const fetchMock = vi.fn(async () => new Response('{}', { status: 201 }));
+    const git = { repo: 'acme/bot', sha: 's', ref: 'main', event: 'push', isDefaultBranch: true };
+    await runAction(
+      makeInputs(ws, { dashboardUrl: 'https://dash.example', dashboardToken: 't', git }),
+      makeWriters(),
+      { env: {}, fetch: fetchMock as unknown as typeof fetch },
+    );
+    const init = fetchMock.mock.calls[0][1] as unknown as RequestInit;
+    const body = JSON.parse(init.body as string);
+    expect(body.context.git).toEqual(git);
+    expect(body.context.aborted).toBeUndefined();
+  });
+
   it('logs the auth kind (never the value) when syncing with OIDC', async () => {
     const writers = makeWriters();
     const getIDToken = vi.fn().mockResolvedValue('super-secret-jwt');
@@ -487,6 +501,23 @@ cases:
       expect(body.run.cases.length).toBe(4);
       expect(body.context).toBeDefined();
       expect(body.context.delta).toBeUndefined();
+    });
+
+    it('marks the synced aborted run with context.aborted and passes git through', async () => {
+      const fetchMock = vi.fn(
+        async () => new Response(JSON.stringify({ id: 'x' }), { status: 201 }),
+      );
+      const git = { repo: 'acme/bot', sha: 's', ref: 'main', event: 'schedule', isDefaultBranch: true };
+      await expect(
+        runAction(
+          makeInputs(ws, { dashboardUrl: 'https://dash.example', dashboardToken: 't', git }),
+          makeWriters(),
+          abortingDeps(fetchMock as unknown as typeof fetch),
+        ),
+      ).rejects.toMatchObject({ code: 'RUN_ABORTED_TRANSIENT' });
+      const body = JSON.parse((fetchMock.mock.calls[0][1] as unknown as RequestInit).body as string);
+      expect(body.context.aborted).toBe(true);
+      expect(body.context.git).toEqual(git);
     });
 
     it('does not sync when no dashboard-url is set', async () => {

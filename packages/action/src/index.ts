@@ -11,6 +11,7 @@ import {
   type RunActionInputs,
   type RunActionWriters,
 } from './run-action.js';
+import { buildGitContext } from './git-context.js';
 import type { CommentApi, PrContext } from './comment.js';
 
 /* c8 ignore start -- thin @actions/core glue; exercised by the end-to-end action workflow, not by unit tests. */
@@ -44,7 +45,16 @@ function readInputs(
     baseRef,
     dashboardUrl: core.getInput('dashboard-url') || undefined,
     dashboardToken: core.getInput('dashboard-token') || undefined,
+    git: safeGitContext(),
   };
+}
+
+function safeGitContext() {
+  try {
+    return buildGitContext(github.context as unknown as Parameters<typeof buildGitContext>[0]);
+  } catch {
+    return undefined; // github.context.repo throws when GITHUB_REPOSITORY is unset (local runs)
+  }
 }
 
 interface PrPayloadHeadRepo {

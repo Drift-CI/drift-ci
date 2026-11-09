@@ -366,3 +366,28 @@ describe('HttpStorage.setDelta', () => {
     });
   });
 });
+
+describe('HttpStorage.markAborted', () => {
+  it('adds aborted: true to the posted context, keeping hashes and git', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 201 }));
+    const git = { repo: 'o/r', sha: 'abc', ref: 'main', event: 'schedule', isDefaultBranch: true };
+    const s = new HttpStorage({
+      url: 'https://x',
+      context: { suiteHashes: { a: 'h' }, git },
+      fetch: fetchMock,
+    });
+    s.markAborted();
+    await s.saveRun(makeRun());
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.context).toEqual({ suiteHashes: { a: 'h' }, git, aborted: true });
+  });
+
+  it('works without a constructor context', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(new Response(null, { status: 201 }));
+    const s = new HttpStorage({ url: 'https://x', fetch: fetchMock });
+    s.markAborted();
+    await s.saveRun(makeRun());
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.context).toEqual({ suiteHashes: {}, aborted: true });
+  });
+});

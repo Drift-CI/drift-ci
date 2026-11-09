@@ -3,6 +3,19 @@ import { computeSuiteHash, type DeltaReport } from '../engine/baseline.js';
 import { stripTrailingSlashes } from '../util/url.js';
 import type { RunFilter, StorageAdapter } from './interface.js';
 
+/** Where a run came from. Sent by the GitHub Action (>= 1.6); the CLI omits it. */
+export interface IngestGit {
+  /** owner/name */
+  repo: string;
+  sha: string;
+  /** Branch name (the PR head branch for pull requests; a tag name for tag pushes). */
+  ref: string;
+  /** pull_request | push | schedule | workflow_dispatch | other */
+  event: string;
+  isDefaultBranch: boolean;
+  pr?: { number: number; title: string; url: string };
+}
+
 /**
  * Snapshot of everything the dashboard receiver needs to hydrate
  * `baseline_snapshots` rows that the raw `RunResult` envelope doesn't
@@ -17,6 +30,10 @@ export interface IngestContext {
   judgeHash?: string;
   /** Regression/improvement verdicts for this run (drift-ci >= 1.2). */
   delta?: IngestDelta;
+  /** True when the run was cut short by a transient-error storm (Action >= 1.6). */
+  aborted?: boolean;
+  /** Git/PR context for the run (Action >= 1.6). */
+  git?: IngestGit;
 }
 
 /**
@@ -107,6 +124,11 @@ export class HttpStorage implements StorageAdapter {
    */
   setDelta(delta: IngestDelta): void {
     this.context = { ...(this.context ?? { suiteHashes: {} }), delta };
+  }
+
+  /** Mark the next saveRun as an aborted (transient-error) run. */
+  markAborted(): void {
+    this.context = { ...(this.context ?? { suiteHashes: {} }), aborted: true };
   }
 
   async saveRun(run: RunResult): Promise<void> {

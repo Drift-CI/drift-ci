@@ -183889,6 +183889,10 @@ class http_HttpStorage {
     setDelta(delta) {
         this.context = { ...(this.context ?? { suiteHashes: {} }), delta };
     }
+    /** Mark the next saveRun as an aborted (transient-error) run. */
+    markAborted() {
+        this.context = { ...(this.context ?? { suiteHashes: {} }), aborted: true };
+    }
     async saveRun(run) {
         const body = {
             schemaVersion: INGEST_SCHEMA_VERSION,
@@ -188418,7 +188422,7 @@ async function runAction(inputs, writers, deps = {}) {
             aborted.run !== null &&
             inputs.dashboardUrl) {
             // Sync the aborted run without delta data: provider errors must not open/regress/improve issues.
-            await syncToDashboard(aborted.run, () => buildIngestContext(suite, judgeHash), inputs, writers, deps);
+            await syncToDashboard(aborted.run, () => ({ ...buildIngestContext(suite, judgeHash), aborted: true, git: inputs.git }), inputs, writers, deps);
         }
         throw err;
     }
@@ -188437,7 +188441,7 @@ async function runAction(inputs, writers, deps = {}) {
     // are surfaced as warnings — a downed dashboard must not block a
     // PR check.
     if (inputs.dashboardUrl) {
-        await syncToDashboard(run, () => actionIngestContext(suite, judgeHash, deltas), inputs, writers, deps);
+        await syncToDashboard(run, () => ({ ...actionIngestContext(suite, judgeHash, deltas), git: inputs.git }), inputs, writers, deps);
     }
     const baselineChangedFiles = detectBaselineChangedFiles(inputs, deps, writers);
     const baselineChanged = baselineChangedFiles.length > 0;
@@ -188629,7 +188633,38 @@ function resolveJudgeProvider(config, fallback, inputs) {
     });
 }
 
+;// CONCATENATED MODULE: ./src/git-context.ts
+const KNOWN_EVENTS = new Set(['pull_request', 'push', 'schedule', 'workflow_dispatch']);
+const MAX_TITLE = 300;
+/** Pure: where this run came from, for the dashboard (alerts, run page). Undefined when the context is incomplete. */
+function buildGitContext(ctx) {
+    if (!ctx.repo?.owner || !ctx.repo?.repo || !ctx.sha)
+        return undefined;
+    const pr = ctx.payload.pull_request;
+    const eventName = ctx.eventName === 'pull_request_target' ? 'pull_request' : ctx.eventName;
+    const event = KNOWN_EVENTS.has(eventName) ? eventName : 'other';
+    const ref = pr?.head?.ref ?? ctx.ref.replace(/^refs\/(heads|tags)\//, '');
+    const defaultBranch = ctx.payload.repository?.default_branch;
+    const git = {
+        repo: `${ctx.repo.owner}/${ctx.repo.repo}`,
+        sha: pr?.head?.sha ?? ctx.sha,
+        ref,
+        event,
+        // The schedule payload has no `repository`, but scheduled workflows always run on the default branch.
+        isDefaultBranch: event === 'schedule' || (!pr && !!defaultBranch && ref === defaultBranch),
+    };
+    if (pr) {
+        git.pr = {
+            number: pr.number,
+            title: (pr.title ?? '').slice(0, MAX_TITLE),
+            url: pr.html_url ?? `https://github.com/${ctx.repo.owner}/${ctx.repo.repo}/pull/${pr.number}`,
+        };
+    }
+    return git;
+}
+
 ;// CONCATENATED MODULE: ./src/index.ts
+
 
 
 
@@ -188661,7 +188696,16 @@ function readInputs(prContext, isFork, forkHeadRef, baseRef) {
         baseRef,
         dashboardUrl: getInput('dashboard-url') || undefined,
         dashboardToken: getInput('dashboard-token') || undefined,
+        git: safeGitContext(),
     };
+}
+function safeGitContext() {
+    try {
+        return buildGitContext(github_context);
+    }
+    catch {
+        return undefined; // github.context.repo throws when GITHUB_REPOSITORY is unset (local runs)
+    }
 }
 function detectPrContext() {
     const pr = github_context.payload.pull_request;
