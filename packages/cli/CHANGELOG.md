@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.0](https://github.com/Drift-CI/drift-ci/compare/cli-v1.4.0...cli-v1.5.0) (2026-11-09)
+
+
+### Features
+
+* repeated sampling — run cases N times, score the median ([#168](https://github.com/Drift-CI/drift-ci/issues/168)) ([44db714](https://github.com/Drift-CI/drift-ci/commit/44db7145fcf9660b45645b2b3a2cc11d21160081))
+
 ## [1.4.0](https://github.com/Drift-CI/drift-ci/compare/cli-v1.3.3...cli-v1.4.0) (2026-11-09)
 
 
