@@ -1,8 +1,8 @@
-export const id = 62;
-export const ids = [62];
+export const id = 730;
+export const ids = [730];
 export const modules = {
 
-/***/ 51062:
+/***/ 83730:
 /***/ ((__unused_webpack___webpack_module__, __webpack_exports__, __webpack_require__) => {
 
 // ESM COMPAT FLAG
@@ -24,8 +24,8 @@ __webpack_require__.d(__webpack_exports__, {
   setupSkills: () => (/* reexport */ setupSkills)
 });
 
-// EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/tslib.mjs
-var tslib = __webpack_require__(8507);
+// EXTERNAL MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/tslib.mjs
+var tslib = __webpack_require__(80263);
 // EXTERNAL MODULE: external "node:fs/promises"
 var promises_ = __webpack_require__(51455);
 // EXTERNAL MODULE: external "node:fs"
@@ -38,15 +38,15 @@ var external_node_child_process_ = __webpack_require__(31421);
 var external_node_crypto_ = __webpack_require__(77598);
 // EXTERNAL MODULE: external "node:readline"
 var external_node_readline_ = __webpack_require__(80481);
-// EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/core/error.mjs
-var error = __webpack_require__(26247);
-// EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/lib/tools/ToolError.mjs
-var ToolError = __webpack_require__(48571);
-// EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/index.mjs + 79 modules
-var sdk = __webpack_require__(41683);
-// EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils.mjs + 1 modules
-var utils = __webpack_require__(75503);
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/lib/transform-json-schema.mjs
+// EXTERNAL MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/core/error.mjs
+var error = __webpack_require__(4523);
+// EXTERNAL MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/lib/tools/ToolError.mjs
+var ToolError = __webpack_require__(22295);
+// EXTERNAL MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/index.mjs + 79 modules
+var sdk = __webpack_require__(58215);
+// EXTERNAL MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils.mjs + 1 modules
+var utils = __webpack_require__(82995);
+;// CONCATENATED MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/lib/transform-json-schema.mjs
 
 // Supported string formats
 const SUPPORTED_STRING_FORMATS = new Set([
@@ -158,7 +158,7 @@ function _transformJSONSchema(jsonSchema) {
     return strictSchema;
 }
 //# sourceMappingURL=transform-json-schema.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/helpers/beta/json-schema.mjs
+;// CONCATENATED MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/helpers/beta/json-schema.mjs
 
 
 /**
@@ -212,9 +212,9 @@ function betaJSONSchemaOutputFormat(jsonSchema, options) {
     };
 }
 //# sourceMappingURL=json-schema.mjs.map
-// EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils/promise.mjs
-var promise = __webpack_require__(57678);
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/tools/agent-toolset/fs-util.mjs
+// EXTERNAL MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils/promise.mjs
+var promise = __webpack_require__(546);
+;// CONCATENATED MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/tools/agent-toolset/fs-util.mjs
 /**
  * Shared, Node-only filesystem helpers for the agent toolset's file tools:
  * path confinement (symlink-aware), an atomic write, and language-independent
@@ -372,9 +372,9 @@ var external_node_util_ = __webpack_require__(57975);
 var external_node_stream_ = __webpack_require__(57075);
 // EXTERNAL MODULE: external "node:stream/promises"
 var external_node_stream_promises_ = __webpack_require__(46466);
-// EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils/log.mjs
-var utils_log = __webpack_require__(46743);
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/tools/agent-toolset/skills.mjs
+// EXTERNAL MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils/log.mjs
+var utils_log = __webpack_require__(93771);
+;// CONCATENATED MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/tools/agent-toolset/skills.mjs
 /**
  * Node-only skill plumbing for the agent toolset: downloading a session
  * agent's skills into the workdir and extracting the archives. Kept in its own
@@ -618,7 +618,7 @@ async function readHead(file, n) {
     }
 }
 //# sourceMappingURL=skills.mjs.map
-;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/tools/agent-toolset/node.mjs
+;// CONCATENATED MODULE: ./node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/tools/agent-toolset/node.mjs
 /**
  * Node implementation of the `agent_toolset_20260401` tools — `bash`, `read`,
  * `write`, `edit`, `glob`, `grep` — plus the workdir/skills

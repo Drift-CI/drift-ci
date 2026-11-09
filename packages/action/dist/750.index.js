@@ -1,16 +1,16 @@
-export const id = 338;
-export const ids = [338];
+export const id = 750;
+export const ids = [750];
 export const modules = {
 
-/***/ 14338:
+/***/ 87750:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var propertyProvider = __webpack_require__(32178);
-var sharedIniFileLoader = __webpack_require__(76290);
-var client = __webpack_require__(12201);
-var tokenProviders = __webpack_require__(16526);
+var propertyProvider = __webpack_require__(73798);
+var sharedIniFileLoader = __webpack_require__(55358);
+var client = __webpack_require__(54997);
+var tokenProviders = __webpack_require__(81850);
 
 const isSsoProfile = (arg) => arg &&
     (typeof arg.sso_start_url === "string" ||
@@ -61,7 +61,7 @@ const resolveSSOCredentials = async ({ ssoStartUrl, ssoSession, ssoAccountId, ss
         });
     }
     const { accessToken } = token;
-    const { SSOClient, GetRoleCredentialsCommand } = await Promise.resolve().then(function () { return __webpack_require__(75785); });
+    const { SSOClient, GetRoleCredentialsCommand } = await Promise.resolve().then(function () { return __webpack_require__(87117); });
     const sso = ssoClient ||
         new SSOClient(Object.assign({}, clientConfig ?? {}, {
             logger: clientConfig?.logger ?? callerClientConfig?.logger ?? parentClientConfig?.logger,
@@ -201,12 +201,12 @@ exports.validateSsoProfile = validateSsoProfile;
 
 /***/ }),
 
-/***/ 75785:
+/***/ 87117:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var sso = __webpack_require__(40992);
+var sso = __webpack_require__(79564);
 
 
 
@@ -216,14 +216,14 @@ exports.SSOClient = sso.SSOClient;
 
 /***/ }),
 
-/***/ 65179:
+/***/ 20031:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.resolveHttpAuthSchemeConfig = exports.defaultSSOHttpAuthSchemeProvider = exports.defaultSSOHttpAuthSchemeParametersProvider = void 0;
-const httpAuthSchemes_1 = __webpack_require__(97452);
-const util_middleware_1 = __webpack_require__(26454);
+const httpAuthSchemes_1 = __webpack_require__(53880);
+const util_middleware_1 = __webpack_require__(32362);
 const defaultSSOHttpAuthSchemeParametersProvider = async (config, context, input) => {
     return {
         operation: (0, util_middleware_1.getSmithyContext)(context).operation,
@@ -279,13 +279,13 @@ exports.resolveHttpAuthSchemeConfig = resolveHttpAuthSchemeConfig;
 
 /***/ }),
 
-/***/ 76818:
+/***/ 5590:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.bdd = void 0;
-const util_endpoints_1 = __webpack_require__(43790);
+const util_endpoints_1 = __webpack_require__(21474);
 const k = "ref";
 const a = -1, b = true, c = "isSet", d = "PartitionResult", e = "booleanEquals", f = "getAttr", g = { [k]: "Endpoint" }, h = { [k]: d }, i = {}, j = [{ [k]: "Region" }];
 const _data = {
@@ -366,15 +366,15 @@ exports.bdd = util_endpoints_1.BinaryDecisionDiagram.from(nodes, root, _data.con
 
 /***/ }),
 
-/***/ 78245:
+/***/ 48041:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.defaultEndpointResolver = void 0;
-const util_endpoints_1 = __webpack_require__(5734);
-const util_endpoints_2 = __webpack_require__(43790);
-const bdd_1 = __webpack_require__(76818);
+const util_endpoints_1 = __webpack_require__(55546);
+const util_endpoints_2 = __webpack_require__(21474);
+const bdd_1 = __webpack_require__(5590);
 const cache = new util_endpoints_2.EndpointCache({
     size: 50,
     params: ["Endpoint", "Region", "UseDualStack", "UseFIPS"],
@@ -391,29 +391,29 @@ util_endpoints_2.customEndpointFunctions.aws = util_endpoints_1.awsEndpointFunct
 
 /***/ }),
 
-/***/ 40992:
+/***/ 79564:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var middlewareHostHeader = __webpack_require__(24285);
-var middlewareLogger = __webpack_require__(36321);
-var middlewareRecursionDetection = __webpack_require__(89182);
-var middlewareUserAgent = __webpack_require__(16980);
-var configResolver = __webpack_require__(93649);
-var core = __webpack_require__(38603);
-var schema = __webpack_require__(61439);
-var middlewareContentLength = __webpack_require__(9250);
-var middlewareEndpoint = __webpack_require__(55376);
-var middlewareRetry = __webpack_require__(86019);
-var smithyClient = __webpack_require__(57212);
-var httpAuthSchemeProvider = __webpack_require__(65179);
-var runtimeConfig = __webpack_require__(658);
-var regionConfigResolver = __webpack_require__(94508);
-var protocolHttp = __webpack_require__(97470);
-var schemas_0 = __webpack_require__(58628);
-var errors = __webpack_require__(76264);
-var SSOServiceException = __webpack_require__(43768);
+var middlewareHostHeader = __webpack_require__(31001);
+var middlewareLogger = __webpack_require__(67165);
+var middlewareRecursionDetection = __webpack_require__(44330);
+var middlewareUserAgent = __webpack_require__(52648);
+var configResolver = __webpack_require__(9693);
+var core = __webpack_require__(45135);
+var schema = __webpack_require__(96507);
+var middlewareContentLength = __webpack_require__(42966);
+var middlewareEndpoint = __webpack_require__(83732);
+var middlewareRetry = __webpack_require__(92807);
+var smithyClient = __webpack_require__(47040);
+var httpAuthSchemeProvider = __webpack_require__(20031);
+var runtimeConfig = __webpack_require__(79646);
+var regionConfigResolver = __webpack_require__(13512);
+var protocolHttp = __webpack_require__(38578);
+var schemas_0 = __webpack_require__(29992);
+var errors = __webpack_require__(57196);
+var SSOServiceException = __webpack_require__(99932);
 
 const resolveClientEndpointParameters = (options) => {
     return Object.assign(options, {
@@ -558,13 +558,13 @@ Object.keys(errors).forEach(function (k) {
 
 /***/ }),
 
-/***/ 43768:
+/***/ 99932:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.SSOServiceException = exports.__ServiceException = void 0;
-const smithy_client_1 = __webpack_require__(57212);
+const smithy_client_1 = __webpack_require__(47040);
 Object.defineProperty(exports, "__ServiceException", ({ enumerable: true, get: function () { return smithy_client_1.ServiceException; } }));
 class SSOServiceException extends smithy_client_1.ServiceException {
     constructor(options) {
@@ -577,13 +577,13 @@ exports.SSOServiceException = SSOServiceException;
 
 /***/ }),
 
-/***/ 76264:
+/***/ 57196:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.UnauthorizedException = exports.TooManyRequestsException = exports.ResourceNotFoundException = exports.InvalidRequestException = void 0;
-const SSOServiceException_1 = __webpack_require__(43768);
+const SSOServiceException_1 = __webpack_require__(99932);
 class InvalidRequestException extends SSOServiceException_1.SSOServiceException {
     name = "InvalidRequestException";
     $fault = "client";
@@ -640,27 +640,27 @@ exports.UnauthorizedException = UnauthorizedException;
 
 /***/ }),
 
-/***/ 658:
+/***/ 79646:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getRuntimeConfig = void 0;
-const tslib_1 = __webpack_require__(43532);
-const package_json_1 = tslib_1.__importDefault(__webpack_require__(87166));
-const client_1 = __webpack_require__(12201);
-const httpAuthSchemes_1 = __webpack_require__(97452);
-const util_user_agent_node_1 = __webpack_require__(23576);
-const config_resolver_1 = __webpack_require__(93649);
-const hash_node_1 = __webpack_require__(81822);
-const middleware_retry_1 = __webpack_require__(86019);
-const node_config_provider_1 = __webpack_require__(28787);
-const node_http_handler_1 = __webpack_require__(65192);
-const smithy_client_1 = __webpack_require__(57212);
-const util_body_length_node_1 = __webpack_require__(74120);
-const util_defaults_mode_node_1 = __webpack_require__(63034);
-const util_retry_1 = __webpack_require__(49644);
-const runtimeConfig_shared_1 = __webpack_require__(76235);
+const tslib_1 = __webpack_require__(21440);
+const package_json_1 = tslib_1.__importDefault(__webpack_require__(46337));
+const client_1 = __webpack_require__(54997);
+const httpAuthSchemes_1 = __webpack_require__(53880);
+const util_user_agent_node_1 = __webpack_require__(19140);
+const config_resolver_1 = __webpack_require__(9693);
+const hash_node_1 = __webpack_require__(50594);
+const middleware_retry_1 = __webpack_require__(92807);
+const node_config_provider_1 = __webpack_require__(23575);
+const node_http_handler_1 = __webpack_require__(55604);
+const smithy_client_1 = __webpack_require__(47040);
+const util_body_length_node_1 = __webpack_require__(81964);
+const util_defaults_mode_node_1 = __webpack_require__(81910);
+const util_retry_1 = __webpack_require__(89880);
+const runtimeConfig_shared_1 = __webpack_require__(80727);
 const getRuntimeConfig = (config) => {
     (0, smithy_client_1.emitWarningIfUnsupportedVersion)(process.version);
     const defaultsMode = (0, util_defaults_mode_node_1.resolveDefaultsModeConfig)(config);
@@ -701,22 +701,22 @@ exports.getRuntimeConfig = getRuntimeConfig;
 
 /***/ }),
 
-/***/ 76235:
+/***/ 80727:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getRuntimeConfig = void 0;
-const httpAuthSchemes_1 = __webpack_require__(97452);
-const protocols_1 = __webpack_require__(59487);
-const core_1 = __webpack_require__(38603);
-const smithy_client_1 = __webpack_require__(57212);
-const url_parser_1 = __webpack_require__(35388);
-const util_base64_1 = __webpack_require__(90318);
-const util_utf8_1 = __webpack_require__(33565);
-const httpAuthSchemeProvider_1 = __webpack_require__(65179);
-const endpointResolver_1 = __webpack_require__(78245);
-const schemas_0_1 = __webpack_require__(58628);
+const httpAuthSchemes_1 = __webpack_require__(53880);
+const protocols_1 = __webpack_require__(58795);
+const core_1 = __webpack_require__(45135);
+const smithy_client_1 = __webpack_require__(47040);
+const url_parser_1 = __webpack_require__(42144);
+const util_base64_1 = __webpack_require__(26290);
+const util_utf8_1 = __webpack_require__(7697);
+const httpAuthSchemeProvider_1 = __webpack_require__(20031);
+const endpointResolver_1 = __webpack_require__(48041);
+const schemas_0_1 = __webpack_require__(29992);
 const getRuntimeConfig = (config) => {
     return {
         apiVersion: "2019-06-10",
@@ -757,7 +757,7 @@ exports.getRuntimeConfig = getRuntimeConfig;
 
 /***/ }),
 
-/***/ 58628:
+/***/ 29992:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
@@ -794,9 +794,9 @@ const _sAK = "secretAccessKey";
 const _sT = "sessionToken";
 const _xasbt = "x-amz-sso_bearer_token";
 const n0 = "com.amazonaws.sso";
-const schema_1 = __webpack_require__(61439);
-const errors_1 = __webpack_require__(76264);
-const SSOServiceException_1 = __webpack_require__(43768);
+const schema_1 = __webpack_require__(96507);
+const errors_1 = __webpack_require__(57196);
+const SSOServiceException_1 = __webpack_require__(99932);
 const _s_registry = schema_1.TypeRegistry.for(_s);
 exports.SSOServiceException$ = [-3, _s, "SSOServiceException", 0, [], []];
 _s_registry.registerError(exports.SSOServiceException$, SSOServiceException_1.SSOServiceException);
@@ -854,15 +854,15 @@ exports.GetRoleCredentials$ = [
 
 /***/ }),
 
-/***/ 16526:
+/***/ 81850:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
 
-var client = __webpack_require__(12201);
-var httpAuthSchemes = __webpack_require__(97452);
-var propertyProvider = __webpack_require__(32178);
-var sharedIniFileLoader = __webpack_require__(76290);
+var client = __webpack_require__(54997);
+var httpAuthSchemes = __webpack_require__(53880);
+var propertyProvider = __webpack_require__(73798);
+var sharedIniFileLoader = __webpack_require__(55358);
 var node_fs = __webpack_require__(73024);
 
 const fromEnvSigningName = ({ logger, signingName } = {}) => async () => {
@@ -883,7 +883,7 @@ const EXPIRE_WINDOW_MS = 5 * 60 * 1000;
 const REFRESH_MESSAGE = `To refresh this SSO session run 'aws sso login' with the corresponding profile.`;
 
 const getSsoOidcClient = async (ssoRegion, init = {}, callerClientConfig) => {
-    const { SSOOIDCClient } = await __webpack_require__.e(/* import() */ 921).then(__webpack_require__.t.bind(__webpack_require__, 17302, 23));
+    const { SSOOIDCClient } = await __webpack_require__.e(/* import() */ 981).then(__webpack_require__.t.bind(__webpack_require__, 53362, 23));
     const coalesce = (prop) => init.clientConfig?.[prop] ?? init.parentClientConfig?.[prop] ?? callerClientConfig?.[prop];
     const ssoOidcClient = new SSOOIDCClient(Object.assign({}, init.clientConfig ?? {}, {
         region: ssoRegion ?? init.clientConfig?.region,
@@ -894,7 +894,7 @@ const getSsoOidcClient = async (ssoRegion, init = {}, callerClientConfig) => {
 };
 
 const getNewSsoOidcToken = async (ssoToken, ssoRegion, init = {}, callerClientConfig) => {
-    const { CreateTokenCommand } = await __webpack_require__.e(/* import() */ 921).then(__webpack_require__.t.bind(__webpack_require__, 17302, 23));
+    const { CreateTokenCommand } = await __webpack_require__.e(/* import() */ 981).then(__webpack_require__.t.bind(__webpack_require__, 53362, 23));
     const ssoOidcClient = await getSsoOidcClient(ssoRegion, init, callerClientConfig);
     return ssoOidcClient.send(new CreateTokenCommand({
         clientId: ssoToken.clientId,

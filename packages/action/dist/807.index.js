@@ -1,8 +1,8 @@
-export const id = 211;
-export const ids = [211];
+export const id = 807;
+export const ids = [807];
 export const modules = {
 
-/***/ 2847:
+/***/ 61803:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -74,7 +74,7 @@ exports.req = req;
 
 /***/ }),
 
-/***/ 16574:
+/***/ 78394:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -109,7 +109,7 @@ exports.Agent = void 0;
 const net = __importStar(__webpack_require__(69278));
 const http = __importStar(__webpack_require__(58611));
 const https_1 = __webpack_require__(65692);
-__exportStar(__webpack_require__(2847), exports);
+__exportStar(__webpack_require__(61803), exports);
 const INTERNAL = Symbol('AgentBaseInternalState');
 class Agent extends http.Agent {
     constructor(opts) {
@@ -258,7 +258,7 @@ exports.Agent = Agent;
 
 /***/ }),
 
-/***/ 58035:
+/***/ 42231:
 /***/ ((module, exports, __webpack_require__) => {
 
 /* eslint-env browser */
@@ -518,7 +518,7 @@ function localstorage() {
 	}
 }
 
-module.exports = __webpack_require__(94350)(exports);
+module.exports = __webpack_require__(91274)(exports);
 
 const {formatters} = module.exports;
 
@@ -537,7 +537,7 @@ formatters.j = function (v) {
 
 /***/ }),
 
-/***/ 94350:
+/***/ 91274:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 
@@ -553,7 +553,7 @@ function setup(env) {
 	createDebug.disable = disable;
 	createDebug.enable = enable;
 	createDebug.enabled = enabled;
-	createDebug.humanize = __webpack_require__(32815);
+	createDebug.humanize = __webpack_require__(34523);
 	createDebug.destroy = destroy;
 
 	Object.keys(env).forEach(key => {
@@ -836,7 +836,7 @@ module.exports = setup;
 
 /***/ }),
 
-/***/ 42111:
+/***/ 66835:
 /***/ ((module, __unused_webpack_exports, __webpack_require__) => {
 
 /**
@@ -845,15 +845,15 @@ module.exports = setup;
  */
 
 if (typeof process === 'undefined' || process.type === 'renderer' || process.browser === true || process.__nwjs) {
-	module.exports = __webpack_require__(58035);
+	module.exports = __webpack_require__(42231);
 } else {
-	module.exports = __webpack_require__(66319);
+	module.exports = __webpack_require__(97043);
 }
 
 
 /***/ }),
 
-/***/ 66319:
+/***/ 97043:
 /***/ ((module, exports, __webpack_require__) => {
 
 /**
@@ -887,7 +887,7 @@ exports.colors = [6, 2, 3, 4, 5, 1];
 try {
 	// Optional dependency (as in, doesn't need to be installed, NOT like optionalDependencies in package.json)
 	// eslint-disable-next-line import/no-extraneous-dependencies
-	const supportsColor = __webpack_require__(87883);
+	const supportsColor = __webpack_require__(86048);
 
 	if (supportsColor && (supportsColor.stderr || supportsColor).level >= 2) {
 		exports.colors = [
@@ -1095,7 +1095,7 @@ function init(debug) {
 	}
 }
 
-module.exports = __webpack_require__(94350)(exports);
+module.exports = __webpack_require__(91274)(exports);
 
 const {formatters} = module.exports;
 
@@ -1123,7 +1123,7 @@ formatters.O = function (v) {
 
 /***/ }),
 
-/***/ 77211:
+/***/ 42807:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1158,10 +1158,10 @@ exports.HttpsProxyAgent = void 0;
 const net = __importStar(__webpack_require__(69278));
 const tls = __importStar(__webpack_require__(64756));
 const assert_1 = __importDefault(__webpack_require__(42613));
-const debug_1 = __importDefault(__webpack_require__(42111));
-const agent_base_1 = __webpack_require__(16574);
+const debug_1 = __importDefault(__webpack_require__(66835));
+const agent_base_1 = __webpack_require__(78394);
 const url_1 = __webpack_require__(87016);
-const parse_proxy_response_1 = __webpack_require__(11561);
+const parse_proxy_response_1 = __webpack_require__(14469);
 const debug = (0, debug_1.default)('https-proxy-agent');
 const setServernameFromNonIpHost = (options) => {
     if (options.servername === undefined &&
@@ -1309,7 +1309,7 @@ function omit(obj, ...keys) {
 
 /***/ }),
 
-/***/ 11561:
+/***/ 14469:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1318,7 +1318,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.parseProxyResponse = void 0;
-const debug_1 = __importDefault(__webpack_require__(42111));
+const debug_1 = __importDefault(__webpack_require__(66835));
 const debug = (0, debug_1.default)('https-proxy-agent:parse-proxy-response');
 function parseProxyResponse(socket) {
     return new Promise((resolve, reject) => {
@@ -1416,7 +1416,7 @@ exports.parseProxyResponse = parseProxyResponse;
 
 /***/ }),
 
-/***/ 32815:
+/***/ 34523:
 /***/ ((module) => {
 
 /**
@@ -1585,7 +1585,7 @@ function plural(ms, msAbs, n, name) {
 
 /***/ }),
 
-/***/ 87883:
+/***/ 86048:
 /***/ ((module) => {
 
 module.exports = eval("require")("supports-color");

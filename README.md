@@ -92,7 +92,7 @@ Want shared run history, drift and cost analytics, and tracked regressions witho
 ## Features
 
 - **Providers** — Anthropic, OpenAI, Azure OpenAI, Bedrock, Google Gemini, Vertex AI, and Ollama (local + cloud).
-- **Evaluators** — exact-match, json-schema, cosine-similarity (embeddings), LLM-judge, refusal-detection, rubric-checklist, and safety-classifier.
+- **Evaluators** — exact-match, contains, json-schema, cosine-similarity (embeddings), LLM-judge, refusal-detection, rubric-checklist, and safety-classifier.
 - **Baselines as code** — one git-committed JSON file per case, with secret redaction before anything reaches disk.
 - **Reporters** — live terminal (Ink), pipe-safe text, JSON, and JUnit XML.
 - **Run history** — in-memory, SQLite, Postgres, or HTTP sync to the dashboard.

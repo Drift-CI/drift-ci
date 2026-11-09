@@ -2,6 +2,7 @@ import type { TestCase, EvaluatorSpec } from '../types/index.js';
 import type { ProviderAdapter } from '../providers/base.js';
 import type { Evaluator } from './base.js';
 import { EvaluatorChain, type EvaluatorWeight } from './composite.js';
+import { ContainsEvaluator } from './contains.js';
 import { ExactMatchEvaluator } from './exact.js';
 import { SchemaEvaluator } from './schema.js';
 import { EmbeddingEvaluator } from './embedding.js';
@@ -19,7 +20,7 @@ import {
 export interface EvaluatorFactoryContext {
   testProvider: ProviderAdapter;
   judgeProvider?: ProviderAdapter;
-  case?: Pick<TestCase, 'schema' | 'rubric' | 'rubricQuorum'>;
+  case?: Pick<TestCase, 'contains' | 'schema' | 'rubric' | 'rubricQuorum'>;
   allowSelfBias?: boolean;
   /**
    * Resolved named judges from the top-level `judges:` config map.
@@ -68,6 +69,8 @@ function build(name: string, ctx: EvaluatorFactoryContext): Evaluator {
   switch (name) {
     case 'exact-match':
       return new ExactMatchEvaluator();
+    case 'contains':
+      return new ContainsEvaluator(ctx.case?.contains ?? []);
     case 'json-schema':
       return new SchemaEvaluator(ctx.case?.schema);
     case 'cosine-similarity':

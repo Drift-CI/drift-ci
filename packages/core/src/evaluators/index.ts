@@ -1,4 +1,5 @@
 export * from './base.js';
+export * from './contains.js';
 export * from './exact.js';
 export * from './composite.js';
 export * from './factory.js';

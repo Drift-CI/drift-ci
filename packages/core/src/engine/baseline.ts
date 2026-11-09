@@ -70,6 +70,9 @@ export function computeSuiteHash(tc: TestCase): string {
     evaluators: tc.evaluators ?? null,
     threshold: tc.threshold ?? null,
     messages: tc.messages ?? null,
+    // Keep hashes for existing suites stable when the new field is absent,
+    // while still invalidating a baseline whenever its requirements change.
+    ...(tc.contains !== undefined ? { contains: tc.contains } : {}),
     schema: tc.schema ?? null,
     systemPrompt: tc.systemPrompt ?? null,
     // Rubric edits / reorders / mode swaps / quorum changes invalidate
