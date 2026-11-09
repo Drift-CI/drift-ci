@@ -23,6 +23,15 @@ LLM applications drift. A reworded prompt, a model upgrade, or a bumped dependen
 
 **drift-ci** makes prompt behaviour **testable**: define cases with expected outputs, score them against your provider on every pull request, and **block the merge** when behaviour drifts past a threshold — with baselines committed as code and a diff-style PR comment.
 
+<p align="center">
+  <picture>
+    <source media="(prefers-color-scheme: dark)" srcset="assets/pr-comment-dark.png">
+    <img src="assets/pr-comment-light.png" width="720" alt="drift-ci PR comment: switching the support agent to claude-haiku-4-5 to cut costs regressed two structured-output cases from 1.000 to 0.000, so the check failed and the merge was blocked">
+  </picture>
+  <br>
+  <sub>A real run: switching a support agent to a cheaper model broke its structured output. drift-ci caught it on the PR (<a href="https://github.com/John-E5/drift-ci-dogfood/pull/14">see the PR</a>).</sub>
+</p>
+
 **What it is** — a CI-time gate for LLM behaviour: shift-left tests for prompts, with git-committed baselines and a pull-request workflow.
 
 **What it isn't** — production observability, tracing, or a prompt-management UI. drift-ci complements eval frameworks like [Promptfoo](https://www.promptfoo.dev) and [DeepEval](https://github.com/confident-ai/deepeval) by being opinionated about the **CI gate** and the **baselines-as-code** workflow, rather than one-off eval runs.
@@ -68,6 +77,10 @@ cases:
 ```
 
 On every pull request, the action runs your suite and posts a regression/improvement table as a single, idempotent comment. Full inputs and outputs — plus the fork-PR safety pattern — are in the [action README](packages/action/README.md); ready-made workflows (basic, matrix, fork-gated, GitLab CI) live in [examples/workflows/](examples/workflows/).
+
+## Hosted dashboard (optional)
+
+Want shared run history, drift and cost analytics, and tracked regressions without running a server? [drift-ci.com](https://drift-ci.com) is the hosted dashboard, free for one developer. Point the CLI or Action at it and keep every run. The CLI and Action stay MIT-licensed and work fully without it, and you can [self-host the dashboard](docs/self-hosting.md) instead.
 
 ## How it works
 
