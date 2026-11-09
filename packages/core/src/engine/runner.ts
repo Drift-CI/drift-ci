@@ -13,6 +13,7 @@ import type { ProviderAdapter } from '../providers/base.js';
 import type { EvaluatorChain } from '../evaluators/composite.js';
 import type { StorageAdapter } from '../storage/interface.js';
 import { classifyError } from './error-classifier.js';
+import { aggregateSamples, effectiveRuns } from './sampling.js';
 
 export type EvaluatorForCase = (tc: TestCase) => EvaluatorChain;
 
@@ -67,7 +68,7 @@ export class Runner {
     const results = await Promise.all(
       suite.cases.map((tc) =>
         this.limit(async () => {
-          const result = await this.runCase(runId, tc, defaultThreshold);
+          const result = await this.runCase(runId, tc, defaultThreshold, suite.default_runs);
           onCaseComplete?.(result);
           return result;
         }),
@@ -100,7 +101,26 @@ export class Runner {
     return run;
   }
 
+  /**
+   * Runs the case `runs` times (case → suite default → 1), one sample after another inside the
+   * case's concurrency slot, and combines them with aggregateSamples (median of scored samples).
+   */
   private async runCase(
+    runId: string,
+    tc: TestCase,
+    defaultThreshold: number,
+    suiteRuns: number | undefined,
+  ): Promise<CaseResult> {
+    const n = effectiveRuns(tc.runs, suiteRuns);
+    const samples: CaseResult[] = [];
+    for (let i = 0; i < n; i++) {
+      samples.push(await this.runSample(runId, tc, defaultThreshold));
+    }
+    return aggregateSamples(samples);
+  }
+
+  /** One provider call + evaluation (the pre-sampling runCase, unchanged). */
+  private async runSample(
     runId: string,
     tc: TestCase,
     defaultThreshold: number,
