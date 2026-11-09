@@ -82,6 +82,23 @@ function baseInput(overrides: Partial<RenderCommentInput> = {}): RenderCommentIn
 }
 
 describe('renderComment', () => {
+  it('marks sampled cases with the sample count', () => {
+    const samples = [
+      { score: 1, status: 'pass' },
+      { score: 0, status: 'pass' },
+      { score: 1, status: 'pass' },
+    ];
+    const out = renderComment(
+      baseInput({
+        run: makeRun([makeCase('c1', { evaluatorBreakdown: { samples } }), makeCase('c2')]),
+      }),
+    );
+    const c1Row = out.split('\n').find((l) => l.includes('`c1`'))!;
+    const c2Row = out.split('\n').find((l) => l.includes('`c2`'))!;
+    expect(c1Row).toContain('<sub>median of 3</sub>');
+    expect(c2Row).not.toContain('median of');
+  });
+
   it('renders the stale-judge accept command with the CLI package and suite path', () => {
     const out = renderComment(
       baseInput({
