@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/Drift-CI/drift-ci/compare/v1.6.0...v1.7.0) (2026-11-09)
+
+
+### Features
+
+* repeated sampling — run cases N times, score the median ([#168](https://github.com/Drift-CI/drift-ci/issues/168)) ([44db714](https://github.com/Drift-CI/drift-ci/commit/44db7145fcf9660b45645b2b3a2cc11d21160081))
+
 ## [1.6.0](https://github.com/Drift-CI/drift-ci/compare/v1.5.0...v1.6.0) (2026-11-09)
 
 
