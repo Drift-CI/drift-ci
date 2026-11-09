@@ -41,10 +41,11 @@ function isScored(s: CaseResult): boolean {
  * Combine N samples of one case into one result (spec: repeated-sampling design).
  * - 1 sample: returned as-is.
  * - At least ceil(N/2) scored: median score; output/breakdown/latency from the scored sample closest to it.
- * - Otherwise: the most common failure status (ties → first seen), score NaN.
+ * - Otherwise: the most common non-scored status (ties → first seen), score NaN.
  * Token usage is summed over every sample so cost reflects real spend.
  */
 export function aggregateSamples(samples: readonly CaseResult[]): CaseResult {
+  if (samples.length === 0) throw new Error('aggregateSamples: no samples');
   if (samples.length === 1) return samples[0];
 
   const records: SampleRecord[] = samples.map((s) => ({
@@ -60,7 +61,7 @@ export function aggregateSamples(samples: readonly CaseResult[]): CaseResult {
     score = median(scored.map((s) => s.score));
     chosen = scored[0];
     for (const s of scored) {
-      if (Math.abs(s.score - score) < Math.abs(chosen.score - score)) chosen = s;
+      if (Math.abs(s.score - score) < Math.abs(chosen.score - score) - 1e-9) chosen = s;
     }
     chosen = { ...chosen, status: 'pass', error: undefined };
   } else {

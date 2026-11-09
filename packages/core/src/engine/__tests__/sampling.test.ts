@@ -147,9 +147,17 @@ describe('aggregateSamples', () => {
   });
 
   it('even sample count with all scored: mean of the middle two', () => {
-    const r = aggregateSamples([sample({ score: 0.2 }), sample({ score: 0.6 })]);
+    const r = aggregateSamples([
+      sample({ score: 0.2, output: 'first' }),
+      sample({ score: 0.6, output: 'second' }),
+    ]);
     expect(r.score).toBeCloseTo(0.4);
     expect(r.status).toBe('pass');
+    expect(r.output).toBe('first'); // equidistant from the median: ties go to the earliest
+  });
+
+  it('throws on empty input', () => {
+    expect(() => aggregateSamples([])).toThrow('aggregateSamples: no samples');
   });
 });
 
