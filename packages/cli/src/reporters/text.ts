@@ -127,9 +127,10 @@ function formatCaseLine(
   if (sets.noScoreSet.has(c.caseId)) flags.push('no-score');
 
   const samples = sampleCount(c);
+  const unscored = Number.isNaN(c.score);
   const scoreText =
-    (Number.isNaN(c.score) ? '—' : c.score.toFixed(3)) +
-    (samples > 1 ? ` (median of ${samples})` : '');
+    (unscored ? '—' : c.score.toFixed(3)) +
+    (samples > 1 ? (unscored ? ` (${samples} samples)` : ` (median of ${samples})`) : '');
   const delta = deltas?.deltas[c.caseId];
   const deltaText =
     delta === undefined || delta === 0

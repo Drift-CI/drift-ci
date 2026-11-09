@@ -143,7 +143,7 @@ function renderRow(
   const samples = sampleCount(c);
   const score =
     (state.noScore ? '—' : formatScore(c.score)) +
-    (samples > 1 ? ` <sub>median of ${samples}</sub>` : '');
+    (samples > 1 ? ` <sub>${state.noScore ? `${samples} samples` : `median of ${samples}`}</sub>` : '');
 
   let deltaCell: string;
   if (state.missing) {

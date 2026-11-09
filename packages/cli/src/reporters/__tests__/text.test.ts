@@ -197,4 +197,16 @@ describe('TextReporter', () => {
     expect(stream.written).toMatch(/case-a\s+pass\s+score=0\.900 \(median of 3\)/);
     expect(stream.written).not.toMatch(/case-b.*median of/);
   });
+
+  it('says "N samples", not "median", when too few samples scored', () => {
+    const ctx = makeCtx();
+    ctx.run.cases[1] = {
+      ...ctx.run.cases[1],
+      evaluatorBreakdown: { samples: [{ score: null, status: 'timeout' }, { score: null, status: 'timeout' }, { score: 1, status: 'pass' }] },
+    } as never;
+    const stream = new CollectingStream();
+    new TextReporter({ out: stream }).onRunEnd(ctx);
+    expect(stream.written).toMatch(/case-b .*score=— \(3 samples\)/);
+    expect(stream.written).not.toMatch(/case-b.*median of/);
+  });
 });
