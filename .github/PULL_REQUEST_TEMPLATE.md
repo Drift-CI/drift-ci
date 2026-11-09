@@ -17,7 +17,7 @@ If this is a draft PR, mark it as such in the UI. Keep one logical change per PR
 
 ## Related issues
 
-<!-- Closes #123, refs #456 -->
+<!-- "Closes #123" closes the issue on merge; use "Part of #123" if this PR only covers part of it. -->
 
 ## Changes
 
