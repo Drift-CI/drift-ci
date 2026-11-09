@@ -5,7 +5,9 @@ name: action bundle
 # across OS / Node patch), so a locally-built bundle rarely byte-matches what a
 # GitHub runner produces. This job rebuilds the bundle ON the runner and, for
 # same-repo PRs, commits the result back to the PR branch. Fork PRs can't be
-# pushed to, so it fails with instructions instead (the contributor rebuilds).
+# pushed to by this job, so it uploads the runner-built bundle as the
+# `action-dist` artifact and fails; a maintainer then applies it with
+# scripts/sync-fork-bundle.sh <pr>. Contributors never need to build dist.
 #
 # Replaces the old `check-action-bundle` verify-only job in ci.yml; the job name
 # is preserved so existing required-status-check config keeps working.
@@ -53,6 +55,7 @@ jobs:
         run: pnpm --filter @drift-ci/action build
 
       - name: Commit the rebuilt bundle if it changed
+        id: sync
         env:
           IS_SAME_REPO: ${{ github.event.pull_request.head.repo.full_name == github.repository }}
           HEAD_REF: ${{ github.head_ref }}
@@ -66,8 +69,8 @@ jobs:
           git --no-pager diff --stat -- packages/action/dist
 
           if [ "$IS_SAME_REPO" != "true" ]; then
-            echo "::error::packages/action/dist is out of sync on a fork PR (cannot auto-commit). Run \`pnpm --filter @drift-ci/action build\` and commit packages/action/dist."
-            exit 1
+            echo "is_fork_out_of_date=true" >> "$GITHUB_OUTPUT"
+            exit 0
           fi
 
           git config user.name "github-actions[bot]"
@@ -76,3 +79,19 @@ jobs:
           git commit -m "build(action): sync dist bundle [skip ci]"
           git push origin "HEAD:${HEAD_REF}"
           echo "Pushed the rebuilt bundle to ${HEAD_REF}."
+
+      # Fork PRs: hand the runner-built bundle to a maintainer instead of asking the
+      # contributor to rebuild (a local build never byte-matches the runner's).
+      - name: Upload the rebuilt bundle (fork PRs)
+        if: steps.sync.outputs.is_fork_out_of_date == 'true'
+        uses: actions/upload-artifact@v7
+        with:
+          name: action-dist
+          path: packages/action/dist
+          retention-days: 7
+
+      - name: Fail until a maintainer syncs the bundle (fork PRs)
+        if: steps.sync.outputs.is_fork_out_of_date == 'true'
+        run: |
+          echo "::error::packages/action/dist needs the runner-built bundle. Contributors: nothing to do, and please don't commit dist yourself. Maintainers: run scripts/sync-fork-bundle.sh ${{ github.event.pull_request.number }}."
+          exit 1
