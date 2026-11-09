@@ -89,6 +89,28 @@ Want shared run history, drift and cost analytics, and tracked regressions witho
 3. **Decide** — a regression (a score drop past your threshold) exits `1` and fails the build. A transient-error storm (rate limits, timeouts) exits `2` instead — never mistaken for a regression.
 4. **Accept** — intentional changes are promoted with `drift-ci baseline accept <suite> --cases <ids>` (or `--all`) and committed alongside the code change, reviewed as a diff.
 
+## Reducing flaky failures
+
+LLM output varies run to run, even at temperature 0. To keep one unlucky answer from failing the build, run cases more than once — drift-ci scores the **median**:
+
+```yaml
+version: 1
+id: support-bot
+name: Support bot
+default_runs: 3        # every case: 3 samples, median score
+cases:
+  - id: refund-policy
+    input: Can I get a refund after 30 days?
+    evaluators: [llm-judge]
+    criteria: Explains the 30-day policy politely
+  - id: greeting
+    input: Say hello
+    expected: Hello
+    runs: 1            # cheap, deterministic case: override back to 1
+```
+
+With 3 samples, a single outlier is ignored. Each sample is a real provider call, so cost scales with the sample count (the cost guard sees the full total). Transient errors on a minority of samples don't fail the case.
+
 ## Features
 
 - **Providers** — Anthropic, OpenAI, Azure OpenAI, Bedrock, Google Gemini, Vertex AI, and Ollama (local + cloud).

@@ -39,6 +39,7 @@ const SUITE_TEMPLATE = `version: 1
 id: example
 name: Example suite
 description: Starter suite. Replace with your own cases.
+# default_runs: 3  # run each case 3 times and score the median (fewer flaky failures, 3x the calls)
 evaluators:
   - exact-match
 cases:
