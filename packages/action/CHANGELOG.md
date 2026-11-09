@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.6.0](https://github.com/Drift-CI/drift-ci/compare/v1.5.0...v1.6.0) (2026-11-09)
+
+
+### Features
+
+* git/PR context and aborted flag on dashboard sync ([#163](https://github.com/Drift-CI/drift-ci/issues/163)) ([3e1c543](https://github.com/Drift-CI/drift-ci/commit/3e1c543074a4fd36ea1874792c2e95c803acc82c))
+
 ## [1.5.0](https://github.com/Drift-CI/drift-ci/compare/v1.4.1...v1.5.0) (2026-11-09)
 
 
