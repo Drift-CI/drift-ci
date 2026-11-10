@@ -1,0 +1,11 @@
+version: 1
+provider:
+  name: ollama
+  model: qwen2.5:1.5b
+  # Defaults to http://localhost:11434. Set baseUrl for a remote Ollama server.
+storage:
+  type: json-file
+thresholds:
+  regression: 0.10
+  alert: 0.20
+timeoutMs: 120000

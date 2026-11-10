@@ -24,6 +24,7 @@ provider, and run `drift-ci run`.
 | [`workflows/matrix.yml`](workflows/matrix.yml) | `pull_request` | Runs the same suite across multiple providers in parallel, uploading each as a separate JUnit artifact. |
 | [`workflows/fork-gated.yml`](workflows/fork-gated.yml) | `pull_request_target` + `safe-to-run-llm-tests` label | The maintainer-gated pattern for running drift-ci against fork PRs without leaking secrets. |
 | [`workflows/gitlab-ci.yml`](workflows/gitlab-ci.yml) | GitLab CI | Non-GitHub equivalent — runs the CLI via `npx`, uploads the JUnit report as a GitLab test artifact. |
+| [`ollama/drift-ollama.yml`](ollama/drift-ollama.yml) | `pull_request` | Runs a local Ollama model as a service container: no API key needed. Full walkthrough in [`ollama/`](ollama/). |
 
 See [packages/action/README.md](../packages/action/README.md) for the
 full action inputs/outputs surface and fork-PR security write-up.

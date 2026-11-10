@@ -1,0 +1,18 @@
+{
+  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "caseId": "classify-shipping",
+  "suiteId": "support-triage",
+  "suiteHash": "sha256:eb26a03fbdc0432d16e448dd93f6dff4dce943ad0c8b4c626bb8d73db705bba4",
+  "score": 1,
+  "output": "shipping",
+  "outputTruncated": false,
+  "outputFullHash": "sha256:740062676a3134f36f0f0fc90152e91a417d0d363bf2441ebd6a5103f562dacf",
+  "evaluatorBreakdown": {
+    "exact-match": 1
+  },
+  "capturedAt": "2026-11-10T18:24:47.895Z",
+  "capturedBy": {
+    "runId": "cad58b47-7696-4a79-a536-479bfd49c91c",
+    "provider": "ollama/qwen2.5:1.5b"
+  }
+}

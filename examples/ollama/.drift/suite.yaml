@@ -1,0 +1,42 @@
+version: 1
+id: support-triage
+name: Support ticket triage (Ollama)
+cases:
+  - id: classify-billing
+    systemPrompt: >-
+      You label customer support tickets. Reply with exactly one lowercase word:
+      billing, shipping or account. No punctuation, no explanation.
+    input: "I was charged twice for order #4417."
+    expected: billing
+    evaluators: [exact-match]
+
+  - id: classify-shipping
+    systemPrompt: >-
+      You label customer support tickets. Reply with exactly one lowercase word:
+      billing, shipping or account. No punctuation, no explanation.
+    input: "My parcel says delivered but nothing arrived."
+    expected: shipping
+    evaluators: [exact-match]
+
+  - id: triage-json
+    systemPrompt: >-
+      You triage support tickets. Reply with only a JSON object with the keys
+      "category" (billing, shipping or account) and "priority" (low, normal or high).
+      No markdown, no code fences, no other text.
+    input: "I can't log in and my account shows a payment I didn't make."
+    evaluators: [json-schema]
+    schema:
+      type: object
+      required: [category, priority]
+      properties:
+        category: { enum: [billing, shipping, account] }
+        priority: { enum: [low, normal, high] }
+
+  - id: reply-mentions-refund-window
+    systemPrompt: >-
+      You are a support agent. Our refund policy: refunds are available within
+      30 days of delivery. Answer in two sentences, and always state the refund
+      window in the form "within 30 days".
+    input: "Can I still get a refund? It arrived three weeks ago."
+    evaluators: [contains]
+    contains: ["30 days"]

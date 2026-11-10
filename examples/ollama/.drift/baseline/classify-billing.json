@@ -1,0 +1,18 @@
+{
+  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "caseId": "classify-billing",
+  "suiteId": "support-triage",
+  "suiteHash": "sha256:63022c48338f237be6f58b2b2892ec2f88d8957ef08fe2b823461e091eba515c",
+  "score": 1,
+  "output": "billing",
+  "outputTruncated": false,
+  "outputFullHash": "sha256:0c95c7ece1ce1a9750275ef1c6d7ad6b278f70d66592207783ffe7d58474cc01",
+  "evaluatorBreakdown": {
+    "exact-match": 1
+  },
+  "capturedAt": "2026-11-10T18:24:47.892Z",
+  "capturedBy": {
+    "runId": "cad58b47-7696-4a79-a536-479bfd49c91c",
+    "provider": "ollama/qwen2.5:1.5b"
+  }
+}

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "caseId": "reply-mentions-refund-window",
+  "suiteId": "support-triage",
+  "suiteHash": "sha256:70fcc8a99eb4a1677f581e7bc3297780dad8c38c893b4e55ddfd2e504a943016",
+  "score": 1,
+  "output": "Yes, you can still get a refund within 30 days of delivery.",
+  "outputTruncated": false,
+  "outputFullHash": "sha256:0ecb59507703088897c6f7a038ec486d4e4d9a927d4db1d4da84f396fa9ff6fd",
+  "evaluatorBreakdown": {
+    "contains": 1
+  },
+  "capturedAt": "2026-11-10T18:24:47.896Z",
+  "capturedBy": {
+    "runId": "cad58b47-7696-4a79-a536-479bfd49c91c",
+    "provider": "ollama/qwen2.5:1.5b"
+  }
+}
