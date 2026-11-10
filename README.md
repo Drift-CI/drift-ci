@@ -52,6 +52,12 @@ git add .drift && git commit -m "Add drift-ci baselines"
 
 That's the whole loop. From now on, every run is compared with those baselines.
 
+<p align="center">
+  <img src="assets/demo.gif" width="720" alt="Terminal demo: drift-ci run passes 3 of 3 cases on claude-sonnet-4-5; after switching to claude-haiku-4-5 the ticket-json case drops from 1.000 to 0.000, drift-ci reports a regression and exits with code 1">
+  <br>
+  <sub>Real CLI output, using the built-in mock provider so the demo runs without an API key.</sub>
+</p>
+
 ## GitHub Action
 
 ```yaml
