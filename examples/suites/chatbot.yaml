@@ -24,12 +24,11 @@ default_threshold: 0.15
 
 cases:
   - id: refund_eligibility
+    systemPrompt: |
+      You are a helpful customer-support agent for a SaaS product.
+      Refunds are available within 14 days of purchase. You never
+      invent policies that are not listed here.
     messages:
-      - role: system
-        content: |
-          You are a helpful customer-support agent for a SaaS product.
-          Refunds are available within 14 days of purchase. You never
-          invent policies that are not listed here.
       - role: user
         content: "Hi, I bought a month ago and it's not what I expected. Can I get a refund?"
     criteria: |
