@@ -1,0 +1,18 @@
+{
+  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "caseId": "triage-json",
+  "suiteId": "support-triage",
+  "suiteHash": "sha256:79b4eb5d2e323f25af92052a1a57f8e4b70417aed6dbea647860eea68ca9c421",
+  "score": 1,
+  "output": "{\n  \"category\": \"account\",\n  \"priority\": \"high\"\n}",
+  "outputTruncated": false,
+  "outputFullHash": "sha256:048cc8f14746f5d00df0a440a4744d419b479564b6df63305c8d45660887d4c1",
+  "evaluatorBreakdown": {
+    "json-schema": 1
+  },
+  "capturedAt": "2026-11-10T18:24:47.896Z",
+  "capturedBy": {
+    "runId": "cad58b47-7696-4a79-a536-479bfd49c91c",
+    "provider": "ollama/qwen2.5:1.5b"
+  }
+}

@@ -1,0 +1,38 @@
+# drift-ci with a local Ollama model: no API key, no provider bill.
+# Copy to .github/workflows/drift-ollama.yml and copy this example's .drift/ folder to your repo root.
+name: drift-ci (Ollama)
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+  pull-requests: write # for the PR comment
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      OLLAMA_MODEL: qwen2.5:1.5b # keep in sync with provider.model in .drift/config.yaml
+    services:
+      ollama:
+        image: ollama/ollama:latest # pin a version (e.g. ollama/ollama:0.12.3) for fully repeatable runs
+        ports:
+          - 11434:11434
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Pull the model
+        run: |
+          for i in $(seq 1 30); do
+            curl -sf http://localhost:11434/api/version > /dev/null && break
+            sleep 1
+          done
+          curl -sf http://localhost:11434/api/pull -d "{\"model\": \"$OLLAMA_MODEL\", \"stream\": false}"
+
+      - uses: Drift-CI/drift-ci@v1
+        with:
+          provider: ollama
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

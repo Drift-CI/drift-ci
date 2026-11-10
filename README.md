@@ -112,7 +112,7 @@ Exact matches only get you so far with LLMs. drift-ci ships eight evaluators, fr
 
 ### It works with your stack
 
-drift-ci supports Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Gemini, Vertex AI and Ollama. Run the same suite against several models side by side with `drift-ci compare` before you switch.
+drift-ci supports Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Gemini, Vertex AI and Ollama. Run the same suite against several models side by side with `drift-ci compare` before you switch. With Ollama you can run the whole gate on the CI runner with no API key: see the [Ollama example](examples/ollama/).
 
 ### It's safe by default
 
