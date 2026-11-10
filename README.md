@@ -1,14 +1,13 @@
-# drift-ci
-**Block merges when your LLM app's behaviour regresses.**
+<p align="center">
+  <img src="assets/drift-ci-logo.png" width="360" alt="drift-ci">
+</p>
 
+<h3 align="center">Unit tests for your prompts. A merge gate for your LLM app.</h3>
 
-
-![drift-ci logo](assets/drift-ci-logo.png)
-
-
-
-*Catch LLM behaviour regressions in CI, before they ship.*
-
+<p align="center">
+  drift-ci runs your LLM test cases on every pull request, compares them with baselines committed to git,<br>
+  and blocks the merge when behaviour regresses.
+</p>
 
 <p align="center">
   <a href="https://github.com/Drift-CI/drift-ci/actions/workflows/ci.yml"><img src="https://github.com/Drift-CI/drift-ci/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
@@ -17,11 +16,19 @@
   <a href="LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"></a>
 </p>
 
+<p align="center">
+  <a href="#quick-start">Quick start</a> ·
+  <a href="#github-action">GitHub Action</a> ·
+  <a href="#why-drift-ci">Why drift-ci</a> ·
+  <a href="#writing-tests">Writing tests</a> ·
+  <a href="https://drift-ci.com">Hosted dashboard</a>
+</p>
+
 ---
 
-LLM applications drift. A reworded prompt, a model upgrade, or a bumped dependency can silently change what your app says — and unlike code, there's no compiler or unit test to catch it.
+A reworded prompt, a model upgrade or a bumped SDK can quietly change what your app says. Code has compilers and unit tests to catch that kind of change. Prompts usually don't.
 
-**drift-ci** makes prompt behaviour **testable**: define cases with expected outputs, score them against your provider on every pull request, and **block the merge** when behaviour drifts past a threshold — with baselines committed as code and a diff-style PR comment.
+drift-ci adds that check to your pull requests:
 
 <p align="center">
   <picture>
@@ -29,121 +36,186 @@ LLM applications drift. A reworded prompt, a model upgrade, or a bumped dependen
     <img src="assets/pr-comment-light.png" width="720" alt="drift-ci PR comment: switching the support agent to claude-haiku-4-5 to cut costs regressed two structured-output cases from 1.000 to 0.000, so the check failed and the merge was blocked">
   </picture>
   <br>
-  <sub>A real run: switching a support agent to a cheaper model broke its structured output. drift-ci caught it on the PR (<a href="https://github.com/John-E5/drift-ci-dogfood/pull/14">see the PR</a>).</sub>
+  <sub>A real run: moving a support agent to a cheaper model broke its structured output. drift-ci failed the check and blocked the merge (<a href="https://github.com/John-E5/drift-ci-dogfood/pull/14">see the PR</a>).</sub>
 </p>
-
-**What it is** — a CI-time gate for LLM behaviour: shift-left tests for prompts, with git-committed baselines and a pull-request workflow.
-
-**What it isn't** — production observability, tracing, or a prompt-management UI. drift-ci complements eval frameworks like [Promptfoo](https://www.promptfoo.dev) and [DeepEval](https://github.com/confident-ai/deepeval) by being opinionated about the **CI gate** and the **baselines-as-code** workflow, rather than one-off eval runs.
 
 ## Quick start
 
-Requires Node.js 22+.
+You need Node.js 22 or later.
 
 ```bash
-# 1. Scaffold .drift/config.yaml + .drift/suite.yaml
-npx @drift-ci/cli init
-
-# 2. Run the suite against your provider
-npx @drift-ci/cli run
-
-# 3. Inspect the diff, accept intentional changes, and commit them as code
+npx @drift-ci/cli init        # writes .drift/config.yaml and .drift/suite.yaml
+npx @drift-ci/cli run         # runs the suite against your provider
 npx @drift-ci/cli baseline accept .drift/suite.yaml --all
-git add .drift/baseline && git commit -m "accept baseline updates"
+git add .drift && git commit -m "Add drift-ci baselines"
 ```
 
-A minimal `.drift/suite.yaml`:
+That's the whole loop. From now on, every run is compared with those baselines.
+
+## GitHub Action
 
 ```yaml
-version: 1
-id: greetings
-name: Greetings
-evaluators: [exact-match]
-cases:
-  - id: hello
-    input: Say hi.
-    expected: Hi!
+# .github/workflows/drift.yml
+on: pull_request
+permissions:
+  contents: read
+  pull-requests: write
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: Drift-CI/drift-ci@v1
+        with:
+          provider: anthropic
+          api-key: ${{ secrets.ANTHROPIC_API_KEY }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-## In CI (GitHub Action)
+On each pull request the action runs your suite, fails the check if anything regressed, and posts one comment with the results. The comment is updated in place rather than reposted. It also writes JUnit XML for your CI's test view.
 
-```yaml
-- uses: Drift-CI/drift-ci@v1
-  with:
-    provider: anthropic
-    api-key: ${{ secrets.ANTHROPIC_API_KEY }}
-  env:
-    GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-```
+See the [action README](packages/action/README.md) for every input and output, and [examples/workflows/](examples/workflows/) for ready-made setups: basic, multi-provider matrix, fork-safe, and GitLab CI.
 
-On every pull request, the action runs your suite and posts a regression/improvement table as a single, idempotent comment. Full inputs and outputs — plus the fork-PR safety pattern — are in the [action README](packages/action/README.md); ready-made workflows (basic, matrix, fork-gated, GitLab CI) live in [examples/workflows/](examples/workflows/).
+## Why drift-ci
 
-## Hosted dashboard (optional)
+### It blocks the merge
 
-Want shared run history, drift and cost analytics, and tracked regressions without running a server? [drift-ci.com](https://drift-ci.com) is the hosted dashboard, free for one developer. Point the CLI or Action at it and keep every run. The CLI and Action stay MIT-licensed and work fully without it, and you can [self-host the dashboard](docs/self-hosting.md) instead.
+Reports are easy to ignore. drift-ci exits `1` when a case regresses past your threshold, so a required check stops the PR. Your normal branch protection does the rest.
 
-## How it works
+### Baselines are code
 
-1. **Run** — each case is sent to the configured provider; the response is scored by the evaluator chain.
-2. **Compare** — scores are diffed against the committed baseline at `.drift/baseline/<case-id>.json`.
-3. **Decide** — a regression (a score drop past your threshold) exits `1` and fails the build. A transient-error storm (rate limits, timeouts) exits `2` instead — never mistaken for a regression.
-4. **Accept** — intentional changes are promoted with `drift-ci baseline accept <suite> --cases <ids>` (or `--all`) and committed alongside the code change, reviewed as a diff.
+Expected behaviour lives in `.drift/baseline/<case-id>.json`, committed next to the prompt it describes. When a change is intentional, you accept the new baseline and commit it in the same PR, so reviewers see the code change and the behaviour change in one diff. There is no server state to promote and no button to click.
 
-## Reducing flaky failures
+### It doesn't cry wolf
 
-LLM output varies run to run, even at temperature 0. To keep one unlucky answer from failing the build, run cases more than once — drift-ci scores the **median**:
+A gate that fails at random gets switched off. drift-ci is built so that a red check means something:
+
+- **Repeated sampling.** Run each case several times and drift-ci scores the median, so a single odd answer can't fail the build.
+- **Outages aren't regressions.** Rate limits, timeouts and network errors get their own statuses. If too many cases fail that way, the run aborts with exit code `2`, which your CI can tell apart from a real regression.
+- **Broken scorers aren't regressions.** If an evaluator can't produce a score, the case is reported as unscored rather than failed.
+- **Judge changes are flagged, not failed.** Swapping the LLM judge's model raises a "stale judge" warning instead of a wave of false regressions.
+
+### It can grade fuzzy output
+
+Exact matches only get you so far with LLMs. drift-ci ships eight evaluators, from exact strings to semantic similarity to an LLM judge. The judge is hardened for CI:
+
+- The text under test is wrapped in a random per-call delimiter, which guards against prompt injection.
+- drift-ci refuses to let a model grade itself unless you opt in.
+- Rubrics can require several judges to agree before they credit an item.
+
+### It works with your stack
+
+drift-ci supports Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Gemini, Vertex AI and Ollama. Run the same suite against several models side by side with `drift-ci compare` before you switch.
+
+### It's safe by default
+
+- **Secrets stay out of git.** API keys, tokens and private keys are redacted before a baseline is written.
+- **Fork PRs can't reach your secrets.** The action ships a fork-PR gate, so untrusted code never runs with your API key.
+- **The action is plain Node.js.** It isn't a Docker image, so there's no container to pull and it starts fast.
+
+## Writing tests
+
+A suite is a YAML file of cases. Each case sends an input to your model and scores the answer:
 
 ```yaml
 version: 1
 id: support-bot
 name: Support bot
-default_runs: 3        # every case: 3 samples, median score
+default_runs: 3                 # score the median of 3 samples per case
 cases:
+  - id: greeting
+    input: Say hello to a new customer.
+    evaluators: [contains]
+    contains: [Hello]
+    runs: 1                     # deterministic enough: one sample
+
   - id: refund-policy
     input: Can I get a refund after 30 days?
     evaluators: [llm-judge]
-    criteria: Explains the 30-day policy politely
-  - id: greeting
-    input: Say hello
-    expected: Hello
-    runs: 1            # cheap, deterministic case: override back to 1
+    criteria: Explains the 30-day refund policy politely and doesn't promise an exception.
+
+  - id: ticket-triage
+    input: "My card was charged twice for order #4417"
+    evaluators: [json-schema]
+    schema:
+      type: object
+      required: [category, priority]
+      properties:
+        category: { enum: [billing, shipping, account] }
+        priority: { enum: [low, normal, high] }
 ```
 
-With 3 samples, a single outlier is ignored. Each sample is a real provider call, so cost scales with the sample count (the cost guard sees the full total). Transient errors on a minority of samples don't fail the case.
+Cases can also take a multi-turn `messages` conversation instead of a single `input`. Each sample is a real provider call, so repeated sampling multiplies the cost of that case. Use it where answers actually vary.
 
-## Features
+### Evaluators
 
-- **Providers** — Anthropic, OpenAI, Azure OpenAI, Bedrock, Google Gemini, Vertex AI, and Ollama (local + cloud).
-- **Evaluators** — exact-match, contains, json-schema, cosine-similarity (embeddings), LLM-judge, refusal-detection, rubric-checklist, and safety-classifier.
-- **Baselines as code** — one git-committed JSON file per case, with secret redaction before anything reaches disk.
-- **Reporters** — live terminal (Ink), pipe-safe text, JSON, and JUnit XML.
-- **Run history** — in-memory, SQLite, Postgres, or HTTP sync to the dashboard.
-- **GitHub Action** — native JavaScript (no Docker), idempotent PR comments, a fork-PR safety gate, and JUnit output.
-- **Self-hostable dashboard** — run history, drift timelines, provider comparison, OAuth + RBAC, and alerts via Slack / Teams / PagerDuty / email / webhook.
+| Evaluator | Use it for |
+|---|---|
+| `exact-match` | Fixed answers, labels and IDs |
+| `contains` | Required words or phrases |
+| `json-schema` | Structured output and tool arguments |
+| `cosine-similarity` | Answers that should mean the same thing in different words (embeddings) |
+| `llm-judge` | Open-ended quality against written criteria |
+| `rubric-checklist` | Scoring against a list of required points, optionally with a judge quorum |
+| `refusal-detection` | Checking that the model refuses, or doesn't refuse, when it should |
+| `safety-classifier` | Flagging unsafe output |
 
-## Design notes
+Copy-ready suites for chatbots, RAG and classification are in [examples/suites/](examples/suites/).
 
-A few load-bearing decisions worth knowing:
+### Exit codes
 
-- **Baselines are git-committed files, not database rows.** Accept locally, commit, and review them as a diff — there's no "promote" button or hidden server state.
-- **Transient errors are never regressions.** Rate limits and network failures get dedicated statuses and their own exit code.
-- **Secrets are redacted before baselines are written.** Baselines live in git, so nothing sensitive may ever reach disk.
+| Code | Meaning |
+|---|---|
+| `0` | No regressions |
+| `1` | At least one case regressed past the threshold |
+| `2` | Run aborted because too many provider calls failed (rate limits, timeouts). Not a regression. |
 
-See [docs/drift-ci-architecture.md](docs/drift-ci-architecture.md) for the full design rationale.
+### Accepting changes
+
+When a change in behaviour is what you wanted, accept it and commit the result:
+
+```bash
+npx @drift-ci/cli baseline accept .drift/suite.yaml --cases refund-policy
+git add .drift/baseline && git commit -m "Accept new refund wording"
+```
+
+## Hosted dashboard
+
+The CLI and action are MIT-licensed and work on their own. When your team wants more than a pass or fail on each PR, [drift-ci.com](https://drift-ci.com) keeps every run and adds:
+
+- run history, drift timelines, and cost and token analytics across projects;
+- regression issues that open, reopen and close themselves as cases break and recover;
+- Slack and email alerts on regressions;
+- flaky-case detection, which flags cases that keep flipping between pass and fail and keeps them out of your alerts.
+
+It's free for one developer. Point the action at it with `dashboard-url` and `dashboard-token`. You can also [self-host the open-source dashboard](docs/self-hosting.md).
+
+## Where it fits
+
+drift-ci is a **CI gate**: tests before merge, with baselines kept as code. It is not production tracing, observability, or a prompt-management UI. It sits alongside eval frameworks such as [Promptfoo](https://www.promptfoo.dev) and [DeepEval](https://github.com/confident-ai/deepeval). Those focus on running evaluations; drift-ci focuses on the pull-request workflow: committed baselines, a pass/fail check, and a PR comment people actually read.
+
+## Reference
+
+| | |
+|---|---|
+| **Providers** | Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Gemini, Vertex AI, Ollama (local and cloud) |
+| **Evaluators** | exact-match, contains, json-schema, cosine-similarity, llm-judge, rubric-checklist, refusal-detection, safety-classifier |
+| **Reporters** | Live terminal, plain text, JSON, JUnit XML |
+| **Run history** | In-memory, SQLite, Postgres, or HTTP sync to a dashboard |
+| **CLI commands** | `init`, `run`, `baseline`, `compare`, `config` |
+| **Packages** | [`@drift-ci/cli`](packages/cli), [`@drift-ci/core`](packages/core), [action](packages/action), [dashboard](packages/dashboard) |
 
 ## Documentation
 
-- [Architecture reference](docs/drift-ci-architecture.md) — what drift-ci is, and why.
-- [Self-hosting guide](docs/self-hosting.md) — bring up the dashboard and Postgres with Docker Compose.
-- [Reverse-proxy hardening](docs/reverse-proxy.md) — TLS and forwarded headers behind nginx / Caddy / Traefik.
+- [Architecture](docs/drift-ci-architecture.md): how drift-ci works and why it's built that way.
+- [Self-hosting](docs/self-hosting.md): run the dashboard and Postgres with Docker Compose.
+- [Reverse proxy](docs/reverse-proxy.md): TLS and forwarded headers behind nginx, Caddy or Traefik.
+- [Examples](examples/): suites and CI workflows to copy.
 
 ## Contributing
 
-Contributions are welcome — see [CONTRIBUTING.md](CONTRIBUTING.md) for the development workflow, commit conventions, and sign-off.
-
-## Security
-
-Report vulnerabilities via [SECURITY.md](SECURITY.md). Please don't open public issues for security reports.
+Contributions are welcome. [CONTRIBUTING.md](CONTRIBUTING.md) covers the development setup, commit conventions and sign-off. Please report security issues privately as described in [SECURITY.md](SECURITY.md), not in public issues.
 
 ## License
 
