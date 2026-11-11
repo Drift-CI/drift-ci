@@ -61,9 +61,11 @@ pnpm vitest run src/path/to/file.test.ts
 6. **Run the full test suite** locally before opening the PR.
 7. **Don't commit `packages/action/dist`.** The bundled Action is rebuilt on a
    CI runner, because a local build never matches it byte-for-byte. On a fork
-   PR the "action bundle is up to date" check stays red until a maintainer
-   applies the runner's build to your branch. That's expected, and there's
-   nothing for you to do. Leave "Allow edits by maintainers" ticked.
+   PR the "dist / dist is up to date" check stays red until a maintainer
+   applies the runner's build to your branch (`npx action-dist-sync <pr>`).
+   That's expected, and there's nothing for you to do. Leave "Allow edits by
+   maintainers" ticked. On a same-repo PR the bundle is committed for you, so
+   pull before you push again.
 8. **Partial fixes:** if a PR covers only part of an issue, write
    `Part of #123` rather than `Closes #123`.
 
