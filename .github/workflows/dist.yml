@@ -1,0 +1,28 @@
+name: dist
+
+# Keeps packages/action/dist in sync without contributors rebuilding it, using
+# action-dist-sync (https://github.com/John-E5/action-dist-sync), the package this
+# flow was extracted into. The ncc bundle differs across machines, so it's built on
+# the runner:
+#   Same-repo PRs: the rebuilt bundle is committed back to the PR branch.
+#   Fork PRs: the job fails and uploads the bundle; a maintainer applies it with
+#             npx action-dist-sync <pr>
+# Required check: "dist / dist is up to date".
+
+on: pull_request
+
+permissions:
+  contents: write
+
+jobs:
+  dist:
+    uses: John-E5/action-dist-sync/.github/workflows/sync.yml@v0
+    with:
+      # pnpm is pinned to package.json's packageManager; core is built first because the action bundles it.
+      build-command: >-
+        npm install -g pnpm@11.5.3 &&
+        pnpm install --frozen-lockfile &&
+        pnpm --filter @drift-ci/core build &&
+        pnpm --filter @drift-ci/action build
+      dist-path: packages/action/dist
+      node-version: "22"
