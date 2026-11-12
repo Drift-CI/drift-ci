@@ -22,8 +22,10 @@ cases:
   - id: invoice_basic
     systemPrompt: |
       Extract the requested fields from the document and reply with a
-      single JSON object and nothing else. Use null for any field the
-      document does not state.
+      single JSON object and nothing else. Do not wrap it in code fences.
+      Return a JSON object with exactly these keys: vendor (string),
+      invoice_number (string), invoice_date (YYYY-MM-DD), currency
+      (ISO code), total_due (number).
     input: |
       INVOICE
       Acme Office Supplies Ltd.
@@ -60,8 +62,11 @@ cases:
   - id: invoice_line_items
     systemPrompt: |
       Extract the requested fields from the document and reply with a
-      single JSON object and nothing else. Use null for any field the
-      document does not state.
+      single JSON object and nothing else. Do not wrap it in code fences.
+      Return a JSON object with exactly these keys: vendor (string),
+      invoice_date (YYYY-MM-DD, normalise the date from the document),
+      items (array of objects with description (string), quantity
+      (integer), unit_price (number)), subtotal (number).
     input: |
       CLOUDBUILD HOSTING INC.
       Invoice #CB-88123 — issued 14 Nov 2026
@@ -73,10 +78,13 @@ cases:
       Subtotal: $159.50
     schema:
       type: object
-      required: [vendor, items, subtotal]
+      required: [vendor, invoice_date, items, subtotal]
       properties:
         vendor:
           type: string
+        invoice_date:
+          type: string
+          format: date
         items:
           type: array
           minItems: 1
@@ -96,13 +104,16 @@ cases:
           type: number
       additionalProperties: false
     expected: |
-      {"vendor": "CLOUDBUILD HOSTING INC.", "items": [{"description": "Virtual server (monthly)", "quantity": 3, "unit_price": 49.00}, {"description": "Snapshot storage 500 GB", "quantity": 1, "unit_price": 12.50}], "subtotal": 159.50}
+      {"vendor": "CLOUDBUILD HOSTING INC.", "invoice_date": "2026-11-14", "items": [{"description": "Virtual server (monthly)", "quantity": 3, "unit_price": 49.00}, {"description": "Snapshot storage 500 GB", "quantity": 1, "unit_price": 12.50}], "subtotal": 159.50}
 
   - id: support_email_fields
     systemPrompt: |
       Extract the requested fields from the document and reply with a
-      single JSON object and nothing else. Use null for any field the
-      document does not state.
+      single JSON object and nothing else. Do not wrap it in code fences.
+      Return a JSON object with exactly these keys: sender_name (string),
+      order_id (string), issue_type (one of: damaged, wrong_item,
+      missing_item, billing, other), priority (one of: low, normal,
+      urgent).
     input: |
       From: Priya Raman <priya.raman@example.com>
       Subject: Order #A-10293 arrived damaged
@@ -136,8 +147,9 @@ cases:
   - id: receipt_fields
     systemPrompt: |
       Extract the requested fields from the document and reply with a
-      single JSON object and nothing else. Use null for any field the
-      document does not state.
+      single JSON object and nothing else. Do not wrap it in code fences.
+      Return a JSON object with exactly these keys: merchant (string),
+      receipt_date (YYYY-MM-DD), total (number), payment_method (string).
     input: |
       Corner Deli — 418 Main St
       Receipt 0042          2026-11-02 12:41
