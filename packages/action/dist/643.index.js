@@ -1412,7 +1412,7 @@ exports.IDPCommunicationErrorException = IDPCommunicationErrorException;
 
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.getRuntimeConfig = void 0;
-const tslib_1 = __webpack_require__(43532);
+const tslib_1 = __webpack_require__(51693);
 const package_json_1 = tslib_1.__importDefault(__webpack_require__(87166));
 const client_1 = __webpack_require__(12201);
 const httpAuthSchemes_1 = __webpack_require__(97452);
