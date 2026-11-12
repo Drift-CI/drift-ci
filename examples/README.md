@@ -12,6 +12,7 @@ action into your CI.
 | [`suites/chatbot.yaml`](suites/chatbot.yaml) | Multi-turn messages + `llm-judge` | Uses the `messages` case format for conversation context and delegates scoring to a judge model. |
 | [`suites/rag.yaml`](suites/rag.yaml) | Single-turn + `cosine-similarity` | Embeddings-based semantic-similarity scoring for RAG answers that shouldn't match verbatim. |
 | [`suites/classification.yaml`](suites/classification.yaml) | Structured output + `json-schema` | Validates that the model emits valid JSON matching a schema. |
+| [`suites/extraction.yaml`](suites/extraction.yaml) | Structured output + `json-schema` | Field extraction from unstructured documents (invoice, support email, receipt), validated against per-case schemas. |
 
 Drop the YAML into `.drift/suite.yaml`, point `.drift/config.yaml` at your
 provider, and run `drift-ci run`.
