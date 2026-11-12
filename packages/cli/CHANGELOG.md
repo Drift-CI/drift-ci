@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.5.1](https://github.com/Drift-CI/drift-ci/compare/cli-v1.5.0...cli-v1.5.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* **cli:** depend on @drift-ci/core with a caret range ([#184](https://github.com/Drift-CI/drift-ci/issues/184)) ([63a2821](https://github.com/Drift-CI/drift-ci/commit/63a2821d051b228c5e95a225b6260d6ae07df53e))
+
 ## [1.5.0](https://github.com/Drift-CI/drift-ci/compare/cli-v1.4.0...cli-v1.5.0) (2026-11-09)
 
 
