@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.1](https://github.com/Drift-CI/drift-ci/compare/v1.7.0...v1.7.1) (2026-11-12)
+
+
+### Bug Fixes
+
+* **deps:** bump @anthropic-ai/bedrock-sdk to 0.36 (clears fast-xml-parser alert) ([#179](https://github.com/Drift-CI/drift-ci/issues/179)) ([060b447](https://github.com/Drift-CI/drift-ci/commit/060b447825bdf2c0822c0b8938b853fe8e17fe55))
+
 ## [1.7.0](https://github.com/Drift-CI/drift-ci/compare/v1.6.0...v1.7.0) (2026-11-09)
 
 
