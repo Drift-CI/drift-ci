@@ -43,7 +43,7 @@
     "clean": "rimraf dist"
   },
   "dependencies": {
-    "@drift-ci/core": "workspace:*",
+    "@drift-ci/core": "workspace:^",
     "better-sqlite3": "^12.11.1",
     "commander": "^15.0.0",
     "ink": "^8.0.0",

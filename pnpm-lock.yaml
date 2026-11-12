@@ -85,7 +85,7 @@ importers:
   packages/cli:
     dependencies:
       '@drift-ci/core':
-        specifier: workspace:*
+        specifier: workspace:^
         version: link:../core
       better-sqlite3:
         specifier: ^12.11.1
