@@ -3,6 +3,11 @@
 # Each case asserts the model produces JSON that validates against a
 # per-case schema. Mix `json-schema` with `exact-match` on the same
 # case to check schema validity AND a specific field value.
+#
+# The schema is only used to score the reply — it is never sent to the
+# model. So each case's `systemPrompt` spells out the exact keys, types
+# and allowed values; without that, a capable model picks its own key
+# names and fails `required` / `additionalProperties: false`.
 
 version: 1
 id: classification
@@ -18,6 +23,11 @@ default_threshold: 0.05
 
 cases:
   - id: intent_billing
+    systemPrompt: |
+      Classify the user's message. Reply with a single JSON object and
+      nothing else (no code fences), with exactly these keys:
+      - intent: one of "billing", "support", "feedback", "other"
+      - confidence: a number from 0 to 1
     input: "When will my card be charged?"
     schema:
       type: object
@@ -35,6 +45,11 @@ cases:
       {"intent": "billing", "confidence": 0.95}
 
   - id: intent_feedback
+    systemPrompt: |
+      Classify the user's message. Reply with a single JSON object and
+      nothing else (no code fences), with exactly these keys:
+      - intent: one of "billing", "support", "feedback", "other"
+      - sentiment: one of "positive", "neutral", "negative"
     input: "I love the new design, great job!"
     schema:
       type: object
@@ -51,6 +66,12 @@ cases:
       {"intent": "feedback", "sentiment": "positive"}
 
   - id: intent_support_with_fields
+    systemPrompt: |
+      Classify the user's message. Reply with a single JSON object and
+      nothing else (no code fences), with exactly these keys:
+      - intent: one of "billing", "support", "feedback", "other"
+      - areas: a non-empty array of short lowercase strings naming the
+        product areas mentioned (for example "dashboard", "export")
     input: "The export button is broken in the dashboard."
     schema:
       type: object
