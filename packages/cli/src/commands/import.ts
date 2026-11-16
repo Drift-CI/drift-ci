@@ -40,6 +40,7 @@ export const KNOWN_EVALUATORS = [
   'cosine-similarity',
   'llm-judge',
   'faithfulness',
+  'tool-call',
   'refusal-detection',
   'rubric-checklist',
   'safety-classifier',
