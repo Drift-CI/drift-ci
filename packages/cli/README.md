@@ -48,7 +48,7 @@ Imported cases are scored against the production reply, so use an evaluator that
 
 Comments in an existing suite are kept. The YAML library may normalise some formatting, such as folded `>` scalars or the spacing before inline comments, so check the diff.
 
-Exit codes: `0` cases were imported (or all were already present), `1` nothing could be imported or the result failed validation (nothing is written), `2` unreadable input, suite or config, or invalid options.
+Exit codes: `0` cases were imported, or every usable trace was already present (re-importing a file is safe), `1` nothing could be imported or the result failed validation (nothing is written), `2` unreadable input, suite or config, or invalid options.
 
 After importing, run `drift-ci run`, then `drift-ci baseline accept <suite> --all` to record today's scores, and commit the suite and `.drift/baseline/`.
 

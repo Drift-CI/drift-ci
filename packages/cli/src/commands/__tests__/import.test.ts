@@ -313,10 +313,10 @@ describe('executeImport', () => {
     expect(new Set(names)).toEqual(new Set(KNOWN_EVALUATORS));
   });
 
-  it('exits 1 when some cases are present and other lines are skipped', () => {
+  it('exits 0 when re-importing a file whose usable traces are all present', () => {
     writeSuite();
     const file = writeTraces([trace('q', 'a', { id: 'x' }), '{bad']);
     expect(executeImport(file, opts(), io)).toBe(0);
-    expect(executeImport(file, opts(), io)).toBe(1);
+    expect(executeImport(file, opts(), io)).toBe(0);
   });
 });

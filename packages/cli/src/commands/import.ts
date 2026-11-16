@@ -246,7 +246,8 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
 
   if (added.length === 0) {
     report(io, { suitePath, added: 0, present, skips, redactions, dryRun: !!opts.dryRun });
-    return present > 0 && skips.length === 0 ? 0 : 1;
+    // Re-importing the same file is a no-op, not a failure.
+    return present > 0 ? 0 : 1;
   }
 
   for (const tc of added) cases.add(doc.createNode(tc));
