@@ -24,7 +24,11 @@ export function hasLLMJudge(specs: EvaluatorSpec[] | undefined): boolean {
 }
 
 /** Evaluators that require a judge provider to be resolved. */
-const JUDGE_EVALUATORS = new Set(['llm-judge', 'rubric-checklist']);
+const JUDGE_EVALUATORS = new Set([
+  'llm-judge',
+  'rubric-checklist',
+  'faithfulness',
+]);
 
 function specsNeedJudge(specs: EvaluatorSpec[] | undefined): boolean {
   return (

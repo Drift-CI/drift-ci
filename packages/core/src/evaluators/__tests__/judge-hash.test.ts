@@ -63,6 +63,14 @@ describe('suiteNeedsJudge', () => {
     ).toBe(true);
   });
 
+  it('detects faithfulness at suite level', () => {
+    expect(
+      suiteNeedsJudge(
+        suite({ evaluators: ['faithfulness'], cases: [{ id: 'a', input: 'x' }] }),
+      ),
+    ).toBe(true);
+  });
+
   it('detects rubric-checklist declared per-case', () => {
     expect(
       suiteNeedsJudge(
