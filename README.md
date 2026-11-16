@@ -182,6 +182,40 @@ How long do I have to return an item?
 
 A string `context` is a single passage, `[1]`. The `faithfulness` evaluator requires `context` and fails the case with an error without it. It asks the configured judge provider to list the factual claims in the answer and mark each as supported by the context or not. The score is supported claims divided by total claims, and an answer with no factual claims scores 1.0. The reason lists up to 3 unsupported claims. Like `llm-judge`, it warns when the judge is the same provider as the one under test.
 
+### Tool calls
+
+Give the model tools and check which ones it calls. List `tools` on the suite (offered to every case), on a case, or both, and say what you expect in `expectedCalls`:
+
+```yaml
+tools:
+  - name: get_order
+    description: Look up an order by its ID
+    parameters:
+      type: object
+      properties: { order_id: { type: string } }
+      required: [order_id]
+
+cases:
+  - id: order-lookup
+    input: Where is order ORD-123?
+    expectedCalls:
+      - name: get_order
+        arguments: { order_id: ORD-123 }
+    evaluators: [tool-call]
+  - id: thanks-no-tool
+    input: Thanks, that's all!
+    expectedCalls: []
+    evaluators: [tool-call]
+```
+
+A tool's `name` is 1 to 64 letters, digits, `_` or `-`, and `parameters` is a JSON Schema object (default: no parameters). A case's tools are the suite's tools, where a case tool with the same name replaces the suite one and any other case tool is added after them. Tool names must be unique within a suite or case, with at most 64 tools. A case with `tool-call` needs `expectedCalls` and at least one tool, and every expected name must be one of the case's tools; both are checked when the suite loads. Editing a tool marks the cases that use it stale in the baseline.
+
+The `tool-call` evaluator is pure, with no judge. It matches each expected call, in order, to the unused actual call with the same name and the most matching arguments (ties go to the earliest). Only the arguments you list are compared, strings after trimming and objects and arrays deeply. Order across different tools doesn't matter. A call scores the fraction of its listed arguments that match (1 when you list none), a missing call scores 0, and the case score is the sum of those scores divided by the larger of the expected and actual call counts, so extra or wrong calls lower it. `expectedCalls: []` means the model should call no tool: the score is 1 if it calls none and 0 if it calls any. The reason lists up to 3 problems.
+
+drift-ci shows the calls in the stored output, one line per call after any text the model wrote, such as `→ get_order {"order_id":"ORD-123"}`. So baselines, PR comments and the other evaluators see them too.
+
+Every bundled provider supports tools. Tools are sent once and the model's first reply is scored; drift-ci doesn't execute the tools. Multi-step cases, where you script tool results and the model continues, aren't supported yet.
+
 To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns production chat logs into test cases. See [Importing production traces](packages/cli/README.md#importing-production-traces).
 
 ### Evaluators
@@ -198,7 +232,7 @@ To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns
 | `refusal-detection` | Checking that the model refuses, or doesn't refuse, when it should |
 | `safety-classifier` | Flagging unsafe output |
 
-Copy-ready suites for chatbots, RAG and classification are in [examples/suites/](examples/suites/).
+Copy-ready suites for chatbots, RAG, classification and tool calling are in [examples/suites/](examples/suites/).
 
 ### Exit codes
 
@@ -237,7 +271,7 @@ drift-ci is a **CI gate**: tests before merge, with baselines kept as code. It i
 | | |
 |---|---|
 | **Providers** | Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Gemini, Vertex AI, Ollama (local and cloud) |
-| **Evaluators** | exact-match, contains, json-schema, cosine-similarity, llm-judge, faithfulness, rubric-checklist, refusal-detection, safety-classifier |
+| **Evaluators** | exact-match, contains, json-schema, cosine-similarity, llm-judge, faithfulness, tool-call, rubric-checklist, refusal-detection, safety-classifier |
 | **Reporters** | Live terminal, plain text, JSON, JUnit XML |
 | **Run history** | In-memory, SQLite, Postgres, or HTTP sync to a dashboard |
 | **CLI commands** | `init`, `run`, `baseline`, `compare`, `config`, `import` |

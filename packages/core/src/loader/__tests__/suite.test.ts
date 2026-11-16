@@ -376,13 +376,27 @@ cases:
     expect(issue.path).toEqual(['cases', 0, 'expectedCalls', 0, 'name']);
   });
 
-  it('parses every example suite exactly as the schema does (none use tools)', () => {
+  it('parses every example suite exactly as the schema does (except tools.yaml, which merges tools)', () => {
     const dir = fileURLToPath(new URL('../../../../../examples/suites', import.meta.url));
-    const files = readdirSync(dir).filter((f) => f.endsWith('.yaml'));
+    const files = readdirSync(dir).filter((f) => f.endsWith('.yaml') && f !== 'tools.yaml');
     expect(files.length).toBeGreaterThan(0);
     for (const f of files) {
       const text = readFileSync(join(dir, f), 'utf8');
       expect(parseSuite(text)).toStrictEqual(SuiteSchema.parse(yamlLoad(text)));
     }
+  });
+
+  it('parses examples/suites/tools.yaml and merges the suite tools into each case', () => {
+    const dir = fileURLToPath(new URL('../../../../../examples/suites', import.meta.url));
+    const suite = parseSuite(readFileSync(join(dir, 'tools.yaml'), 'utf8'));
+    const byId = Object.fromEntries(suite.cases.map((c) => [c.id, c]));
+    expect(suite.cases).toHaveLength(4);
+    expect(byId.order_lookup.tools?.map((t) => t.name)).toEqual(['get_order', 'cancel_order']);
+    expect(byId.thanks_no_tool.expectedCalls).toEqual([]);
+    expect(byId.case_level_tool.tools?.map((t) => t.name)).toEqual([
+      'get_order',
+      'cancel_order',
+      'send_receipt',
+    ]);
   });
 });
