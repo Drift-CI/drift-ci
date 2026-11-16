@@ -34,11 +34,11 @@ export interface LLMJudgeOptions {
   warn?: (msg: string) => void;
 }
 
-function defaultFence(): string {
+export function defaultFence(): string {
   return `drift_${randomBytes(6).toString('hex')}`;
 }
 
-function fencedFields(
+export function fencedFields(
   fence: string,
   fields: Record<string, string | undefined>,
 ): string {

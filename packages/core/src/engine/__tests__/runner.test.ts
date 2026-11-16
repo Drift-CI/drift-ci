@@ -10,6 +10,9 @@ import { EvaluatorChain } from '../../evaluators/composite.js';
 import { ExactMatchEvaluator } from '../../evaluators/exact.js';
 import { MemoryStorage } from '../../storage/memory.js';
 import type { Suite } from '../../types/index.js';
+import type { EvalInput } from '../../evaluators/base.js';
+import { formatContext } from '../context.js';
+import { createEvaluatorChain } from '../../evaluators/factory.js';
 
 function makeSuite(overrides: Partial<Suite> = {}): Suite {
   return {
@@ -273,5 +276,59 @@ describe('Runner repeated sampling', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  it('sends context to the provider and the evaluator', async () => {
+    const seen: unknown[] = [];
+    const provider = new MockProvider({
+      responder: (input) => {
+        seen.push(input);
+        return 'ok';
+      },
+    });
+    const inputs: EvalInput[] = [];
+    const spy = {
+      name: 'spy',
+      evaluate: async (i: EvalInput) => {
+        inputs.push(i);
+        return { score: 1 };
+      },
+    };
+    const runner = new Runner({
+      provider,
+      evaluator: new EvaluatorChain([{ evaluator: spy, weight: 1 }]),
+      storage: new MemoryStorage(),
+    });
+    await runner.run(
+      makeSuite({ cases: [{ id: 'c1', input: 'q', context: ['p1'] }] }),
+    );
+    expect(seen[0]).toBe(formatContext(['p1']) + 'q');
+    expect(inputs[0].context).toEqual(['p1']);
+    expect(inputs[0].input).toBe('q');
+  });
+
+  it('reports evaluator-error when suite-level faithfulness meets a case without context', async () => {
+    const judge = {
+      name: 'judge/y',
+      complete: async () => ({
+        text: '',
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+        model: 'm',
+        latencyMs: 0,
+      }),
+    };
+    const runner = new Runner({
+      provider: new MockProvider({ defaultResponse: 'ok' }),
+      evaluator: (tc) =>
+        createEvaluatorChain(['faithfulness'], {
+          testProvider: new MockProvider({ defaultResponse: 'ok' }),
+          judgeProvider: judge,
+          case: tc,
+        }),
+      storage: new MemoryStorage(),
+    });
+    const run = await runner.run(makeSuite({ cases: [{ id: 'c1', input: 'q' }] }));
+    expect(run.cases[0].status).toBe('evaluator-error');
+    expect(run.cases[0].error).toContain('requires a `context` field');
   });
 });

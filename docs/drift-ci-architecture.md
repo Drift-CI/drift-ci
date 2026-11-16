@@ -2242,6 +2242,7 @@ These are not Phase 1 deliverables but are reserved in the evaluator registry so
 | `tool-call-shape` | For function-calling apps: validate tool names + argument schemas against a fixture | Phase 2 |
 | `rubric-checklist` | LLM-judge variant that evaluates a natural-language checklist and returns per-item verdicts. **Defined** below — see ["Roadmap evaluator: rubric-checklist"](#roadmap-evaluator-rubric-checklist) for the full schema, strict-vs-lenient semantics, multi-judge quorum, minimum-items rule, scoring output shape, and test matrix. Implementation lands in Phase 4. | Phase 4 |
 | `safety-classifier` | Optional opt-in classifier (e.g., OpenAI moderation, Llama Guard) for safety regression | Phase 4 |
+| `faithfulness` | RAG grounding: the configured judge lists the answer's factual claims and marks each supported or not by the case's `context`; score is supported/total (no claims = 1.0). Requires `context` | Shipped |
 
 **Evaluator-error vs transient boundary.** An evaluator throwing for any reason other than a provider error maps to `evaluator-error` — a permanent case status that excludes the case from delta math but does NOT count toward the transient-abort threshold. Transient classification is reserved for provider-originated errors (rate-limit, network, timeout) surfaced by the provider adapter's `withRetry` wrapper. This boundary matters operationally: a systemic evaluator bug (e.g., embedding model OOM) must surface as a distinct signal from a provider outage, so teams debug the right system.
 

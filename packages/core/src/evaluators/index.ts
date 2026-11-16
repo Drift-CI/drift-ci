@@ -6,6 +6,7 @@ export * from './factory.js';
 export * from './schema.js';
 export * from './embedding.js';
 export * from './llm-judge.js';
+export * from './faithfulness.js';
 export * from './judge-hash.js';
 export * from './refusal.js';
 export * from './rubric-checklist.js';

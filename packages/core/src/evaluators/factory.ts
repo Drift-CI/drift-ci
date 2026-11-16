@@ -7,6 +7,7 @@ import { ExactMatchEvaluator } from './exact.js';
 import { SchemaEvaluator } from './schema.js';
 import { EmbeddingEvaluator } from './embedding.js';
 import { LLMJudgeEvaluator } from './llm-judge.js';
+import { FaithfulnessEvaluator } from './faithfulness.js';
 import { RefusalDetectionEvaluator } from './refusal.js';
 import {
   RubricChecklistEvaluator,
@@ -20,7 +21,7 @@ import {
 export interface EvaluatorFactoryContext {
   testProvider: ProviderAdapter;
   judgeProvider?: ProviderAdapter;
-  case?: Pick<TestCase, 'contains' | 'schema' | 'rubric' | 'rubricQuorum'>;
+  case?: Pick<TestCase, 'contains' | 'schema' | 'rubric' | 'rubricQuorum' | 'context'>;
   allowSelfBias?: boolean;
   /**
    * Resolved named judges from the top-level `judges:` config map.
@@ -77,6 +78,17 @@ function build(name: string, ctx: EvaluatorFactoryContext): Evaluator {
       return new EmbeddingEvaluator();
     case 'llm-judge':
       return new LLMJudgeEvaluator({
+        judgeProvider: ctx.judgeProvider ?? ctx.testProvider,
+        testProviderName: ctx.testProvider.name,
+        allowSelfBias: ctx.allowSelfBias,
+      });
+    case 'faithfulness':
+      if (!ctx.case?.context) {
+        throw new Error(
+          'faithfulness evaluator requires a `context` field on the test case.',
+        );
+      }
+      return new FaithfulnessEvaluator({
         judgeProvider: ctx.judgeProvider ?? ctx.testProvider,
         testProviderName: ctx.testProvider.name,
         allowSelfBias: ctx.allowSelfBias,
