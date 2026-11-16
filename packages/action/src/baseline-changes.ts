@@ -13,6 +13,12 @@ function toLines(s: string): string[] {
   return lines.length > MAX_LINES ? lines.slice(0, MAX_LINES) : lines;
 }
 
+/** True when lineDiff would drop part of this output (8 KB / 2,000-line bound). */
+export function outputWasTruncated(s: string): boolean {
+  if (s.length > OUTPUT_MAX_BYTES) return true;
+  return s.split('\n').length > MAX_LINES + 1;
+}
+
 /**
  * LCS line diff. Normalises CRLF to LF, ignores one trailing newline, and
  * bounds its input (8 KB / 2,000 lines per side; above ~4M DP cells it

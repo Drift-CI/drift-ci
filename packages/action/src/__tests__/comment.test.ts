@@ -614,3 +614,40 @@ describe('renderBaselineChanges hardening', () => {
     expect(() => renderComment(baseInput({ baselineChanges: [bad] }))).not.toThrow();
   });
 });
+
+describe('renderBaselineChanges follow-ups', () => {
+  const ch = (o: Partial<BaselineChange>): BaselineChange => ({
+    caseId: 'c',
+    path: 'p',
+    kind: 'lowered',
+    oldScore: 1,
+    newScore: 0.5,
+    oldOutput: 'a',
+    newOutput: 'b',
+    ...o,
+  });
+
+  it('keeps the lowered warning in compact mode', () => {
+    expect(renderBaselineChanges([ch({})], { compact: true })).toContain('Lowering a baseline accepts worse behaviour');
+    expect(renderBaselineChanges([ch({ kind: 'raised' })], { compact: true })).not.toContain('Lowering a baseline');
+  });
+
+  it('does not render an empty diff block when outputs differ only beyond 8 KB', () => {
+    const head = 'x'.repeat(9000);
+    const md = renderBaselineChanges([ch({ oldOutput: head + 'A', newOutput: head + 'B' })]);
+    expect(md).toContain('Outputs differ only beyond the first 8 KB or in trailing whitespace.');
+    expect(md).not.toContain('```diff');
+  });
+
+  it('does not render an empty diff block for a trailing-newline-only difference', () => {
+    const md = renderBaselineChanges([ch({ kind: 'output-changed', newScore: 1, oldOutput: 'a\n', newOutput: 'a' })]);
+    expect(md).toContain('Outputs differ only beyond');
+    expect(md).not.toContain('```diff');
+  });
+
+  it('appends a truncation marker when an output was cut by the bound', () => {
+    const md = renderBaselineChanges([ch({ oldOutput: 'x'.repeat(9000), newOutput: 'short' })]);
+    expect(md).toContain('… (truncated)');
+    expect(renderBaselineChanges([ch({})])).not.toContain('(truncated)');
+  });
+});

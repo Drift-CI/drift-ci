@@ -6,7 +6,7 @@ import type {
 } from '@drift-ci/core';
 import { sampleCount } from '@drift-ci/core';
 
-import { lineDiff, type BaselineChange } from './baseline-changes.js';
+import { lineDiff, outputWasTruncated, type BaselineChange } from './baseline-changes.js';
 
 export const COMMENT_MARKER = '<!-- drift-ci-comment -->';
 
@@ -220,7 +220,10 @@ export function renderBaselineChanges(
       .join(' · '),
   );
 
+  const warning =
+    '> ⚠️ **Lowering a baseline accepts worse behaviour as the new normal.** Check the output diffs below before approving.';
   if (opts.compact) {
+    if (count('lowered') > 0) out.push('', warning.replace(' Check the output diffs below before approving.', ' Check *Files changed* before approving.'));
     out.push(
       '',
       "_Details omitted to keep this comment within GitHub's size limit; see *Files changed*._",
@@ -284,20 +287,26 @@ function renderBaselineRow(c: BaselineChange): string {
 }
 
 function renderOutputDiff(c: BaselineChange): string {
-  const lines = lineDiff(c.oldOutput ?? '', c.newOutput ?? '').map((l) =>
-    l.op === ' ' ? `  ${l.text}` : `${l.op} ${l.text}`,
-  );
+  const oldOut = c.oldOutput ?? '';
+  const newOut = c.newOutput ?? '';
+  const diff = lineDiff(oldOut, newOut);
+  const id = htmlEscapeId(displayId(c.caseId));
+  const open = `<details><summary>Output diff: <code>${id}</code></summary>`;
+  if (!diff.some((l) => l.op !== ' ')) {
+    return `${open}\n\nOutputs differ only beyond the first 8 KB or in trailing whitespace.\n</details>`;
+  }
+  const lines = diff.map((l) => (l.op === ' ' ? `  ${l.text}` : `${l.op} ${l.text}`));
   if (lines.length > MAX_DIFF_LINES) {
     const more = lines.length - MAX_DIFF_LINES;
     lines.length = MAX_DIFF_LINES;
     lines.push(`… ${more} more lines`);
   }
+  if (outputWasTruncated(oldOut) || outputWasTruncated(newOut)) lines.push('… (truncated)');
   const body = lines.join('\n');
   let longest = 0;
   for (const m of body.matchAll(/`+/g)) longest = Math.max(longest, m[0].length);
   const fence = '`'.repeat(Math.max(3, longest + 1));
-  const id = htmlEscapeId(displayId(c.caseId));
-  return `<details><summary>Output diff: <code>${id}</code></summary>\n\n${fence}diff\n${body}\n${fence}\n</details>`;
+  return `${open}\n\n${fence}diff\n${body}\n${fence}\n</details>`;
 }
 
 function renderRow(
