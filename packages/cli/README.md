@@ -44,7 +44,7 @@ Thinking blocks are dropped. Traces that can't become a case (tool calls, images
 
 Imported cases are scored against the production reply, so use an evaluator that compares with `expected` usefully: `llm-judge` or `cosine-similarity`. The command warns if the suite has neither and you didn't pass `--evaluator`.
 
-**Review traces before committing them.** Common secret formats (AWS access keys, Anthropic and legacy OpenAI API keys, JWTs and PEM private keys) are redacted automatically. Other tokens, such as GitHub or Slack tokens and newer `sk-proj-` OpenAI keys, are not, and neither is personal data such as names, emails and addresses.
+**Review traces before committing them.** Common secret formats (AWS access keys, Anthropic and OpenAI API keys, GitHub and Slack tokens, JWTs and PEM private keys) are redacted automatically. Other credentials, such as bearer tokens or passwords in plain text, are not, and neither is personal data such as names, emails and addresses.
 
 Comments in an existing suite are kept. The YAML library may normalise some formatting, such as folded `>` scalars or the spacing before inline comments, so check the diff.
 
