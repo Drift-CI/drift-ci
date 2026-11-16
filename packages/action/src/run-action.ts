@@ -32,6 +32,7 @@ import {
   type CommentApi,
   type PrContext,
 } from './comment.js';
+import { summariseBaselineChanges, type BaselineChange } from './baseline-changes.js';
 import { resolveDashboardAuth } from './auth.js';
 import { actionIngestContext } from './ingest-context.js';
 
@@ -92,6 +93,17 @@ export interface GitOps {
    * output so reviewers know when a PR is bringing new baselines along.
    */
   diffBaselineFiles(baseRef: string): string[];
+  /**
+   * Read `path` (repo-relative) as it exists at the merge base of
+   * `origin/<baseRef>` and HEAD. Returns null when the file did not exist
+   * there; throws on any other git failure (e.g. a shallow clone).
+   */
+  readBaseFile(baseRef: string, path: string): string | null;
+  /**
+   * Read `path` (repo-relative) as committed at HEAD. Returns null when the
+   * file does not exist there; throws on any other git failure.
+   */
+  readHeadFile(path: string): string | null;
 }
 
 export interface RunActionDeps {
@@ -208,6 +220,7 @@ export async function runAction(
 
   const baselineChangedFiles = detectBaselineChangedFiles(inputs, deps, writers);
   const baselineChanged = baselineChangedFiles.length > 0;
+  const baselineChanges = collectBaselineChanges(baselineChangedFiles, inputs, deps, writers);
 
   writers.setOutput('regression-count', String(deltas.regressions.length));
   writers.setOutput('avg-score', run.summary.avgScore.toFixed(3));
@@ -239,6 +252,8 @@ export async function runAction(
         threshold: regressionThreshold,
         baselineSource: inputs.baselineSource,
         baselineChanged: baselineChangedFiles,
+        baselineChanges: baselineChanges?.changes,
+        baselineSkipped: baselineChanges?.skipped,
         dashboardUrl: inputs.dashboardUrl,
       });
       try {
@@ -340,6 +355,32 @@ function resolveBaselineRoot(
       }. Falling back to baselineDir.`,
     );
     return inputs.baselineDir;
+  }
+}
+
+function collectBaselineChanges(
+  files: string[],
+  inputs: RunActionInputs,
+  deps: RunActionDeps,
+  writers: RunActionWriters,
+): { changes: BaselineChange[]; skipped: number } | undefined {
+  const gitOps = deps.gitOps;
+  const baseRef = inputs.baseRef;
+  if (files.length === 0 || !gitOps || !baseRef) return undefined;
+  try {
+    return summariseBaselineChanges(
+      files,
+      (p) => gitOps.readBaseFile(baseRef, p),
+      (p) => gitOps.readHeadFile(p),
+      (m) => writers.warning(`drift-ci: ${m}`),
+    );
+  } catch (err) {
+    writers.warning(
+      `drift-ci: could not read baseline changes — ${
+        err instanceof Error ? err.message : String(err)
+      }. Omitting them from the comment.`,
+    );
+    return undefined;
   }
 }
 
