@@ -109,7 +109,7 @@ describe('ToolCallEvaluator', () => {
   });
 
   it('compares numbers and booleans exactly', async () => {
-    expect((await run([call('a', { n: 1 })], [call('a', { n: '1' })])).score).toBe(0);
+    expect((await run([call('a', { n: 1 })], [call('a', { n: '2' })])).score).toBe(0);
     expect((await run([call('a', { b: true })], [call('a', { b: true })])).score).toBe(1);
   });
 
@@ -118,6 +118,57 @@ describe('ToolCallEvaluator', () => {
     expect((await run([call('t', exp)], [call('t', { o: { k: ['a', { z: 1 }] } })])).score).toBe(1);
     expect((await run([call('t', exp)], [call('t', { o: { k: ['a', { z: 2 }] } })])).score).toBe(0);
     expect((await run([call('t', { o: { k: [1] } })], [call('t', { o: { k: [1], extra: 1 } })])).score).toBe(0);
+  });
+});
+
+describe('ToolCallEvaluator optimal matching', () => {
+  const actual = [call('search', { q: 'shoes', color: 'red' }), call('search', { q: 'shoes', color: 'blue' })];
+
+  it('is independent of the order of expected calls', async () => {
+    const a = call('search', { q: 'shoes' });
+    const b = call('search', { q: 'shoes', color: 'red' });
+    expect((await run([a, b], actual)).score).toBe(1);
+    expect((await run([b, a], actual)).score).toBe(1);
+  });
+
+  it('beats greedy when the first expected call would take the best partner', async () => {
+    const acts = [call('f', { x: 1, y: 1 }), call('f', { x: 1, y: 2 })];
+    const exp = [call('f', { x: 1 }), call('f', { x: 1, y: 1 })];
+    // optimal: e1->a2 + e2->a1 = 2 => 1.0; greedy gives e1->a1 (1), e2->a2 (0.5) => 0.75
+    expect((await run(exp, acts)).score).toBe(1);
+  });
+
+  it('prefers the earliest actual calls on ties', async () => {
+    const res = await run([call('a', { id: '1' })], [call('a', { id: '1' }), call('a', { id: '1' })]);
+    expect(res.score).toBe(0.5);
+    expect(res.reason).toBe('unexpected call: a');
+  });
+
+  it('matches only the first 16 actual calls and treats the rest as unexpected', async () => {
+    const many = Array.from({ length: 20 }, () => call('a'));
+    const res = await run([call('a')], many);
+    expect(res.score).toBe(1 / 20);
+  });
+});
+
+describe('ToolCallEvaluator unparsed arguments', () => {
+  it('scores 0 even with no listed arguments', async () => {
+    const res = await run([call('a')], [call('a', { __unparsed: '{oops' })]);
+    expect(res.score).toBe(0);
+    expect(res.reason).toBe('a: arguments were not valid JSON');
+  });
+});
+
+describe('ToolCallEvaluator numeric ids', () => {
+  it('treats a number and its plain decimal string as equal', async () => {
+    expect((await run([call('a', { zip: 2139 })], [call('a', { zip: '02139' })])).score).toBe(1);
+    expect((await run([call('a', { n: '02139' })], [call('a', { n: 2139 })])).score).toBe(1);
+    expect((await run([call('a', { n: -1.5 })], [call('a', { n: ' -1.50 ' })])).score).toBe(1);
+  });
+  it('does not accept exponent, empty or non-numeric strings', async () => {
+    expect((await run([call('a', { n: 1000 })], [call('a', { n: '1e3' })])).score).toBe(0);
+    expect((await run([call('a', { n: 0 })], [call('a', { n: '' })])).score).toBe(0);
+    expect((await run([call('a', { n: 1 })], [call('a', { n: 'one' })])).score).toBe(0);
   });
 });
 

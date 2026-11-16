@@ -64,11 +64,18 @@ export type RubricQuorum = z.infer<typeof RubricQuorumSchema>;
 // ─── tools ──────────────────────────────────────────────────────────────
 
 /** A tool offered to the model. `parameters` is a JSON Schema object. */
-export const ToolDefinitionSchema = z.object({
-  name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/, 'Tool names must be 1-64 letters, digits, _ or -.'),
-  description: z.string().max(1024).optional(),
-  parameters: z.record(z.string(), z.unknown()).default({ type: 'object', properties: {} }),
-});
+export const ToolDefinitionSchema = z
+  .object({
+    name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/, 'Tool names must be 1-64 letters, digits, _ or -.'),
+    description: z.string().max(1024).optional(),
+    parameters: z.record(z.string(), z.unknown()).default({ type: 'object', properties: {} }),
+  })
+  .strict()
+  .refine((t) => t.parameters.type === 'object', {
+    error: (issue) =>
+      `Tool "${(issue.input as { name?: string }).name}": parameters must be a JSON Schema object (type: object).`,
+    path: ['parameters'],
+  });
 
 const ToolListSchema = z
   .array(ToolDefinitionSchema)

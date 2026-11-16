@@ -399,4 +399,37 @@ cases:
       'send_receipt',
     ]);
   });
+
+  it('rejects a tool whose parameters are not an object schema', () => {
+    expect(() =>
+      parseSuite(suite(`cases:
+  - id: c1
+    input: q
+    tools:
+      - name: t
+        parameters: { type: string }
+`)),
+    ).toThrow(/parameters must be a JSON Schema object/);
+  });
+
+  it('rejects misspelled tool keys', () => {
+    expect(() =>
+      parseSuite(suite(`tools:
+  - name: t
+    paramaters: { type: object }
+cases:
+  - id: c1
+    input: q
+`)),
+    ).toThrow(/Unrecognized key/);
+    expect(() =>
+      parseSuite(suite(`tools:
+  - name: t
+    input_schema: { type: object }
+cases:
+  - id: c1
+    input: q
+`)),
+    ).toThrow(/Unrecognized key/);
+  });
 });
