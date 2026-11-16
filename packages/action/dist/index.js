@@ -105146,6 +105146,12 @@ var external_node_child_process_ = __nccwpck_require__(31421);
 var external_node_fs_ = __nccwpck_require__(73024);
 // EXTERNAL MODULE: external "node:path"
 var external_node_path_ = __nccwpck_require__(76760);
+;// CONCATENATED MODULE: ./src/git-errors.ts
+/** True when git's stderr says the path is simply absent at the revision. */
+function isMissingAtRevision(stderr) {
+    return /does not exist|exists on disk, but not in/.test(stderr);
+}
+
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/zod@4.6.7/node_modules/zod/v4/core/util.js
 
 // functions
@@ -206792,7 +206798,188 @@ function buildDefaultSenders(opts = {}) {
 
 
 //# sourceMappingURL=index.js.map
+;// CONCATENATED MODULE: ./src/baseline-changes.ts
+
+const MAX_LINES = 2000;
+const MAX_DP_CELLS = 4_000_000;
+function toLines(s) {
+    let n = s.slice(0, OUTPUT_MAX_BYTES).replace(/\r\n?/g, '\n');
+    if (n.endsWith('\n'))
+        n = n.slice(0, -1);
+    if (n === '')
+        return [];
+    const lines = n.split('\n');
+    return lines.length > MAX_LINES ? lines.slice(0, MAX_LINES) : lines;
+}
+/** True when lineDiff would drop part of this output (8 KB / 2,000-line bound). */
+function outputWasTruncated(s) {
+    if (s.length > OUTPUT_MAX_BYTES)
+        return true;
+    return s.split('\n').length > MAX_LINES + 1;
+}
+/**
+ * LCS line diff. Normalises CRLF to LF, ignores one trailing newline, and
+ * bounds its input (8 KB / 2,000 lines per side; above ~4M DP cells it
+ * degrades to all-removed then all-added). Identical inputs → all ' ' lines.
+ */
+function lineDiff(a, b) {
+    const x = toLines(a);
+    const y = toLines(b);
+    let lo = 0;
+    while (lo < x.length && lo < y.length && x[lo] === y[lo])
+        lo++;
+    let xe = x.length;
+    let ye = y.length;
+    while (xe > lo && ye > lo && x[xe - 1] === y[ye - 1]) {
+        xe--;
+        ye--;
+    }
+    const out = [];
+    for (let k = 0; k < lo; k++)
+        out.push({ op: ' ', text: x[k] });
+    out.push(...diffMiddle(x.slice(lo, xe), y.slice(lo, ye)));
+    for (let k = xe; k < x.length; k++)
+        out.push({ op: ' ', text: x[k] });
+    return out;
+}
+function diffMiddle(x, y) {
+    const n = x.length;
+    const m = y.length;
+    if (n === 0 || m === 0 || n * m > MAX_DP_CELLS) {
+        return [
+            ...x.map((text) => ({ op: '-', text })),
+            ...y.map((text) => ({ op: '+', text })),
+        ];
+    }
+    const w = m + 1;
+    // lcs[i * w + j] = LCS length of x[i..] and y[j..]
+    const lcs = new Uint16Array((n + 1) * w);
+    for (let i = n - 1; i >= 0; i--) {
+        for (let j = m - 1; j >= 0; j--) {
+            lcs[i * w + j] =
+                x[i] === y[j]
+                    ? lcs[(i + 1) * w + j + 1] + 1
+                    : Math.max(lcs[(i + 1) * w + j], lcs[i * w + j + 1]);
+        }
+    }
+    const out = [];
+    let i = 0;
+    let j = 0;
+    while (i < n && j < m) {
+        if (x[i] === y[j]) {
+            out.push({ op: ' ', text: x[i] });
+            i++;
+            j++;
+        }
+        else if (lcs[(i + 1) * w + j] >= lcs[i * w + j + 1]) {
+            out.push({ op: '-', text: x[i++] });
+        }
+        else {
+            out.push({ op: '+', text: y[j++] });
+        }
+    }
+    while (i < n)
+        out.push({ op: '-', text: x[i++] });
+    while (j < m)
+        out.push({ op: '+', text: y[j++] });
+    return out;
+}
+function parseBaseline(text) {
+    let raw;
+    try {
+        raw = JSON.parse(text);
+    }
+    catch {
+        return null;
+    }
+    if (typeof raw !== 'object' || raw === null)
+        return null;
+    const r = raw;
+    if (typeof r['score'] !== 'number' || !Number.isFinite(r['score']))
+        return null;
+    return {
+        caseId: typeof r['caseId'] === 'string' ? r['caseId'] : undefined,
+        score: r['score'],
+        output: typeof r['output'] === 'string' ? r['output'] : '',
+    };
+}
+const KIND_ORDER = {
+    lowered: 0,
+    raised: 1,
+    'output-changed': 2,
+    added: 3,
+    removed: 4,
+    unchanged: 5,
+};
+function baseName(path) {
+    const leaf = path.split('/').pop() ?? path;
+    return leaf.replace(/\.json$/, '');
+}
+/**
+ * files: repo-relative changed baseline paths (from GitOps.diffBaselineFiles).
+ * readBase/readHead may throw; the caller handles git failure.
+ * `skipped` counts files dropped as unparseable or score-less.
+ * Sorted: lowered (largest drop first), raised, output-changed, added, removed, unchanged.
+ */
+function summariseBaselineChanges(files, readBase, readHead, warn) {
+    let skipped = 0;
+    const changes = [];
+    for (const path of files) {
+        if (!path.endsWith('.json'))
+            continue;
+        const baseText = readBase(path);
+        const headText = readHead(path);
+        if (baseText === null && headText === null)
+            continue;
+        const base = baseText === null ? null : parseBaseline(baseText);
+        const head = headText === null ? null : parseBaseline(headText);
+        if ((baseText !== null && base === null) || (headText !== null && head === null)) {
+            skipped++;
+            warn(`skipping ${path}: unparseable baseline JSON or no numeric score`);
+            continue;
+        }
+        const caseId = head?.caseId ?? base?.caseId ?? baseName(path);
+        if (!base && head) {
+            changes.push({ caseId, path, kind: 'added', newScore: head.score, newOutput: head.output });
+        }
+        else if (base && !head) {
+            changes.push({ caseId, path, kind: 'removed', oldScore: base.score, oldOutput: base.output });
+        }
+        else if (base && head) {
+            const kind = head.score < base.score
+                ? 'lowered'
+                : head.score > base.score
+                    ? 'raised'
+                    : head.output !== base.output
+                        ? 'output-changed'
+                        : 'unchanged';
+            changes.push({
+                caseId,
+                path,
+                kind,
+                oldScore: base.score,
+                newScore: head.score,
+                oldOutput: base.output,
+                newOutput: head.output,
+            });
+        }
+    }
+    const drop = (c) => (c.oldScore ?? 0) - (c.newScore ?? 0);
+    changes.sort((p, q) => {
+        const k = KIND_ORDER[p.kind] - KIND_ORDER[q.kind];
+        if (k !== 0)
+            return k;
+        if (p.kind === 'lowered')
+            return drop(q) - drop(p);
+        if (p.kind === 'raised')
+            return drop(p) - drop(q);
+        return 0;
+    });
+    return { changes, skipped };
+}
+
 ;// CONCATENATED MODULE: ./src/comment.ts
+
 
 const COMMENT_MARKER = '<!-- drift-ci-comment -->';
 const comment_TRANSIENT_STATUSES = new Set([
@@ -206806,6 +206993,11 @@ const comment_TRANSIENT_STATUSES = new Set([
  * first line so subsequent runs can find and update the same comment.
  */
 function renderComment(input) {
+    const full = renderCommentWith(input, false);
+    return full.length > MAX_COMMENT_CHARS ? renderCommentWith(input, true) : full;
+}
+const MAX_COMMENT_CHARS = 65_000;
+function renderCommentWith(input, compact) {
     const { run, suite, deltas, threshold, baselineSource, baselineChanged, dashboardUrl } = input;
     const { summary } = run;
     const regressionSet = new Set(deltas.regressions);
@@ -206843,6 +207035,9 @@ function renderComment(input) {
         tableHeader,
         rows,
     ];
+    const baselineSection = safeBaselineSection(input, compact);
+    if (baselineSection)
+        sections.push('', baselineSection);
     if (staleSet.size > 0) {
         sections.push('', renderStaleBaselines([...staleSet], input.suitePath, input.baselineHashes));
     }
@@ -206865,6 +207060,156 @@ function renderComment(input) {
     }
     sections.push('', renderRegressionExplainer(threshold));
     return sections.join('\n').trim() + '\n';
+}
+const MAX_DIFF_LINES = 60;
+const MAX_DIFFS = 10;
+const MAX_TABLE_ROWS = 50;
+const MAX_ID_CHARS = 120;
+const DIFF_BUDGET_CHARS = 30_000;
+/** Never lets a rendering failure take down the whole comment. */
+function safeBaselineSection(input, compact) {
+    try {
+        return renderBaselineChanges(input.baselineChanges ?? [], {
+            skipped: input.baselineSkipped,
+            compact,
+        });
+    }
+    catch {
+        return '';
+    }
+}
+/** Case ID safe for one line of markdown/HTML: no control chars, bounded, never empty. */
+function displayId(id) {
+    const cleaned = stripControl(String(id)).trim();
+    if (cleaned === '')
+        return 'unnamed';
+    const chars = [...cleaned];
+    return chars.length > MAX_ID_CHARS ? chars.slice(0, MAX_ID_CHARS).join('') + '…' : cleaned;
+}
+function stripControl(s) {
+    return s.replace(new RegExp('[\u0000-\u001f\u007f\u2028\u2029]', 'g'), ' ');
+}
+function htmlEscapeId(s) {
+    return s
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/@/g, '&#64;')
+        .replace(/\[/g, '&#91;')
+        .replace(/\]/g, '&#93;');
+}
+/**
+ * Renders the "Baselines changed in this PR" section ('' when there is
+ * nothing to show). Baseline output is untrusted model text: each diff is
+ * fenced with a backtick run longer than any run inside it.
+ */
+function renderBaselineChanges(changes, opts = {}) {
+    const skipped = opts.skipped ?? 0;
+    const listed = changes.filter((c) => c.kind !== 'unchanged');
+    const unchangedCount = changes.length - listed.length;
+    const out = [];
+    const skippedLine = `<sub>${skipped} baseline file(s) could not be read and are not shown.</sub>`;
+    if (listed.length === 0) {
+        if (unchangedCount > 0) {
+            out.push(`<sub>📝 ${unchangedCount} baseline file(s) re-captured with no score or output change.</sub>`);
+        }
+        if (skipped > 0)
+            out.push(skippedLine);
+        return out.join('\n\n');
+    }
+    const count = (k) => listed.filter((c) => c.kind === k).length;
+    out.push(`### 📝 Baselines changed in this PR (${listed.length})`);
+    const labels = [
+        ['lowered', 'lowered'],
+        ['raised', 'raised'],
+        ['output-changed', 'output changed'],
+        ['added', 'added'],
+        ['removed', 'removed'],
+    ];
+    out.push(labels
+        .filter(([k]) => count(k) > 0)
+        .map(([k, label]) => `${count(k)} ${label}`)
+        .join(' · '));
+    const warning = '> ⚠️ **Lowering a baseline accepts worse behaviour as the new normal.** Check the output diffs below before approving.';
+    if (opts.compact) {
+        if (count('lowered') > 0)
+            out.push('', warning.replace(' Check the output diffs below before approving.', ' Check *Files changed* before approving.'));
+        out.push('', "_Details omitted to keep this comment within GitHub's size limit; see *Files changed*._");
+        if (skipped > 0)
+            out.push('', skippedLine);
+        return out.join('\n');
+    }
+    if (count('lowered') > 0) {
+        out.push('', '> ⚠️ **Lowering a baseline accepts worse behaviour as the new normal.** Check the output diffs below before approving.');
+    }
+    out.push('', '| Case | Baseline score | Change |', '|---|---|---|');
+    for (const c of listed.slice(0, MAX_TABLE_ROWS))
+        out.push(renderBaselineRow(c));
+    if (listed.length > MAX_TABLE_ROWS) {
+        out.push(`| … ${listed.length - MAX_TABLE_ROWS} more — see *Files changed* | | |`);
+    }
+    if (unchangedCount > 0) {
+        out.push('', `<sub>Plus ${unchangedCount} re-captured with no score or output change.</sub>`);
+    }
+    if (skipped > 0)
+        out.push('', skippedLine);
+    const diffable = listed.filter((c) => (c.kind === 'lowered' || c.kind === 'raised' || c.kind === 'output-changed') &&
+        (c.oldOutput ?? '') !== (c.newOutput ?? ''));
+    let used = out.join('\n').length;
+    let shown = 0;
+    for (const c of diffable.slice(0, MAX_DIFFS)) {
+        const block = renderOutputDiff(c);
+        if (used + block.length > DIFF_BUDGET_CHARS)
+            break;
+        used += block.length;
+        out.push('', block);
+        shown++;
+    }
+    if (shown < diffable.length) {
+        out.push('', `_${diffable.length - shown} more output diff(s) omitted to keep this comment within GitHub's size limit; see *Files changed*._`);
+    }
+    return out.join('\n');
+}
+function renderBaselineRow(c) {
+    const id = `\`${escapeMd(displayId(c.caseId))}\``;
+    const oldS = c.oldScore === undefined ? '' : c.oldScore.toFixed(3);
+    const newS = c.newScore === undefined ? '' : c.newScore.toFixed(3);
+    const scores = `${oldS} → ${newS}`.trim();
+    const delta = (c.newScore ?? 0) - (c.oldScore ?? 0);
+    let change;
+    if (c.kind === 'lowered')
+        change = `**${formatDelta(delta)}** ⬇️`;
+    else if (c.kind === 'raised')
+        change = formatDelta(delta);
+    else if (c.kind === 'output-changed')
+        change = 'output changed';
+    else
+        change = c.kind;
+    return `| ${id} | ${scores} | ${change} |`;
+}
+function renderOutputDiff(c) {
+    const oldOut = c.oldOutput ?? '';
+    const newOut = c.newOutput ?? '';
+    const diff = lineDiff(oldOut, newOut);
+    const id = htmlEscapeId(displayId(c.caseId));
+    const open = `<details><summary>Output diff: <code>${id}</code></summary>`;
+    if (!diff.some((l) => l.op !== ' ')) {
+        return `${open}\n\nOutputs differ only beyond the first 8 KB or in trailing whitespace.\n</details>`;
+    }
+    const lines = diff.map((l) => (l.op === ' ' ? `  ${l.text}` : `${l.op} ${l.text}`));
+    if (lines.length > MAX_DIFF_LINES) {
+        const more = lines.length - MAX_DIFF_LINES;
+        lines.length = MAX_DIFF_LINES;
+        lines.push(`… ${more} more lines`);
+    }
+    if (outputWasTruncated(oldOut) || outputWasTruncated(newOut))
+        lines.push('… (truncated)');
+    const body = lines.join('\n');
+    let longest = 0;
+    for (const m of body.matchAll(/`+/g))
+        longest = Math.max(longest, m[0].length);
+    const fence = '`'.repeat(Math.max(3, longest + 1));
+    return `${open}\n\n${fence}diff\n${body}\n${fence}\n</details>`;
 }
 function renderRow(c, state) {
     const icon = state.regression
@@ -207030,7 +207375,7 @@ function escapeMd(s) {
     // attacker-supplied `\` can't neutralise the `\|` escape that follows and
     // break out of the table cell. Backticks are swapped for a homoglyph (they
     // can't be reliably backslash-escaped inside a cell).
-    return s
+    return stripControl(s)
         .replace(/\\/g, '\\\\')
         .replace(/\|/g, '\\|')
         .replace(/`/g, 'ˋ');
@@ -207103,6 +207448,7 @@ function actionIngestContext(suite, judgeHash, deltas) {
 }
 
 ;// CONCATENATED MODULE: ./src/run-action.ts
+
 
 
 
@@ -207183,6 +207529,7 @@ async function runAction(inputs, writers, deps = {}) {
     }
     const baselineChangedFiles = detectBaselineChangedFiles(inputs, deps, writers);
     const baselineChanged = baselineChangedFiles.length > 0;
+    const baselineChanges = collectBaselineChanges(baselineChangedFiles, inputs, deps, writers);
     writers.setOutput('regression-count', String(deltas.regressions.length));
     writers.setOutput('avg-score', run.summary.avgScore.toFixed(3));
     writers.setOutput('run-id', run.id);
@@ -207207,6 +207554,8 @@ async function runAction(inputs, writers, deps = {}) {
                 threshold: regressionThreshold,
                 baselineSource: inputs.baselineSource,
                 baselineChanged: baselineChangedFiles,
+                baselineChanges: baselineChanges?.changes,
+                baselineSkipped: baselineChanges?.skipped,
                 dashboardUrl: inputs.dashboardUrl,
             });
             try {
@@ -207284,6 +207633,19 @@ function resolveBaselineRoot(inputs, deps, writers) {
     catch (err) {
         writers.warning(`drift-ci: failed to materialise origin/main baseline — ${err instanceof Error ? err.message : String(err)}. Falling back to baselineDir.`);
         return inputs.baselineDir;
+    }
+}
+function collectBaselineChanges(files, inputs, deps, writers) {
+    const gitOps = deps.gitOps;
+    const baseRef = inputs.baseRef;
+    if (files.length === 0 || !gitOps || !baseRef)
+        return undefined;
+    try {
+        return summariseBaselineChanges(files, (p) => gitOps.readBaseFile(baseRef, p), (p) => gitOps.readHeadFile(p), (m) => writers.warning(`drift-ci: ${m}`));
+    }
+    catch (err) {
+        writers.warning(`drift-ci: could not read baseline changes — ${err instanceof Error ? err.message : String(err)}. Omitting them from the comment.`);
+        return undefined;
     }
 }
 function detectBaselineChangedFiles(inputs, deps, writers) {
@@ -207409,6 +207771,7 @@ function buildGitContext(ctx) {
 
 
 
+
 /* c8 ignore start -- thin @actions/core glue; exercised by the end-to-end action workflow, not by unit tests. */
 function readInputs(prContext, isFork, forkHeadRef, baseRef) {
     const runnerTemp = process.env.RUNNER_TEMP ?? process.env.TMPDIR ?? process.env.TEMP ?? '/tmp';
@@ -207498,6 +207861,7 @@ function buildCommentApi() {
     };
 }
 function buildGitOps() {
+    const mergeBases = new Map();
     return {
         materialiseMainBaseline(runnerTemp) {
             const targetDir = (0,external_node_path_.join)(runnerTemp, 'drift-main-baseline');
@@ -207510,14 +207874,52 @@ function buildGitOps() {
             (0,external_node_child_process_.execFileSync)('git', ['--work-tree', targetDir, 'checkout', 'origin/main', '--', '.drift/baseline'], { stdio: 'inherit' });
             return (0,external_node_path_.join)(targetDir, '.drift', 'baseline');
         },
+        readBaseFile(baseRef, path) {
+            let sha = mergeBases.get(baseRef);
+            if (sha === undefined) {
+                sha = gitText(['merge-base', `origin/${baseRef}`, 'HEAD']).trim();
+                mergeBases.set(baseRef, sha);
+            }
+            return gitShowOrNull(`${sha}:${path}`);
+        },
+        readHeadFile(path) {
+            return gitShowOrNull(`HEAD:${path}`);
+        },
         diffBaselineFiles(baseRef) {
-            const out = (0,external_node_child_process_.execFileSync)('git', ['diff', '--name-only', `origin/${baseRef}...HEAD`, '--', '.drift/baseline/'], { encoding: 'utf8' });
-            return out
-                .split('\n')
-                .map((s) => s.trim())
-                .filter(Boolean);
+            // --no-renames: a rename shows as delete + add so a lowered score can't hide.
+            // -z: NUL-separated, unquoted paths (core.quotePath would mangle non-ASCII).
+            const out = gitText([
+                'diff',
+                '--name-only',
+                '--no-renames',
+                '-z',
+                `origin/${baseRef}...HEAD`,
+                '--',
+                '.drift/baseline/',
+            ]);
+            return out.split('\0').filter(Boolean);
         },
     };
+}
+// LC_ALL=C keeps git's stderr in English so isMissingAtRevision can classify it.
+const gitEnv = { ...process.env, LC_ALL: 'C' };
+function gitText(args) {
+    return (0,external_node_child_process_.execFileSync)('git', args, {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+        env: gitEnv,
+    });
+}
+function gitShowOrNull(spec) {
+    try {
+        return gitText(['show', spec]);
+    }
+    catch (err) {
+        const stderr = String(err.stderr ?? '');
+        if (isMissingAtRevision(stderr))
+            return null;
+        throw err;
+    }
 }
 const writers = {
     setOutput: (name, value) => setOutput(name, value),
