@@ -1,6 +1,6 @@
 {
   "name": "@drift-ci/core",
-  "version": "1.7.0",
+  "version": "1.8.0",
   "description": "drift-ci core engine: types, providers, evaluators, storage, runner",
   "keywords": [
     "llm",

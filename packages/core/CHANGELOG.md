@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.8.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.7.0...core-v1.8.0) (2026-11-16)
+
+
+### Features
+
+* **core:** faithfulness evaluator and case context for RAG ([#194](https://github.com/Drift-CI/drift-ci/issues/194)) ([d07b1d9](https://github.com/Drift-CI/drift-ci/commit/d07b1d9a67e35d98b5847014173dba2069314020))
+* **core:** tool definitions, provider tool calls and the tool-call evaluator ([#197](https://github.com/Drift-CI/drift-ci/issues/197)) ([1b1404e](https://github.com/Drift-CI/drift-ci/commit/1b1404eae4f2805e86708902818a00f52649c8f1))
+
+
+### Bug Fixes
+
+* **core:** redact current OpenAI keys and GitHub and Slack tokens ([#193](https://github.com/Drift-CI/drift-ci/issues/193)) ([38514c0](https://github.com/Drift-CI/drift-ci/commit/38514c08827bd24fdfe8518b3b307de87058eb52))
+
 ## [1.7.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.6.1...core-v1.7.0) (2026-11-16)
 
 
