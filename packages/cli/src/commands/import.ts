@@ -1,7 +1,7 @@
 import { InvalidArgumentError, type Command } from 'commander';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { Document, isMap, isSeq, parseDocument, stringify } from 'yaml';
+import { Document, isMap, isScalar, isSeq, parseDocument, stringify } from 'yaml';
 import {
   loadConfigFromFile,
   parseSuite,
@@ -33,7 +33,7 @@ const REFERENCE_EVALUATORS = new Set(['llm-judge', 'cosine-similarity']);
 const MAX_SKIP_LINES = 20;
 const DEFAULT_SUITE = '.drift/suite.yaml';
 const DEFAULT_CONFIG = '.drift/config.yaml';
-const KNOWN_EVALUATORS = [
+export const KNOWN_EVALUATORS = [
   'exact-match',
   'contains',
   'json-schema',
@@ -114,9 +114,22 @@ function writeAtomically(path: string, content: string): void {
       }
     }
   } catch (e) {
-    rmSync(tmp, { force: true });
+    try {
+      rmSync(tmp, { force: true });
+    } catch {
+      // report the original write/rename error, not the cleanup failure
+    }
     throw e;
   }
+}
+
+function isBlankDocument(doc: Document): boolean {
+  return doc.contents === null || (isScalar(doc.contents) && doc.contents.value == null);
+}
+
+function joinComments(...parts: (string | null | undefined)[]): string | undefined {
+  const present = parts.filter((p): p is string => !!p);
+  return present.length > 0 ? present.join('\n') : undefined;
 }
 
 function evaluatorNames(specs: unknown): string[] {
@@ -152,6 +165,7 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
   }
 
   let doc: Document | undefined;
+  let leadingComment: string | undefined;
   if (existsSync(suitePath)) {
     try {
       doc = parseDocument(readFileSync(suitePath, 'utf8'));
@@ -163,7 +177,13 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
       io.err(`Can't parse ${suitePath}: ${doc.errors[0].message}`);
       return 2;
     }
-    if (doc.contents === null) doc = undefined; // empty or comments-only file
+    if (isBlankDocument(doc)) {
+      leadingComment = joinComments(
+        doc.commentBefore,
+        isScalar(doc.contents) ? doc.contents.commentBefore : undefined,
+      );
+      doc = undefined; // empty, comments-only, `---` or `null`
+    }
   }
   if (!doc) {
     doc = new Document({
@@ -173,6 +193,7 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
       evaluators: ['llm-judge'],
       cases: [],
     });
+    if (leadingComment) doc.commentBefore = leadingComment;
   }
 
   const cases = doc.get('cases', true);
@@ -274,7 +295,8 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
   report(io, { suitePath, added: added.length, present, skips, redactions, dryRun: false });
   io.out('');
   io.out(
-    'Next: run `drift-ci baseline accept` to record today\'s scores, then commit the suite and .drift/baseline/.',
+    `Next: run \`drift-ci run\`, then \`drift-ci baseline accept ${suitePath} --all\` to record ` +
+      "today's scores, and commit the suite and .drift/baseline/.",
   );
   return 0;
 }

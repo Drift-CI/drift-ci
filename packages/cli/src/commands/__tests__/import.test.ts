@@ -1,10 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { loadSuiteFromFile } from '@drift-ci/core';
 
-import { executeImport, type ImportOptions } from '../import.js';
+import { executeImport, KNOWN_EVALUATORS, type ImportOptions } from '../import.js';
 
 let dir: string;
 let out: string[];
@@ -73,7 +74,7 @@ describe('executeImport', () => {
       tags: ['imported'],
     });
     expect(out.join('\n')).toContain('Imported 1 case(s) into');
-    expect(out.join('\n')).toContain('drift-ci baseline accept');
+    expect(out.join('\n')).toContain(`drift-ci baseline accept ${suite} --all`);
     expect(existsSync(`${suite}.tmp`)).toBe(false);
   });
 
@@ -214,7 +215,7 @@ describe('executeImport', () => {
   });
 
   it('leaves existing suite text byte-identical', () => {
-    const long = 'x'.repeat(120);
+    const long = 'word '.repeat(30).trim();
     const text = `version: 1\nid: s\nname: S\nevaluators: [llm-judge]\ncases:\n  - id: a\n    input: '${long}'\n    expected: 'ok'\n`;
     const suite = writeSuite(text);
     const file = writeTraces([trace('q', 'a')]);
@@ -284,6 +285,32 @@ describe('executeImport', () => {
     const loaded = loadSuiteFromFile(suite);
     expect(loaded.id).toBe('imported');
     expect(loaded.cases).toHaveLength(1);
+  });
+
+  it.each([['---\n'], ['null\n'], ['---\nnull\n'], ['~\n']])('treats %j as a new suite', (text) => {
+    const suite = writeSuite(text);
+    expect(executeImport(writeTraces([trace('q', 'a')]), opts(), io)).toBe(0);
+    const loaded = loadSuiteFromFile(suite);
+    expect(loaded.id).toBe('imported');
+    expect(loaded.cases).toHaveLength(1);
+  });
+
+  it.each([['# my notes\n'], ['# my notes\n---\n'], ['# my notes\nnull\n']])(
+    'keeps leading comments when replacing %j',
+    (text) => {
+      const suite = writeSuite(text);
+      expect(executeImport(writeTraces([trace('q', 'a')]), opts(), io)).toBe(0);
+      expect(readFileSync(suite, 'utf8')).toContain('# my notes');
+      expect(loadSuiteFromFile(suite).cases).toHaveLength(1);
+    },
+  );
+
+  it('keeps KNOWN_EVALUATORS in sync with the evaluator factory', () => {
+    const here = dirname(fileURLToPath(import.meta.url));
+    const factory = readFileSync(join(here, '../../../../core/src/evaluators/factory.ts'), 'utf8');
+    const names = [...factory.matchAll(/case '([a-z-]+)':/g)].map((m) => m[1]);
+    expect(names.length).toBeGreaterThan(0);
+    expect(new Set(names)).toEqual(new Set(KNOWN_EVALUATORS));
   });
 
   it('exits 1 when some cases are present and other lines are skipped', () => {
