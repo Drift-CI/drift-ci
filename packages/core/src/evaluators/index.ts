@@ -11,3 +11,4 @@ export * from './judge-hash.js';
 export * from './refusal.js';
 export * from './rubric-checklist.js';
 export * from './safety-classifier.js';
+export * from './tool-call.js';

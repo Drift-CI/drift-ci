@@ -361,6 +361,35 @@ describe('Runner repeated sampling', () => {
     expect(run.cases[0].output).toBe('→ get_order {"order_id":"ORD-1"}');
   });
 
+  it('scores a tool-call case end to end with the rendered output', async () => {
+    const tools = [{ name: 'get_order', parameters: { type: 'object', properties: {} } }];
+    const runner = new Runner({
+      provider: new MockProvider({
+        responder: () => ({ text: '', toolCalls: [{ name: 'get_order', arguments: { order_id: 'ORD-1' } }] }),
+      }),
+      evaluator: (tc) =>
+        createEvaluatorChain(['tool-call'], {
+          testProvider: new MockProvider({ defaultResponse: 'ok' }),
+          case: tc,
+        }),
+      storage: new MemoryStorage(),
+    });
+    const run = await runner.run(
+      makeSuite({
+        cases: [
+          {
+            id: 'c1',
+            input: 'q',
+            tools,
+            expectedCalls: [{ name: 'get_order', arguments: { order_id: 'ORD-1' } }],
+          },
+        ],
+      }),
+    );
+    expect(run.cases[0].score).toBe(1);
+    expect(run.cases[0].output).toBe('→ get_order {"order_id":"ORD-1"}');
+  });
+
   it('leaves a case without tools unaffected', async () => {
     const opts: Record<string, unknown>[] = [];
     const provider = new MockProvider({
