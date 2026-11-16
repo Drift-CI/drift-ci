@@ -114736,7 +114736,7 @@ const RubricQuorumSchema = object({
     },
 });
 // ─── case ───────────────────────────────────────────────────────────────
-const TestCaseSchema = object({
+const suite_TestCaseSchema = object({
     id: schemas_string()
         .min(1)
         .regex(/^[a-z0-9\-\/_]+$/, 'IDs must be lowercase alphanumeric with hyphens, underscores, or slashes'),
@@ -114777,7 +114777,7 @@ const SuiteSchema = object({
     default_threshold: schemas_number().min(0).max(1).optional(),
     /** Samples per case when a case has no `runs` of its own (1–5). The median score is used. */
     default_runs: schemas_number().int().min(1).max(5).optional(),
-    cases: array(TestCaseSchema)
+    cases: array(suite_TestCaseSchema)
         .min(1)
         .refine((cases) => new Set(cases.map((c) => c.id)).size === cases.length, {
         message: 'Case IDs must be unique within a suite.',
@@ -201362,7 +201362,7 @@ const SCANNERS = [
         pattern: /-----BEGIN (?:RSA |OPENSSH |DSA |EC |ENCRYPTED |)PRIVATE KEY-----[\s\S]*?-----END (?:RSA |OPENSSH |DSA |EC |ENCRYPTED |)PRIVATE KEY-----/g,
     },
 ];
-function redactSecrets(text) {
+function redaction_redactSecrets(text) {
     let current = text;
     const counts = [];
     for (const { kind, pattern } of SCANNERS) {
@@ -201559,11 +201559,11 @@ class FileBaselineStore {
     }
 }
 function applyRedaction(entry) {
-    const scan = redactSecrets(entry.output);
+    const scan = redaction_redactSecrets(entry.output);
     if (scan.redactions.length === 0) {
         return entry;
     }
-    const redactedFull = redactSecrets(rehydrateFullOutput(entry)).text;
+    const redactedFull = redaction_redactSecrets(rehydrateFullOutput(entry)).text;
     const truncated = Buffer.byteLength(redactedFull, 'utf8') > OUTPUT_MAX_BYTES;
     const storedOutput = truncated
         ? truncateUtf8(redactedFull, OUTPUT_MAX_BYTES)
@@ -206789,7 +206789,146 @@ function buildDefaultSenders(opts = {}) {
 
 
 //# sourceMappingURL=index.js.map
+;// CONCATENATED MODULE: ../core/dist/import/trace.js
+
+
+
+const PREFIX_RE = /^[a-z0-9\-_]+$/;
+const ID_MAX = 80;
+class Skip extends Error {
+    reason;
+    constructor(reason) {
+        super(reason);
+        this.reason = reason;
+    }
+}
+function trace_isObject(v) {
+    return typeof v === 'object' && v !== null && !Array.isArray(v);
+}
+/** A message's text: a string, or the `text` parts of a content array joined with \n. */
+function textOf(content) {
+    if (content === null || content === undefined)
+        return '';
+    if (typeof content === 'string')
+        return content;
+    if (!Array.isArray(content))
+        throw new Skip('not-a-chat-trace');
+    const texts = [];
+    for (const part of content) {
+        if (trace_isObject(part) && (part.type === 'thinking' || part.type === 'redacted_thinking'))
+            continue;
+        if (trace_isObject(part) && part.type === 'text' && typeof part.text === 'string') {
+            texts.push(part.text);
+            continue;
+        }
+        throw new Skip('non-text content');
+    }
+    return texts.join('\n');
+}
+function caseId(rawId, prefix, system, turns) {
+    if (rawId !== undefined) {
+        const clean = rawId
+            .toLowerCase()
+            .replace(/[^a-z0-9\-_]+/g, '-')
+            .replace(/^-+|-+$/g, '')
+            .slice(0, ID_MAX)
+            .replace(/-+$/, '');
+        if (clean)
+            return `${prefix}-${clean}`;
+    }
+    const hash = createHash('sha256')
+        .update(JSON.stringify({ system, turns }))
+        .digest('hex')
+        .slice(0, 12);
+    return `${prefix}-${hash}`;
+}
+function trace_build(trace, prefix) {
+    if (!trace_isObject(trace) || !Array.isArray(trace.messages))
+        throw new Skip('not-a-chat-trace');
+    const systemParts = [];
+    if (trace.system !== undefined && trace.system !== null)
+        systemParts.push(textOf(trace.system));
+    const turns = [];
+    for (const m of trace.messages) {
+        if (!trace_isObject(m) || typeof m.role !== 'string')
+            throw new Skip('not-a-chat-trace');
+        if (m.role === 'tool' ||
+            m.role === 'function' ||
+            (m.function_call !== undefined && m.function_call !== null) ||
+            (Array.isArray(m.tool_calls) && m.tool_calls.length > 0)) {
+            throw new Skip('tool calls');
+        }
+        if (m.role === 'system' || m.role === 'developer') {
+            if (turns.length > 0)
+                throw new Skip('system message mid-conversation');
+            systemParts.push(textOf(m.content));
+            continue;
+        }
+        if (m.role !== 'user' && m.role !== 'assistant')
+            throw new Skip('not-a-chat-trace');
+        turns.push({ role: m.role, content: textOf(m.content) });
+    }
+    if (!turns.some((t) => t.role === 'user'))
+        throw new Skip('no user turn');
+    if (turns[turns.length - 1].role !== 'assistant')
+        throw new Skip('no final assistant reply');
+    if (turns.some((t, i) => t.role !== (i % 2 === 0 ? 'user' : 'assistant'))) {
+        throw new Skip('roles do not alternate');
+    }
+    if (turns.some((t) => t.content.trim() === ''))
+        throw new Skip('empty content');
+    let redactions = 0;
+    const redact = (s) => {
+        const r = redactSecrets(s);
+        redactions += r.redactions.reduce((n, x) => n + x.count, 0);
+        return r.text;
+    };
+    let rawId;
+    if (typeof trace.id === 'string')
+        rawId = redact(trace.id);
+    else if (typeof trace.id === 'number' && Number.isFinite(trace.id))
+        rawId = String(trace.id);
+    const system = systemParts.filter((s) => s.trim() !== '').join('\n\n');
+    const systemPrompt = system ? redact(system) : undefined;
+    const red = turns.map((t) => ({ role: t.role, content: redact(t.content) }));
+    const prompt = red.slice(0, -1);
+    // Built in display order (id, systemPrompt, input|messages, expected, tags), so the YAML reads well.
+    const tc = { id: caseId(rawId, prefix, systemPrompt ?? '', red) };
+    if (systemPrompt)
+        tc.systemPrompt = systemPrompt;
+    if (prompt.length === 1)
+        tc.input = prompt[0].content;
+    else
+        tc.messages = prompt;
+    tc.expected = red[red.length - 1].content;
+    tc.tags = ['imported'];
+    TestCaseSchema.parse(tc); // a failure here is a bug in this function
+    return { case: tc, redactions };
+}
+/**
+ * Convert one parsed chat trace (OpenAI `messages`, or Anthropic `system` + `messages`)
+ * into a suite case. The final assistant turn becomes `expected`; secrets are redacted.
+ * Returns a skip reason for traces that can't become a case.
+ */
+function traceToCase(trace, opts) {
+    if (!PREFIX_RE.test(opts.prefix)) {
+        throw new Error(`traceToCase: prefix must match ${PREFIX_RE} (got "${opts.prefix}")`);
+    }
+    try {
+        return { ok: true, ...trace_build(trace, opts.prefix) };
+    }
+    catch (err) {
+        if (err instanceof Skip)
+            return { ok: false, reason: err.reason };
+        throw err;
+    }
+}
+//# sourceMappingURL=trace.js.map
+;// CONCATENATED MODULE: ../core/dist/import/index.js
+
+//# sourceMappingURL=index.js.map
 ;// CONCATENATED MODULE: ../core/dist/index.js
+
 
 
 
