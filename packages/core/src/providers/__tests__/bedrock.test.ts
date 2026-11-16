@@ -142,3 +142,80 @@ describe('BedrockAnthropicProvider', () => {
     expect(create).toHaveBeenCalledTimes(2);
   });
 });
+
+describe('BedrockAnthropicProvider tools', () => {
+  const MODEL_ID = 'anthropic.claude-sonnet-4-5-20260101-v1:0';
+  const tools = [
+    {
+      name: 'lookup',
+      description: 'Look up a record',
+      parameters: { type: 'object', properties: { id: { type: 'string' } } },
+    },
+  ];
+
+  it('sends the tools mapped to input_schema', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(okResponse(MODEL_ID));
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    await p.complete('hi', undefined, { tools });
+    const args = create.mock.calls[0][0];
+    expect(args.tools).toEqual([
+      {
+        name: 'lookup',
+        description: 'Look up a record',
+        input_schema: { type: 'object', properties: { id: { type: 'string' } } },
+      },
+    ]);
+    expect(args).not.toHaveProperty('tool_choice');
+  });
+
+  it('parses one tool_use block', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(
+      okResponse(MODEL_ID, {
+        content: [{ type: 'tool_use', id: 't1', name: 'lookup', input: { id: 'a1' } }],
+      }),
+    );
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([{ name: 'lookup', arguments: { id: 'a1' } }]);
+    expect(res.text).toBe('');
+  });
+
+  it('returns text and two calls', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(
+      okResponse(MODEL_ID, {
+        content: [
+          { type: 'text', text: 'ok' },
+          { type: 'tool_use', id: 't1', name: 'lookup', input: { id: 'a1' } },
+          { type: 'tool_use', id: 't2', name: 'lookup', input: { id: 'b2' } },
+        ],
+      }),
+    );
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('ok');
+    expect(res.toolCalls).toEqual([
+      { name: 'lookup', arguments: { id: 'a1' } },
+      { name: 'lookup', arguments: { id: 'b2' } },
+    ]);
+  });
+
+  it('returns toolCalls: [] when none called', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(okResponse(MODEL_ID));
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([]);
+  });
+
+  it('sends no tools key and leaves toolCalls undefined without tools', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(okResponse(MODEL_ID));
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    const res = await p.complete('hi');
+    expect(create.mock.calls[0][0]).not.toHaveProperty('tools');
+    expect(res).not.toHaveProperty('toolCalls');
+  });
+});

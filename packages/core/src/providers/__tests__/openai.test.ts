@@ -173,3 +173,108 @@ describe('OpenAIProvider', () => {
     expect(sent[0].content).toMatch(/"text":"hi"/);
   });
 });
+
+describe('OpenAIProvider tools', () => {
+  const tools = [
+    {
+      name: 'get_weather',
+      description: 'Weather',
+      parameters: { type: 'object', properties: { city: { type: 'string' } } },
+    },
+  ];
+  const fnCall = (id: string, name: string, args: string) => ({
+    id,
+    type: 'function',
+    function: { name, arguments: args },
+  });
+  const withMessage = (message: Record<string, unknown>) =>
+    okResponse({
+      choices: [
+        {
+          index: 0,
+          message: { role: 'assistant', ...message },
+          finish_reason: 'tool_calls',
+          logprobs: null,
+        },
+      ],
+    });
+
+  it('sends the tools as function tools, without tool_choice', async () => {
+    const { client, create } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    await p.complete('hi', undefined, { tools });
+    const args = create.mock.calls[0][0];
+    expect(args.tools).toEqual([
+      {
+        type: 'function',
+        function: {
+          name: 'get_weather',
+          description: 'Weather',
+          parameters: { type: 'object', properties: { city: { type: 'string' } } },
+        },
+      },
+    ]);
+    expect(args).not.toHaveProperty('tool_choice');
+  });
+
+  it('parses one call', async () => {
+    const { client } = makeClient(
+      withMessage({ content: null, tool_calls: [fnCall('c1', 'get_weather', '{"city":"Paris"}')] }),
+    );
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('');
+    expect(res.toolCalls).toEqual([{ name: 'get_weather', arguments: { city: 'Paris' } }]);
+  });
+
+  it('returns text and two calls, skipping custom tool calls', async () => {
+    const { client } = makeClient(
+      withMessage({
+        content: 'Checking.',
+        tool_calls: [
+          fnCall('c1', 'get_weather', '{"city":"Paris"}'),
+          { id: 'c9', type: 'custom', custom: { name: 'x', input: 'y' } },
+          fnCall('c2', 'get_weather', '{"city":"Rome"}'),
+        ],
+      }),
+    );
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('Checking.');
+    expect(res.toolCalls).toEqual([
+      { name: 'get_weather', arguments: { city: 'Paris' } },
+      { name: 'get_weather', arguments: { city: 'Rome' } },
+    ]);
+  });
+
+  it('returns toolCalls: [] when none called', async () => {
+    const { client } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([]);
+    expect(res.text).toBe('hi');
+  });
+
+  it('keeps bad JSON or non-object arguments as __unparsed', async () => {
+    const { client } = makeClient(
+      withMessage({
+        content: null,
+        tool_calls: [fnCall('c1', 'get_weather', '{"city":'), fnCall('c2', 'get_weather', '[1,2]')],
+      }),
+    );
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([
+      { name: 'get_weather', arguments: { __unparsed: '{"city":' } },
+      { name: 'get_weather', arguments: { __unparsed: '[1,2]' } },
+    ]);
+  });
+
+  it('sends no tools key and leaves toolCalls undefined without tools', async () => {
+    const { client, create } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools: [] });
+    expect(create.mock.calls[0][0]).not.toHaveProperty('tools');
+    expect(res).not.toHaveProperty('toolCalls');
+  });
+});

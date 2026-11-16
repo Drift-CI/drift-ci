@@ -156,3 +156,76 @@ describe('AnthropicProvider', () => {
     expect(create).toHaveBeenCalledTimes(1);
   });
 });
+
+describe('AnthropicProvider tools', () => {
+  const tools = [
+    {
+      name: 'get_weather',
+      description: 'Look up the weather',
+      parameters: { type: 'object', properties: { city: { type: 'string' } } },
+    },
+  ];
+
+  it('sends the tools mapped to input_schema, without tool_choice', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    await p.complete('hi', undefined, { tools });
+    const args = client.messages.create.mock.calls[0][0];
+    expect(args.tools).toEqual([
+      {
+        name: 'get_weather',
+        description: 'Look up the weather',
+        input_schema: { type: 'object', properties: { city: { type: 'string' } } },
+      },
+    ]);
+    expect(args).not.toHaveProperty('tool_choice');
+  });
+
+  it('parses one tool_use block', async () => {
+    const client = makeClient(
+      baseResponse({
+        content: [{ type: 'tool_use', id: 'tu_1', name: 'get_weather', input: { city: 'Paris' } }],
+      }),
+    );
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('');
+    expect(res.toolCalls).toEqual([{ name: 'get_weather', arguments: { city: 'Paris' } }]);
+  });
+
+  it('returns text and two calls', async () => {
+    const client = makeClient(
+      baseResponse({
+        content: [
+          { type: 'text', text: 'Checking.' },
+          { type: 'tool_use', id: 'tu_1', name: 'get_weather', input: { city: 'Paris' } },
+          { type: 'tool_use', id: 'tu_2', name: 'get_weather', input: { city: 'Rome' } },
+        ],
+      }),
+    );
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('Checking.');
+    expect(res.toolCalls).toEqual([
+      { name: 'get_weather', arguments: { city: 'Paris' } },
+      { name: 'get_weather', arguments: { city: 'Rome' } },
+    ]);
+  });
+
+  it('returns toolCalls: [] when tools were offered but none called', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([]);
+    expect(res.text).toBe('Hello from Claude');
+  });
+
+  it('sends no tools key and leaves toolCalls undefined without tools', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    const res = await p.complete('hi', undefined, { tools: [] });
+    const args = client.messages.create.mock.calls[0][0];
+    expect(args).not.toHaveProperty('tools');
+    expect(res).not.toHaveProperty('toolCalls');
+  });
+});

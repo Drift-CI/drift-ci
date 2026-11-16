@@ -6,8 +6,10 @@ import {
   type CompletionOptions,
   type CompletionResponse,
   type ProviderAdapter,
+  type ToolCall,
+  type ToolDefinition,
 } from './base.js';
-import { withRetry, type RetryOptions } from './utils.js';
+import { parseArgs, withRetry, type RetryOptions } from './utils.js';
 
 export interface OpenAIProviderConfig {
   model: string;
@@ -65,6 +67,7 @@ export class OpenAIProvider implements ProviderAdapter {
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
     const start = Date.now();
+    const tools = options.tools?.length ? options.tools : undefined;
 
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
@@ -83,6 +86,7 @@ export class OpenAIProvider implements ProviderAdapter {
           max_tokens: options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
           temperature: options.temperature ?? 0,
           messages,
+          ...(tools ? { tools: toOpenAITools(tools) } : {}),
         }),
       this.config.retry,
     );
@@ -112,6 +116,31 @@ export class OpenAIProvider implements ProviderAdapter {
       },
       model: response.model ?? this.config.model,
       latencyMs: Date.now() - start,
+      ...(tools ? { toolCalls: readOpenAIToolCalls(choice?.message?.tool_calls) } : {}),
     };
   }
+}
+
+function toOpenAITools(
+  tools: ToolDefinition[],
+): OpenAI.Chat.Completions.ChatCompletionFunctionTool[] {
+  return tools.map((t) => ({
+    type: 'function',
+    function: {
+      name: t.name,
+      ...(t.description !== undefined ? { description: t.description } : {}),
+      parameters: t.parameters,
+    },
+  }));
+}
+
+function readOpenAIToolCalls(
+  calls: OpenAI.Chat.Completions.ChatCompletionMessageToolCall[] | undefined,
+): ToolCall[] {
+  return (calls ?? [])
+    .filter(
+      (c): c is OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall =>
+        c.type === 'function',
+    )
+    .map((c) => ({ name: c.function.name, arguments: parseArgs(c.function.arguments) }));
 }

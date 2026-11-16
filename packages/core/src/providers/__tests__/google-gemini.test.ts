@@ -228,3 +228,104 @@ describe('GoogleGeminiProvider', () => {
     expect(out.latencyMs).toBeGreaterThanOrEqual(0);
   });
 });
+
+describe('GoogleGeminiProvider tools', () => {
+  const tools = [
+    {
+      name: 'get_weather',
+      description: 'Weather',
+      parameters: { type: 'object', properties: { city: { type: 'string' } } },
+    },
+  ];
+  const withParts = (parts: Array<Record<string, unknown>>) =>
+    okResponse({ text: undefined, candidates: [{ content: { role: 'model', parts } }] });
+
+  it('sends functionDeclarations inside config.tools', async () => {
+    const { client, generateContent } = makeClient();
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    await p.complete('hi', undefined, { tools });
+    const args = generateContent.mock.calls[0][0];
+    expect(args.config.tools).toEqual([
+      {
+        functionDeclarations: [
+          {
+            name: 'get_weather',
+            description: 'Weather',
+            parametersJsonSchema: { type: 'object', properties: { city: { type: 'string' } } },
+          },
+        ],
+      },
+    ]);
+    expect(args.config).not.toHaveProperty('toolConfig');
+  });
+
+  it('parses one function call from the candidate parts', async () => {
+    const { client } = makeClient(
+      withParts([{ functionCall: { name: 'get_weather', args: { city: 'Paris' } } }]),
+    );
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('');
+    expect(res.toolCalls).toEqual([{ name: 'get_weather', arguments: { city: 'Paris' } }]);
+  });
+
+  it('returns text and two calls, skipping thought text', async () => {
+    const { client } = makeClient(
+      withParts([
+        { text: 'thinking', thought: true },
+        { text: 'Checking.' },
+        { functionCall: { name: 'get_weather', args: { city: 'Paris' } } },
+        { functionCall: { name: 'get_weather' } },
+      ]),
+    );
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('Checking.');
+    expect(res.toolCalls).toEqual([
+      { name: 'get_weather', arguments: { city: 'Paris' } },
+      { name: 'get_weather', arguments: {} },
+    ]);
+  });
+
+  it('falls back to response.functionCalls when there are no candidates', async () => {
+    const { client } = makeClient(
+      okResponse({ text: undefined, functionCalls: [{ name: 'get_weather', args: { city: 'Rome' } }] }),
+    );
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('');
+    expect(res.toolCalls).toEqual([{ name: 'get_weather', arguments: { city: 'Rome' } }]);
+  });
+
+  it('reads a throwing text getter as empty', async () => {
+    const response = {
+      ...okResponse(),
+      get text(): string {
+        throw new Error('no text');
+      },
+    };
+    const { client } = makeClient(response as unknown as ReturnType<typeof okResponse>);
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('');
+    expect(res.toolCalls).toEqual([]);
+  });
+
+  it('returns toolCalls: [] when none called', async () => {
+    const { client } = makeClient();
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('hi');
+    expect(res.toolCalls).toEqual([]);
+  });
+
+  it('sends no tools key and leaves toolCalls undefined without tools', async () => {
+    const { client, generateContent } = makeClient();
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    const res = await p.complete('hi', undefined, { tools: [] });
+    const args = generateContent.mock.calls[0][0];
+    expect(args).not.toHaveProperty('tools');
+    expect(args.config).not.toHaveProperty('tools');
+    expect(res).not.toHaveProperty('toolCalls');
+  });
+});

@@ -4,8 +4,10 @@ import {
   type CompletionOptions,
   type CompletionResponse,
   type ProviderAdapter,
+  type ToolCall,
+  type ToolDefinition,
 } from './base.js';
-import { withRetry, type RetryOptions } from './utils.js';
+import { parseArgs, withRetry, type RetryOptions } from './utils.js';
 import { stripTrailingSlashes } from '../util/url.js';
 
 export interface OllamaProviderConfig {
@@ -24,10 +26,15 @@ interface OllamaChatMessage {
 
 interface OllamaChatResponse {
   model: string;
-  message: { role: string; content: string };
+  message: { role: string; content: string; tool_calls?: OllamaToolCall[] };
   done: boolean;
   prompt_eval_count?: number;
   eval_count?: number;
+}
+
+/** Ollama sends arguments as an object; tolerate a JSON string too. */
+interface OllamaToolCall {
+  function?: { name?: string; arguments?: Record<string, unknown> | string };
 }
 
 const DEFAULT_BASE_URL = 'http://localhost:11434';
@@ -56,6 +63,7 @@ export class OllamaProvider implements ProviderAdapter {
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
     const start = Date.now();
+    const tools = options.tools?.length ? options.tools : undefined;
 
     const messages: OllamaChatMessage[] = [];
     if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
@@ -75,6 +83,7 @@ export class OllamaProvider implements ProviderAdapter {
         num_predict:
           options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
       },
+      ...(tools ? { tools: toOllamaTools(tools) } : {}),
     };
 
     const headers: Record<string, string> = {
@@ -115,8 +124,37 @@ export class OllamaProvider implements ProviderAdapter {
       },
       model: response.model ?? this.config.model,
       latencyMs: Date.now() - start,
+      ...(tools ? { toolCalls: readOllamaToolCalls(response.message?.tool_calls) } : {}),
     };
   }
+}
+
+function toOllamaTools(tools: ToolDefinition[]) {
+  return tools.map((t) => ({
+    type: 'function' as const,
+    function: {
+      name: t.name,
+      ...(t.description !== undefined ? { description: t.description } : {}),
+      parameters: t.parameters,
+    },
+  }));
+}
+
+function readOllamaToolCalls(calls: OllamaToolCall[] | undefined): ToolCall[] {
+  return (calls ?? []).map((c) => {
+    const args = c.function?.arguments;
+    return {
+      name: c.function?.name ?? '',
+      arguments:
+        args === undefined || args === null
+          ? {}
+          : typeof args === 'string'
+            ? parseArgs(args)
+            : typeof args === 'object' && !Array.isArray(args)
+              ? args
+              : { __unparsed: JSON.stringify(args) },
+    };
+  });
 }
 
 async function safeReadText(res: Response): Promise<string> {

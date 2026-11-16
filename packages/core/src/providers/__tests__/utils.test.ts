@@ -1,5 +1,5 @@
 import { describe, it, expect, vi } from 'vitest';
-import { isRateLimitError, withRetry } from '../utils.js';
+import { isRateLimitError, parseArgs, withRetry } from '../utils.js';
 
 describe('isRateLimitError', () => {
   it('catches HTTP 429 and 503', () => {
@@ -94,5 +94,17 @@ describe('withRetry', () => {
       isRetryable: (e) => (e as Error).message === 'quota',
     });
     expect(result).toBe('ok');
+  });
+});
+
+describe('parseArgs', () => {
+  it('returns a parsed plain object', () => {
+    expect(parseArgs('{"a":1,"b":{"c":[2]}}')).toEqual({ a: 1, b: { c: [2] } });
+  });
+
+  it('wraps invalid JSON, arrays, null and primitives as __unparsed', () => {
+    for (const raw of ['{"a":', '[1]', 'null', '42', '"s"', '']) {
+      expect(parseArgs(raw)).toEqual({ __unparsed: raw });
+    }
   });
 });
