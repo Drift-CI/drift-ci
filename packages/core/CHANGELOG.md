@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.7.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.6.1...core-v1.7.0) (2026-11-16)
+
+
+### Features
+
+* drift-ci import turns production chat traces into test cases ([#189](https://github.com/Drift-CI/drift-ci/issues/189)) ([6fe5d18](https://github.com/Drift-CI/drift-ci/commit/6fe5d189b6fb1fa3836c416312a1afb5e9e97cf3))
+
 ## [1.6.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.6.0...core-v1.6.1) (2026-11-12)
 
 
