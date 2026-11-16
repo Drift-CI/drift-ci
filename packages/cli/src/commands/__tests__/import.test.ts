@@ -212,4 +212,84 @@ describe('executeImport', () => {
     expect(executeImport(file, opts({ suite: undefined }), io)).toBe(0);
     expect(loadSuiteFromFile(suite).cases).toHaveLength(2);
   });
+
+  it('leaves existing suite text byte-identical', () => {
+    const long = 'x'.repeat(120);
+    const text = `version: 1\nid: s\nname: S\nevaluators: [llm-judge]\ncases:\n  - id: a\n    input: '${long}'\n    expected: 'ok'\n`;
+    const suite = writeSuite(text);
+    const file = writeTraces([trace('q', 'a')]);
+    expect(executeImport(file, opts(), io)).toBe(0);
+    const after = readFileSync(suite, 'utf8');
+    expect(after.startsWith(text)).toBe(true);
+    for (const l of text.split('\n')) expect(after).toContain(l);
+  });
+
+  it('converts a flow-style cases list to a block list', () => {
+    for (const cases of ['[]', '[{id: a, input: hi, expected: x}]']) {
+      const suite = writeSuite(`version: 1\nid: s\nname: S\nevaluators: [llm-judge]\ncases: ${cases}\n`);
+      const file = writeTraces([trace('q', 'line1\nline2', { id: 'm' })]);
+      expect(executeImport(file, opts(), io)).toBe(0);
+      expect(readFileSync(suite, 'utf8')).toContain('expected: |-');
+      expect(loadSuiteFromFile(suite).cases.at(-1)?.expected).toBe('line1\nline2');
+    }
+  });
+
+  it('exits 2 and leaves no tmp file when the write fails', () => {
+    const blocker = join(dir, 'blocker');
+    writeFileSync(blocker, 'x');
+    const suitePath = join(blocker, 'suite.yaml');
+    expect(executeImport(writeTraces([trace('q', 'a')]), opts({ suite: suitePath }), io)).toBe(2);
+    expect(err.join('\n')).toContain("Can't write");
+    expect(err.join('\n')).toContain('(nothing written)');
+
+    // target is a directory: rename fails
+    const dirTarget = join(dir, 'dirsuite');
+    mkdirSync(dirTarget);
+    err = [];
+    expect(executeImport(writeTraces([trace('q', 'a')]), opts({ suite: dirTarget }), io)).toBe(2);
+    expect(existsSync(`${dirTarget}.tmp`)).toBe(false);
+  });
+
+  it('exits 2 for a missing non-default --config', () => {
+    expect(executeImport(writeTraces([trace('q', 'a')]), opts({ suite: undefined, config: join(dir, 'nope.yaml') }), io)).toBe(2);
+    expect(err.join('\n')).toContain('Config not found:');
+  });
+
+  it('exits 2 with a one-line message for an invalid config', () => {
+    writeSuite();
+    const cfg = join(dir, '.drift', 'config.yaml');
+    writeFileSync(cfg, 'version: 1\n');
+    expect(executeImport(writeTraces([trace('q', 'a')]), opts({ suite: undefined, config: cfg }), io)).toBe(2);
+    expect(err.join('\n')).toMatch(/^Can't read config .*/);
+    expect(err.join('\n').split('\n')).toHaveLength(1);
+  });
+
+  it('rejects unknown --evaluator names with exit 2', () => {
+    const suite = writeSuite();
+    expect(executeImport(writeTraces([trace('q', 'a')]), opts({ evaluator: ['nope'] }), io)).toBe(2);
+    expect(err.join('\n')).toContain('Unknown evaluator "nope". Known:');
+    expect(readFileSync(suite, 'utf8')).toBe(SUITE);
+  });
+
+  it('puts evaluators before tags', () => {
+    const suite = writeSuite();
+    executeImport(writeTraces([trace('q', 'a', { id: 'o' })]), opts({ evaluator: ['llm-judge'] }), io);
+    const t = readFileSync(suite, 'utf8');
+    expect(t.indexOf('evaluators:', t.indexOf('prod-o'))).toBeLessThan(t.indexOf('tags:'));
+  });
+
+  it('treats an empty suite file as a new suite', () => {
+    const suite = writeSuite('# nothing here\n');
+    expect(executeImport(writeTraces([trace('q', 'a')]), opts(), io)).toBe(0);
+    const loaded = loadSuiteFromFile(suite);
+    expect(loaded.id).toBe('imported');
+    expect(loaded.cases).toHaveLength(1);
+  });
+
+  it('exits 1 when some cases are present and other lines are skipped', () => {
+    writeSuite();
+    const file = writeTraces([trace('q', 'a', { id: 'x' }), '{bad']);
+    expect(executeImport(file, opts(), io)).toBe(0);
+    expect(executeImport(file, opts(), io)).toBe(1);
+  });
 });

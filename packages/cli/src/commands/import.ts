@@ -1,10 +1,10 @@
-import type { Command } from 'commander';
-import { existsSync, mkdirSync, readFileSync, renameSync, writeFileSync } from 'node:fs';
+import { InvalidArgumentError, type Command } from 'commander';
+import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { Document, isMap, isSeq, parse as yamlParse, parseDocument, stringify } from 'yaml';
+import { Document, isMap, isSeq, parseDocument, stringify } from 'yaml';
 import {
   loadConfigFromFile,
-  SuiteSchema,
+  parseSuite,
   traceToCase,
   type TestCase,
   type TraceSkipReason,
@@ -32,6 +32,18 @@ const PREFIX_RE = /^[a-z0-9\-_]+$/;
 const REFERENCE_EVALUATORS = new Set(['llm-judge', 'cosine-similarity']);
 const MAX_SKIP_LINES = 20;
 const DEFAULT_SUITE = '.drift/suite.yaml';
+const DEFAULT_CONFIG = '.drift/config.yaml';
+const KNOWN_EVALUATORS = [
+  'exact-match',
+  'contains',
+  'json-schema',
+  'cosine-similarity',
+  'llm-judge',
+  'refusal-detection',
+  'rubric-checklist',
+  'safety-classifier',
+];
+const YAML_OPTS = { lineWidth: 0, flowCollectionPadding: false } as const;
 
 /* c8 ignore start -- Commander wiring; executeImport is tested directly. */
 export function registerImportCommand(program: Command): void {
@@ -53,7 +65,9 @@ export function registerImportCommand(program: Command): void {
 
 function parsePositiveInt(v: string): number {
   const n = Number(v);
-  if (!Number.isInteger(n) || n < 1) throw new Error(`--limit must be a positive integer (got "${v}")`);
+  if (!/^\d+$/.test(v) || !Number.isSafeInteger(n) || n < 1) {
+    throw new InvalidArgumentError('must be a positive integer.');
+  }
   return n;
 }
 
@@ -62,10 +76,47 @@ function collect(v: string, prev: string[]): string[] {
 }
 /* c8 ignore stop */
 
-function resolveSuitePath(opts: ImportOptions): string {
+/** Returns the suite path, or a string error message wrapped as { error }. */
+function resolveSuitePath(opts: ImportOptions): string | { error: string } {
   if (opts.suite) return opts.suite;
-  if (existsSync(opts.config)) return loadConfigFromFile(opts.config).config.suite;
-  return DEFAULT_SUITE;
+  if (!existsSync(opts.config)) {
+    if (opts.config === DEFAULT_CONFIG) return DEFAULT_SUITE;
+    return { error: `Config not found: ${opts.config}` };
+  }
+  try {
+    return loadConfigFromFile(opts.config).config.suite;
+  } catch (e) {
+    const issues = (e as { issues?: { path: PropertyKey[]; message: string }[] }).issues;
+    const msg = issues?.length
+      ? `${issues[0].path.join('.')}: ${issues[0].message}`
+      : (e as Error).message;
+    return { error: `Can't read config ${opts.config}: ${msg.split(String.fromCharCode(10))[0]}` };
+  }
+}
+
+function sleepSync(ms: number): void {
+  Atomics.wait(new Int32Array(new SharedArrayBuffer(4)), 0, 0, ms);
+}
+
+function writeAtomically(path: string, content: string): void {
+  mkdirSync(dirname(path), { recursive: true });
+  const tmp = `${path}.tmp`;
+  try {
+    writeFileSync(tmp, content);
+    for (let attempt = 1; ; attempt++) {
+      try {
+        renameSync(tmp, path);
+        return;
+      } catch (e) {
+        const code = (e as NodeJS.ErrnoException).code;
+        if (attempt >= 3 || (code !== 'EPERM' && code !== 'EBUSY')) throw e;
+        sleepSync(50);
+      }
+    }
+  } catch (e) {
+    rmSync(tmp, { force: true });
+    throw e;
+  }
 }
 
 function evaluatorNames(specs: unknown): string[] {
@@ -80,17 +131,27 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
     return 2;
   }
 
-  let suitePath: string;
+  const unknown = (opts.evaluator ?? []).find((n) => !KNOWN_EVALUATORS.includes(n));
+  if (unknown !== undefined) {
+    io.err(`Unknown evaluator "${unknown}". Known: ${KNOWN_EVALUATORS.join(', ')}`);
+    return 2;
+  }
+
+  const resolved = resolveSuitePath(opts);
+  if (typeof resolved !== 'string') {
+    io.err(resolved.error);
+    return 2;
+  }
+  const suitePath = resolved;
   let text: string;
   try {
-    suitePath = resolveSuitePath(opts);
     text = readFileSync(file, 'utf8');
   } catch (e) {
     io.err(`drift-ci import: ${(e as Error).message}`);
     return 2;
   }
 
-  let doc: Document;
+  let doc: Document | undefined;
   if (existsSync(suitePath)) {
     try {
       doc = parseDocument(readFileSync(suitePath, 'utf8'));
@@ -102,7 +163,9 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
       io.err(`Can't parse ${suitePath}: ${doc.errors[0].message}`);
       return 2;
     }
-  } else {
+    if (doc.contents === null) doc = undefined; // empty or comments-only file
+  }
+  if (!doc) {
     doc = new Document({
       version: 1,
       id: 'imported',
@@ -117,6 +180,7 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
     io.err(`${suitePath} has no \`cases\` list.`);
     return 2;
   }
+  cases.flow = false;
   const seen = new Set<string>();
   for (const item of cases.items) {
     const id = isMap(item) ? item.get('id') : undefined;
@@ -150,7 +214,7 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
       continue;
     }
     seen.add(r.case.id);
-    added.push(opts.evaluator?.length ? { ...r.case, evaluators: [...opts.evaluator] } : r.case);
+    added.push(withEvaluators(r.case, opts.evaluator));
     redactions += r.redactions;
   }
 
@@ -165,11 +229,24 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
   }
 
   for (const tc of added) cases.add(doc.createNode(tc));
-  const output = doc.toString();
-  const check = SuiteSchema.safeParse(yamlParse(output));
-  if (!check.success) {
+  const output = doc.toString(YAML_OPTS);
+  try {
+    parseSuite(output);
+  } catch (e) {
+    const issues = (e as { issues?: { path: PropertyKey[]; message: string }[] }).issues;
     io.err(`The updated suite is invalid, nothing written:`);
-    for (const issue of check.error.issues) io.err(`  ${issue.path.join('.')}: ${issue.message}`);
+    if (!issues) io.err(`  ${(e as Error).message.split(String.fromCharCode(10))[0]}`);
+    else {
+      const parsed = doc.toJS() as { cases?: { id?: unknown }[] };
+      for (const issue of issues) {
+        let label = issue.path.join('.');
+        if (issue.path[0] === 'cases' && typeof issue.path[1] === 'number') {
+          const id = parsed.cases?.[issue.path[1]]?.id;
+          if (typeof id === 'string') label = [id, ...issue.path.slice(2)].join('.');
+        }
+        io.err(`  ${label}: ${issue.message}`);
+      }
+    }
     return 1;
   }
 
@@ -183,14 +260,16 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
   if (opts.dryRun) {
     report(io, { suitePath, added: added.length, present, skips, redactions, dryRun: true });
     io.out('');
-    io.out(stringify(added).trimEnd());
+    io.out(stringify(added, { lineWidth: 0 }).trimEnd());
     return 0;
   }
 
-  mkdirSync(dirname(suitePath), { recursive: true });
-  const tmp = `${suitePath}.tmp`;
-  writeFileSync(tmp, output);
-  renameSync(tmp, suitePath);
+  try {
+    writeAtomically(suitePath, output);
+  } catch (e) {
+    io.err(`Can't write ${suitePath}: ${(e as Error).message} (nothing written)`);
+    return 2;
+  }
 
   report(io, { suitePath, added: added.length, present, skips, redactions, dryRun: false });
   io.out('');
@@ -198,6 +277,12 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
     'Next: run `drift-ci baseline accept` to record today\'s scores, then commit the suite and .drift/baseline/.',
   );
   return 0;
+}
+
+function withEvaluators(c: TestCase, evaluators: string[] | undefined): TestCase {
+  if (!evaluators?.length) return c;
+  const { tags, ...rest } = c;
+  return { ...rest, evaluators: [...evaluators], ...(tags ? { tags } : {}) } as TestCase;
 }
 
 function report(
