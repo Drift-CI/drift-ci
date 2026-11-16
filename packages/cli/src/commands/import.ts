@@ -39,6 +39,7 @@ export const KNOWN_EVALUATORS = [
   'json-schema',
   'cosine-similarity',
   'llm-judge',
+  'faithfulness',
   'refusal-detection',
   'rubric-checklist',
   'safety-classifier',
