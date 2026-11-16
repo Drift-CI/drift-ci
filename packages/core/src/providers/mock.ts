@@ -3,6 +3,7 @@ import type {
   CompletionResponse,
   MessageParam,
   ProviderAdapter,
+  ToolCall,
 } from './base.js';
 import { toMessages } from './base.js';
 
@@ -10,7 +11,10 @@ export type MockResponder = (
   input: string | MessageParam[],
   systemPrompt: string | undefined,
   options: CompletionOptions,
-) => string | Promise<string> | Error;
+) => MockResult | Promise<MockResult> | Error;
+
+/** A responder's reply: plain text, or text with the model's tool calls. */
+export type MockResult = string | { text: string; toolCalls?: ToolCall[] };
 
 export interface MockProviderOptions {
   name?: string;
@@ -53,9 +57,11 @@ export class MockProvider implements ProviderAdapter {
     return this.wrap(text);
   }
 
-  private wrap(text: string): CompletionResponse {
+  private wrap(result: MockResult): CompletionResponse {
+    const { text, toolCalls } = typeof result === 'string' ? { text: result, toolCalls: undefined } : result;
     return {
       text,
+      ...(toolCalls !== undefined ? { toolCalls } : {}),
       usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
       model: this.name,
       latencyMs: this.latencyMs,

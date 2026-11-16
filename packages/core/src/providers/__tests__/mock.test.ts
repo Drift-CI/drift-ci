@@ -27,6 +27,22 @@ describe('MockProvider', () => {
     expect((await p.complete('shout')).text).toBe('SHOUT');
   });
 
+  it('lets the responder return text with tool calls', async () => {
+    const p = new MockProvider({
+      responder: () => ({ text: 'looking', toolCalls: [{ name: 'get_order', arguments: { id: 1 } }] }),
+    });
+    const r = await p.complete('x');
+    expect(r.text).toBe('looking');
+    expect(r.toolCalls).toEqual([{ name: 'get_order', arguments: { id: 1 } }]);
+  });
+
+  it('leaves toolCalls undefined for a plain string or an object without calls', async () => {
+    expect((await new MockProvider({ responder: () => 'hi' }).complete('x')).toolCalls).toBeUndefined();
+    const r = await new MockProvider({ responder: async () => ({ text: 'hi' }) }).complete('x');
+    expect(r.text).toBe('hi');
+    expect('toolCalls' in r).toBe(false);
+  });
+
   it('propagates errors returned by the responder', async () => {
     const p = new MockProvider({
       responder: () => {

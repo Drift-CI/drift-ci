@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { load as yamlLoad } from 'js-yaml';
+import { z } from 'zod';
 import { parseSuite } from '../suite.js';
+import { SuiteSchema } from '../../types/index.js';
 
 describe('parseSuite', () => {
   it('parses a minimal valid suite', () => {
@@ -258,5 +264,125 @@ cases:
       if (!r) throw new Error('rubric expected');
       expect(typeof r[0]).toBe('object');
     });
+  });
+});
+
+describe('parseSuite tools', () => {
+  const suite = (body: string) => `
+version: 1
+id: s
+name: S
+${body}`;
+
+  it('merges suite tools into each case: replacement in place, then case-only tools', () => {
+    const s = parseSuite(
+      suite(`tools:
+  - name: a
+    description: suite a
+  - name: b
+cases:
+  - id: c1
+    input: q
+    tools:
+      - name: c
+      - name: a
+        description: case a
+  - id: c2
+    input: q
+`),
+    );
+    expect(s.cases[0].tools?.map((t) => [t.name, t.description])).toEqual([
+      ['a', 'case a'],
+      ['b', undefined],
+      ['c', undefined],
+    ]);
+    expect(s.cases[1].tools?.map((t) => t.name)).toEqual(['a', 'b']);
+    expect(s.tools?.map((t) => t.name)).toEqual(['a', 'b']);
+  });
+
+  it('leaves tools undefined on a case with no effective tools', () => {
+    const s = parseSuite(suite(`cases:\n  - id: c1\n    input: q\n`));
+    expect(s.cases[0].tools).toBeUndefined();
+    expect('tools' in s.cases[0]).toBe(false);
+  });
+
+  it('accepts a per-case tool-call case with expectedCalls and a suite tool', () => {
+    const s = parseSuite(
+      suite(`tools:
+  - name: get_order
+cases:
+  - id: c1
+    input: q
+    expectedCalls:
+      - name: get_order
+        arguments: { order_id: ORD-1 }
+    evaluators: [tool-call]
+  - id: c2
+    input: thanks
+    expectedCalls: []
+    evaluators: [tool-call]
+`),
+    );
+    expect(s.cases[0].expectedCalls?.[0].arguments).toEqual({ order_id: 'ORD-1' });
+  });
+
+  it('rejects per-case tool-call without expectedCalls', () => {
+    const run = () =>
+      parseSuite(
+        suite(`tools:
+  - name: a
+cases:
+  - id: c1
+    input: q
+    evaluators: [tool-call]
+`),
+      );
+    expect(run).toThrow(z.ZodError);
+    expect(run).toThrow(/tool-call/);
+  });
+
+  it('rejects per-case tool-call without tools', () => {
+    const run = () =>
+      parseSuite(
+        suite(`cases:
+  - id: c1
+    input: q
+    expectedCalls: []
+    evaluators: [{ name: tool-call }]
+`),
+      );
+    expect(run).toThrow(z.ZodError);
+  });
+
+  it('rejects an expectedCalls name that is not an effective tool', () => {
+    let err: unknown;
+    try {
+      parseSuite(
+        suite(`tools:
+  - name: a
+cases:
+  - id: c1
+    input: q
+    expectedCalls:
+      - name: nope
+`),
+      );
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(z.ZodError);
+    const issue = (err as z.ZodError).issues[0];
+    expect(issue.message).toBe('case c1: expectedCalls names unknown tool "nope"');
+    expect(issue.path).toEqual(['cases', 0, 'expectedCalls', 0, 'name']);
+  });
+
+  it('parses every example suite exactly as the schema does (none use tools)', () => {
+    const dir = fileURLToPath(new URL('../../../../../examples/suites', import.meta.url));
+    const files = readdirSync(dir).filter((f) => f.endsWith('.yaml'));
+    expect(files.length).toBeGreaterThan(0);
+    for (const f of files) {
+      const text = readFileSync(join(dir, f), 'utf8');
+      expect(parseSuite(text)).toStrictEqual(SuiteSchema.parse(yamlLoad(text)));
+    }
   });
 });

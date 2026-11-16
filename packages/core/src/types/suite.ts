@@ -61,6 +61,37 @@ export type RubricItem = z.infer<typeof RubricItemSchema>;
 export type RubricSpec = z.infer<typeof RubricSpecSchema>;
 export type RubricQuorum = z.infer<typeof RubricQuorumSchema>;
 
+// ─── tools ──────────────────────────────────────────────────────────────
+
+/** A tool offered to the model. `parameters` is a JSON Schema object. */
+export const ToolDefinitionSchema = z.object({
+  name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/, 'Tool names must be 1-64 letters, digits, _ or -.'),
+  description: z.string().max(1024).optional(),
+  parameters: z.record(z.string(), z.unknown()).default({ type: 'object', properties: {} }),
+});
+
+const ToolListSchema = z
+  .array(ToolDefinitionSchema)
+  .max(64)
+  .refine((t) => new Set(t.map((x) => x.name)).size === t.length, {
+    message: 'Tool names must be unique.',
+  });
+
+/** A tool call the `tool-call` evaluator expects; listed arguments only are compared. */
+export const ExpectedCallSchema = z.object({
+  name: z.string().min(1),
+  arguments: z.record(z.string(), z.unknown()).default({}),
+});
+
+export type ToolDefinition = z.infer<typeof ToolDefinitionSchema>;
+export type ExpectedCall = z.infer<typeof ExpectedCallSchema>;
+
+/** A tool call made by the model, as returned by a provider. */
+export interface ToolCall {
+  name: string;
+  arguments: Record<string, unknown>;
+}
+
 // ─── case ───────────────────────────────────────────────────────────────
 
 export const TestCaseSchema = z
@@ -90,6 +121,10 @@ export const TestCaseSchema = z
     schema: z.record(z.string(), z.unknown()).optional(),
     rubric: RubricSpecSchema.optional(),
     rubricQuorum: RubricQuorumSchema.optional(),
+    tools: ToolListSchema.optional(),
+    expectedCalls: z.array(ExpectedCallSchema).max(16).optional(),
+    /** Reserved for multi-step tool cases; rejected for now. */
+    toolResults: z.unknown().optional(),
   })
   .refine((tc) => (tc.input !== undefined) !== (tc.messages !== undefined), {
     message:
@@ -134,7 +169,11 @@ export const TestCaseSchema = z
       message:
         'A case using the `faithfulness` evaluator must define a `context` field.',
     },
-  );
+  )
+  .refine((tc) => tc.toolResults === undefined, {
+    message: "multi-step tool cases (`toolResults`) aren't supported yet.",
+    path: ['toolResults'],
+  });
 
 export const SuiteSchema = z.object({
   version: z.literal(1),
@@ -145,6 +184,8 @@ export const SuiteSchema = z.object({
   default_threshold: z.number().min(0).max(1).optional(),
   /** Samples per case when a case has no `runs` of its own (1–5). The median score is used. */
   default_runs: z.number().int().min(1).max(5).optional(),
+  /** Tools offered to every case; merged into each case's `tools` by `parseSuite`. */
+  tools: ToolListSchema.optional(),
   cases: z
     .array(TestCaseSchema)
     .min(1)
