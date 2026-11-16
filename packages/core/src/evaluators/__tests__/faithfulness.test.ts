@@ -25,6 +25,30 @@ const claims = (...flags: boolean[]) =>
 const base = { input: 'q', output: 'a', context: ['p1', 'p2'] };
 
 describe('FaithfulnessEvaluator scoring', () => {
+  it('ignores empty claims and counts repeated claims once', async () => {
+    const reply = JSON.stringify({
+      claims: [
+        { claim: 'A', supported: false },
+        { claim: ' a ', supported: false },
+        { claim: '', supported: false },
+        { claim: 'B', supported: true },
+      ],
+    });
+    const res = await new FaithfulnessEvaluator({ judgeProvider: judgeProvider(reply) }).evaluate(base);
+    expect(res.score).toBe(0.5);
+    expect(res.metadata).toEqual({ claims: 2, unsupported: ['A'] });
+  });
+
+  it('caps the unsupported claims kept in metadata at 30', async () => {
+    const reply = JSON.stringify({
+      claims: Array.from({ length: 40 }, (_, i) => ({ claim: `c${i}`, supported: false })),
+    });
+    const res = await new FaithfulnessEvaluator({ judgeProvider: judgeProvider(reply) }).evaluate(base);
+    expect(res.score).toBe(0);
+    expect((res.metadata as { unsupported: string[] }).unsupported).toHaveLength(30);
+    expect((res.metadata as { claims: number }).claims).toBe(40);
+  });
+
   it('scores 1 when all claims are supported', async () => {
     const ev = new FaithfulnessEvaluator({
       judgeProvider: judgeProvider(claims(true, true, true)),
@@ -112,7 +136,7 @@ describe('FaithfulnessEvaluator call', () => {
     expect(user).toContain('<F>context: [1] p1\n[2] p2</F>');
     expect(user).toContain('<F>candidate: the answer</F>');
     expect(system).toContain('`<F>`');
-    expect(opts).toEqual({ temperature: 0, maxTokens: 1000 });
+    expect(opts).toEqual({ temperature: 0, maxTokens: 2000 });
   });
 
   it('throws without context', async () => {

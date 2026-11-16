@@ -23,5 +23,8 @@ export function withContext(tc: TestCase): string | MessageParam[] {
   const prefix = formatContext(passages);
   if (typeof base === 'string') return prefix + base;
   const lastUser = base.map((m) => m.role).lastIndexOf('user');
+  if (lastUser === -1) {
+    throw new Error(`Case ${tc.id}: \`context\` needs a user message to attach to`);
+  }
   return base.map((m, i) => (i === lastUser ? { ...m, content: prefix + m.content } : m));
 }

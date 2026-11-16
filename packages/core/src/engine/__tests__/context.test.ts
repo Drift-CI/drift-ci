@@ -52,4 +52,9 @@ describe('withContext', () => {
     expect(out[2].content).toBe(formatContext(['p']) + 'c');
     expect(tc).toEqual(copy);
   });
+
+  it('throws when a messages case with context has no user turn', () => {
+    const tc: TestCase = { id: 'c', context: 'p', messages: [{ role: 'assistant', content: 'hi' }] };
+    expect(() => withContext(tc)).toThrow(/needs a user message/);
+  });
 });
