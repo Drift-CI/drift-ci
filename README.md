@@ -154,6 +154,34 @@ cases:
 
 Cases can also take a multi-turn `messages` conversation instead of a single `input`. Each sample is a real provider call, so repeated sampling multiplies the cost of that case. Use it where answers actually vary.
 
+### Context for RAG
+
+A case can carry the retrieved passages in `context`, either a list or a single string. drift-ci puts them in front of the case's input (or of the last user message when you use `messages`), numbered, in this exact format:
+
+```yaml
+  - id: refund-window-grounded
+    input: How long do I have to return an item?
+    context:
+      - Items can be returned within 30 days of delivery.
+      - Refunds go back to the original payment method.
+    evaluators: [faithfulness]
+```
+
+The model receives:
+
+```text
+Answer using the context below.
+
+<context>
+[1] Items can be returned within 30 days of delivery.
+[2] Refunds go back to the original payment method.
+</context>
+
+How long do I have to return an item?
+```
+
+A string `context` is a single passage, `[1]`. The `faithfulness` evaluator requires `context` and fails the case with an error without it. It asks the configured judge provider to list the factual claims in the answer and mark each as supported by the context or not. The score is supported claims divided by total claims, and an answer with no factual claims scores 1.0. The reason lists up to 3 unsupported claims. Like `llm-judge`, it warns when the judge is the same provider as the one under test.
+
 To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns production chat logs into test cases. See [Importing production traces](packages/cli/README.md#importing-production-traces).
 
 ### Evaluators
@@ -165,6 +193,7 @@ To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns
 | `json-schema` | Structured output and tool arguments |
 | `cosine-similarity` | Answers that should mean the same thing in different words (embeddings) |
 | `llm-judge` | Open-ended quality against written criteria |
+| `faithfulness` | Answers grounded in the retrieved context (RAG), claim by claim |
 | `rubric-checklist` | Scoring against a list of required points, optionally with a judge quorum |
 | `refusal-detection` | Checking that the model refuses, or doesn't refuse, when it should |
 | `safety-classifier` | Flagging unsafe output |
@@ -208,7 +237,7 @@ drift-ci is a **CI gate**: tests before merge, with baselines kept as code. It i
 | | |
 |---|---|
 | **Providers** | Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Gemini, Vertex AI, Ollama (local and cloud) |
-| **Evaluators** | exact-match, contains, json-schema, cosine-similarity, llm-judge, rubric-checklist, refusal-detection, safety-classifier |
+| **Evaluators** | exact-match, contains, json-schema, cosine-similarity, llm-judge, faithfulness, rubric-checklist, refusal-detection, safety-classifier |
 | **Reporters** | Live terminal, plain text, JSON, JUnit XML |
 | **Run history** | In-memory, SQLite, Postgres, or HTTP sync to a dashboard |
 | **CLI commands** | `init`, `run`, `baseline`, `compare`, `config`, `import` |

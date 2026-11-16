@@ -5,6 +5,10 @@
 # whose answers should be faithful to a reference without being an
 # exact transcription.
 #
+# Two cases at the end use `faithfulness`: they pass retrieved passages in
+# `context` and score whether the answer's claims are supported by them,
+# using the judge provider from .drift/config.yaml.
+#
 # Cache the embedding model in CI so the first run isn't slow:
 #
 #   - uses: actions/cache@v4
@@ -42,3 +46,15 @@ cases:
     expected: |
       Visit the sign-in page and click "Forgot password?". We'll email
       a reset link to the address on file within a minute.
+
+  - id: refund_window_grounded
+    input: "How long do I have to return a product?"
+    context:
+      - "Products can be returned within 30 days of delivery."
+      - "Returned items must be unused and in original packaging."
+    evaluators: [faithfulness]
+
+  - id: shipping_grounded
+    input: "How long does standard shipping take?"
+    context: "Standard shipping takes 3 to 5 business days within the US."
+    evaluators: [faithfulness]
