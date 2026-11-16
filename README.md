@@ -208,11 +208,11 @@ cases:
     evaluators: [tool-call]
 ```
 
-A tool's `name` is 1 to 64 letters, digits, `_` or `-`, and `parameters` is a JSON Schema object (default: no parameters). A case's tools are the suite's tools, where a case tool with the same name replaces the suite one and any other case tool is added after them. Tool names must be unique within a suite or case, with at most 64 tools. A case with `tool-call` needs `expectedCalls` and at least one tool, and every expected name must be one of the case's tools; both are checked when the suite loads. Editing a tool marks the cases that use it stale in the baseline.
+A tool's `name` is 1 to 64 letters, digits, `_` or `-`, and `parameters` is a JSON Schema object (`type: object`; default: no parameters). Tool keys other than `name`, `description` and `parameters` are rejected, so a misspelled `parameters` fails loudly. A case's tools are the suite's tools, where a case tool with the same name replaces the suite one and any other case tool is added after them. Tool names must be unique within a suite or case, with at most 64 tools. A case that lists `tool-call` in its own `evaluators` needs `expectedCalls` and at least one tool, and every expected name must be one of the case's tools; both are checked when the suite loads. If `tool-call` is set at the suite level, a case without `expectedCalls` or tools fails at run time with an evaluator error instead. Editing a tool marks the cases that use it stale in the baseline.
 
-The `tool-call` evaluator is pure, with no judge. It matches each expected call, in order, to the unused actual call with the same name and the most matching arguments (ties go to the earliest). Only the arguments you list are compared, strings after trimming and objects and arrays deeply. Order across different tools doesn't matter. A call scores the fraction of its listed arguments that match (1 when you list none), a missing call scores 0, and the case score is the sum of those scores divided by the larger of the expected and actual call counts, so extra or wrong calls lower it. `expectedCalls: []` means the model should call no tool: the score is 1 if it calls none and 0 if it calls any. The reason lists up to 3 problems.
+The `tool-call` evaluator is pure, with no judge. It assigns expected calls to actual calls with the same name so that the total argument score is as high as possible, so the result doesn't depend on the order you list calls in (ties keep the earliest actual calls; only the first 16 actual calls are matched and any more count as unexpected). Only the arguments you list are compared, and unlisted keys are ignored only at the top level of `arguments`: a nested object you list must match exactly. Strings compare after trimming, objects and arrays deeply, and a number equals a plain decimal string (`2139` matches `"02139"`, but not `"1e3"`), so quote IDs in `expectedCalls` to be exact. A call scores the fraction of its listed arguments that match (1 when you list none; 0 if the provider returned arguments that weren't valid JSON), a missing call scores 0, and the case score is the sum of those scores divided by the larger of the expected and actual call counts, so extra or wrong calls lower it. `expectedCalls: []` means the model should call no tool: the score is 1 if it calls none and 0 if it calls any. The reason lists up to 3 problems.
 
-drift-ci shows the calls in the stored output, one line per call after any text the model wrote, such as `→ get_order {"order_id":"ORD-123"}`. So baselines, PR comments and the other evaluators see them too.
+drift-ci shows the calls in the stored output, one line per call after any text the model wrote, such as `→ get_order {"order_id":"ORD-123"}`. So baselines, PR comments and the other evaluators see them too. Other evaluators on a tool case, such as `json-schema` or `faithfulness`, see those `→` lines in the output too, so use `tool-call` to check tool use.
 
 Every bundled provider supports tools. Tools are sent once and the model's first reply is scored; drift-ci doesn't execute the tools. Multi-step cases, where you script tool results and the model continues, aren't supported yet.
 
@@ -224,10 +224,11 @@ To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns
 |---|---|
 | `exact-match` | Fixed answers, labels and IDs |
 | `contains` | Required words or phrases |
-| `json-schema` | Structured output and tool arguments |
+| `json-schema` | Structured output (JSON) |
 | `cosine-similarity` | Answers that should mean the same thing in different words (embeddings) |
 | `llm-judge` | Open-ended quality against written criteria |
 | `faithfulness` | Answers grounded in the retrieved context (RAG), claim by claim |
+| `tool-call` | Choosing the right tool with the right arguments, single step |
 | `rubric-checklist` | Scoring against a list of required points, optionally with a judge quorum |
 | `refusal-detection` | Checking that the model refuses, or doesn't refuse, when it should |
 | `safety-classifier` | Flagging unsafe output |
