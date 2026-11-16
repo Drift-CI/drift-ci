@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/Drift-CI/drift-ci/compare/v1.7.1...v1.8.0) (2026-11-16)
+
+
+### Features
+
+* **action:** show baselines changed in this PR in the comment ([#187](https://github.com/Drift-CI/drift-ci/issues/187)) ([7b44972](https://github.com/Drift-CI/drift-ci/commit/7b449725b9195bf4aa576debc5f6803019d71a16))
+
 ## [1.7.1](https://github.com/Drift-CI/drift-ci/compare/v1.7.0...v1.7.1) (2026-11-12)
 
 
