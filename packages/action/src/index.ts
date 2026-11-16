@@ -142,6 +142,22 @@ function buildGitOps(): GitOps {
       );
       return join(targetDir, '.drift', 'baseline');
     },
+    readBaseFile(baseRef: string, path: string): string | null {
+      const sha = execFileSync('git', ['merge-base', `origin/${baseRef}`, 'HEAD'], {
+        encoding: 'utf8',
+        stdio: ['ignore', 'pipe', 'pipe'],
+      }).trim();
+      try {
+        return execFileSync('git', ['show', `${sha}:${path}`], {
+          encoding: 'utf8',
+          stdio: ['ignore', 'pipe', 'pipe'],
+        });
+      } catch (err) {
+        const stderr = String((err as { stderr?: unknown }).stderr ?? '');
+        if (/does not exist|exists on disk, but not in/.test(stderr)) return null;
+        throw err;
+      }
+    },
     diffBaselineFiles(baseRef: string): string[] {
       const out = execFileSync(
         'git',

@@ -280,6 +280,7 @@ describe('runAction', () => {
             return altBaselineDir;
           },
           diffBaselineFiles: () => [],
+          readBaseFile: () => null,
         },
       },
     );
@@ -300,6 +301,7 @@ describe('runAction', () => {
             throw new Error('git fetch failed');
           },
           diffBaselineFiles: () => [],
+          readBaseFile: () => null,
         },
       },
     );
@@ -589,10 +591,85 @@ cases:
           throw new Error('not called');
         },
         diffBaselineFiles: () => ['.drift/baseline/math.json'],
+        readBaseFile: () => null,
       },
     });
     expect(out.baselineChanged).toBe(true);
     expect(writers.outputs['baseline-changed']).toBe('true');
+  });
+
+  describe('baseline changes in the PR comment', () => {
+    const commentDeps = (created: string[]) => ({
+      list: async () => [],
+      update: async () => {
+        throw new Error('should not update');
+      },
+      create: async ({ body }: { body: string }) => {
+        created.push(body);
+        return { id: 1 };
+      },
+    });
+    const unusedMaterialise = () => {
+      throw new Error('not called');
+    };
+
+    it('renders the section from base and head baseline files', async () => {
+      const headPath = join(ws.baselineDir, 'math.json');
+      writeFileSync(headPath, JSON.stringify({ caseId: 'math', score: 0.5, output: 'new' }));
+      const created: string[] = [];
+      await runAction(
+        makeInputs(ws, {
+          baseRef: 'main',
+          postComment: true,
+          prContext: { owner: 'o', repo: 'r', prNumber: 1 },
+        }),
+        makeWriters(),
+        {
+          commentApi: commentDeps(created),
+          gitOps: {
+            materialiseMainBaseline: unusedMaterialise,
+            diffBaselineFiles: () => [headPath],
+            readBaseFile: (ref, p) => {
+              expect(ref).toBe('main');
+              expect(p).toBe(headPath);
+              return JSON.stringify({ caseId: 'math', score: 0.9, output: 'old' });
+            },
+          },
+        },
+      );
+      expect(created[0]).toContain('Baselines changed in this PR (1)');
+      expect(created[0]).toContain('| `math` | 0.900 → 0.500 |');
+      expect(created[0]).toContain('- old');
+    });
+
+    it('warns and omits the section when readBaseFile throws', async () => {
+      const headPath = join(ws.baselineDir, 'math.json');
+      writeFileSync(headPath, JSON.stringify({ caseId: 'math', score: 0.5, output: 'new' }));
+      const created: string[] = [];
+      const writers = makeWriters();
+      const out = await runAction(
+        makeInputs(ws, {
+          baseRef: 'main',
+          postComment: true,
+          prContext: { owner: 'o', repo: 'r', prNumber: 1 },
+        }),
+        writers,
+        {
+          commentApi: commentDeps(created),
+          gitOps: {
+            materialiseMainBaseline: unusedMaterialise,
+            diffBaselineFiles: () => [headPath],
+            readBaseFile: () => {
+              throw new Error('no merge base');
+            },
+          },
+        },
+      );
+      expect(writers.warnings.some((w) => /could not read baseline changes — no merge base/.test(w))).toBe(true);
+      expect(created[0]).not.toContain('Baselines changed in this PR');
+      expect(out.run).not.toBeNull();
+      expect(out.baselineChanged).toBe(true);
+    });
   });
 
   it('skips the run on a fork PR without an api-key and returns skipped=true', async () => {
