@@ -197,3 +197,16 @@ describe('tool-call in the factory', () => {
     ).toThrow('requires `expectedCalls` and at least one tool');
   });
 });
+
+describe('ToolCallEvaluator performance', () => {
+  it('matches 16 expected against 16 actual calls with many arguments quickly', async () => {
+    const args = (i: number) =>
+      Object.fromEntries(Array.from({ length: 10 }, (_, k) => [`k${k}`, { nested: [i, k, 'x'] }]));
+    const expected = Array.from({ length: 16 }, (_, i) => ({ name: 'search', arguments: args(i) }));
+    const actual = Array.from({ length: 16 }, (_, i) => ({ name: 'search', arguments: args(15 - i) }));
+    const start = Date.now();
+    const res = await new ToolCallEvaluator(expected).evaluate({ input: 'q', output: '', toolCalls: actual });
+    expect(res.score).toBe(1);
+    expect(Date.now() - start).toBeLessThan(2000);
+  });
+});

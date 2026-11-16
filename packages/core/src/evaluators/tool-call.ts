@@ -79,8 +79,12 @@ export class ToolCallEvaluator implements Evaluator {
         ? 1
         : keys.filter((k) => valuesEqual(exp.arguments[k], c.arguments[k])).length / keys.length;
     };
-    const pair = (i: number, j: number): number | null =>
-      this.expected[i].name === toolCalls[j].name ? argScore(this.expected[i], toolCalls[j]) : null;
+    // Score every expected/actual pair once; the DP below only looks these up.
+    // null = different tool names, so the pair can never match.
+    const scores: (number | null)[][] = this.expected.map((exp) =>
+      toolCalls.slice(0, m).map((c) => (exp.name === c.name ? argScore(exp, c) : null)),
+    );
+    const pair = (i: number, j: number): number | null => scores[i][j];
 
     // Optimal assignment: best[i][mask] = max total for expected i.. with the actual calls in mask used.
     const size = 1 << m;
