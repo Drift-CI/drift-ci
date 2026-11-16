@@ -1,3 +1,5 @@
+import type { ToolCall } from '../types/index.js';
+
 export interface EvalInput {
   input: string;
   output: string;
@@ -5,6 +7,8 @@ export interface EvalInput {
   criteria?: string;
   systemPrompt?: string;
   context?: string[];
+  /** The model's tool calls, when the case offered tools. */
+  toolCalls?: ToolCall[];
 }
 
 export interface EvalResult {

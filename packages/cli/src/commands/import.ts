@@ -40,6 +40,7 @@ export const KNOWN_EVALUATORS = [
   'cosine-similarity',
   'llm-judge',
   'faithfulness',
+  'tool-call',
   'refusal-detection',
   'rubric-checklist',
   'safety-classifier',
@@ -267,7 +268,12 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
           const id = parsed.cases?.[issue.path[1]]?.id;
           if (typeof id === 'string') label = [id, ...issue.path.slice(2)].join('.');
         }
-        io.err(`  ${label}: ${issue.message}`);
+        const id0 = issue.path[0] === 'cases' && typeof issue.path[1] === 'number' ? parsed.cases?.[issue.path[1]]?.id : undefined;
+        io.err(
+          typeof id0 === 'string' && issue.message.startsWith(`case ${id0}:`)
+            ? `  ${issue.message}`
+            : `  ${label}: ${issue.message}`,
+        );
       }
     }
     return 1;

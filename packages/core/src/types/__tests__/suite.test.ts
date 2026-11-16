@@ -54,3 +54,55 @@ describe('TestCase context', () => {
     ).toBe(true);
   });
 });
+
+describe('TestCase and Suite tools', () => {
+  const tool = (name: string) => ({ name, parameters: { type: 'object', properties: {} } });
+  const withCase = (c: Record<string, unknown>, s: Record<string, unknown> = {}) => ({
+    ...base,
+    ...s,
+    cases: [{ id: 'c1', input: 'q', ...c }],
+  });
+
+  it('accepts valid tools on the suite and the case, defaulting parameters', () => {
+    const r = SuiteSchema.parse(
+      withCase({ tools: [{ name: 'get_order', description: 'Look up' }] }, { tools: [tool('a-b_1')] }),
+    );
+    expect(r.tools?.[0].name).toBe('a-b_1');
+    expect(r.cases[0].tools?.[0].parameters).toEqual({ type: 'object', properties: {} });
+  });
+
+  it('rejects bad names, duplicate names and more than 64 tools', () => {
+    expect(SuiteSchema.safeParse(withCase({ tools: [tool('has space')] })).success).toBe(false);
+    expect(SuiteSchema.safeParse(withCase({ tools: [tool('x'.repeat(65))] })).success).toBe(false);
+    expect(SuiteSchema.safeParse(withCase({ tools: [tool('')] })).success).toBe(false);
+    const dup = SuiteSchema.safeParse(withCase({}, { tools: [tool('a'), tool('a')] }));
+    expect(dup.success).toBe(false);
+    expect(JSON.stringify(dup.error?.issues)).toContain('Tool names must be unique.');
+    const many = Array.from({ length: 65 }, (_, i) => tool(`t${i}`));
+    expect(SuiteSchema.safeParse(withCase({ tools: many })).success).toBe(false);
+    expect(SuiteSchema.safeParse(withCase({ tools: many.slice(0, 64) })).success).toBe(true);
+  });
+
+  it('rejects a description over 1024 characters', () => {
+    expect(
+      SuiteSchema.safeParse(withCase({ tools: [{ name: 'a', description: 'x'.repeat(1025) }] })).success,
+    ).toBe(false);
+  });
+
+  it('accepts expectedCalls, defaulting arguments, and rejects more than 16', () => {
+    const r = SuiteSchema.parse(withCase({ expectedCalls: [{ name: 'a' }] }));
+    expect(r.cases[0].expectedCalls).toEqual([{ name: 'a', arguments: {} }]);
+    expect(SuiteSchema.parse(withCase({ expectedCalls: [] })).cases[0].expectedCalls).toEqual([]);
+    const calls = Array.from({ length: 17 }, () => ({ name: 'a' }));
+    expect(SuiteSchema.safeParse(withCase({ expectedCalls: calls })).success).toBe(false);
+    expect(SuiteSchema.safeParse(withCase({ expectedCalls: [{ name: '' }] })).success).toBe(false);
+  });
+
+  it('rejects toolResults with the reserved message', () => {
+    const r = SuiteSchema.safeParse(withCase({ toolResults: [{ name: 'a', result: 1 }] }));
+    expect(r.success).toBe(false);
+    expect(JSON.stringify(r.error?.issues)).toContain(
+      "multi-step tool cases (`toolResults`) aren't supported yet.",
+    );
+  });
+});

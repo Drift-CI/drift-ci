@@ -74,6 +74,9 @@ export function computeSuiteHash(tc: TestCase): string {
     // while still invalidating a baseline whenever its requirements change.
     ...(tc.contains !== undefined ? { contains: tc.contains } : {}),
     ...(tc.context !== undefined ? { context: tc.context } : {}),
+    // Resolved (suite + case) tools, so editing a shared tool marks its cases stale.
+    ...(tc.tools !== undefined ? { tools: tc.tools } : {}),
+    ...(tc.expectedCalls !== undefined ? { expectedCalls: tc.expectedCalls } : {}),
     schema: tc.schema ?? null,
     systemPrompt: tc.systemPrompt ?? null,
     // Rubric edits / reorders / mode swaps / quorum changes invalidate

@@ -191,6 +191,15 @@ describe('executeImport', () => {
     expect(err.join('\n')).toContain('nothing written');
   });
 
+  it('does not repeat the case id when the message already starts with it', () => {
+    writeSuite();
+    const file = writeTraces([trace('q', 'a')]);
+    expect(executeImport(file, opts({ evaluator: ['tool-call'] }), io)).toBe(1);
+    const lines = err.filter((l) => l.includes('the `tool-call` evaluator requires'));
+    expect(lines).toHaveLength(1);
+    expect(lines[0]).toMatch(/^ {2}case [^:]+: the/);
+  });
+
   it('exits 2 when the input file is missing', () => {
     writeSuite();
     expect(executeImport(join(dir, 'missing.jsonl'), opts(), io)).toBe(2);

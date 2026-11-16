@@ -8,6 +8,7 @@ import type {
   RunSummary,
   Suite,
   TestCase,
+  ToolCall,
 } from '../types/index.js';
 import type { ProviderAdapter } from '../providers/base.js';
 import type { EvaluatorChain } from '../evaluators/composite.js';
@@ -15,6 +16,17 @@ import type { StorageAdapter } from '../storage/interface.js';
 import { contextPassages, withContext } from './context.js';
 import { classifyError } from './error-classifier.js';
 import { aggregateSamples, effectiveRuns } from './sampling.js';
+
+/**
+ * The output text stored and shown to evaluators: the model's text, then one
+ * `→ <name> <json args>` line per tool call (blank line between when both are present).
+ */
+export function renderOutput(text: string, toolCalls?: ToolCall[]): string {
+  if (!toolCalls || toolCalls.length === 0) return text;
+  const lines = toolCalls.map((c) => `→ ${c.name} ${JSON.stringify(c.arguments)}`).join('\n');
+  const t = text.trim();
+  return t ? `${t}\n\n${lines}` : lines;
+}
 
 export type EvaluatorForCase = (tc: TestCase) => EvaluatorChain;
 
@@ -138,6 +150,7 @@ export class Runner {
         this.opts.provider.complete(providerInput, tc.systemPrompt, {
           temperature: 0,
           maxTokens: tc.maxTokens,
+          ...(tc.tools?.length ? { tools: tc.tools } : {}),
         }),
         new Promise<never>((_, reject) => {
           timeoutHandle = setTimeout(() => {
@@ -149,6 +162,8 @@ export class Runner {
       ]).finally(() => {
         if (timeoutHandle) clearTimeout(timeoutHandle);
       });
+
+      const outputText = renderOutput(output.text, output.toolCalls);
 
       let score = 0;
       let evaluatorBreakdown: Record<string, unknown> | undefined;
@@ -163,11 +178,12 @@ export class Runner {
             typeof tc.input === 'string'
               ? tc.input
               : JSON.stringify(tc.messages ?? tc.input),
-          output: output.text,
+          output: outputText,
           expected: tc.expected,
           criteria: tc.criteria,
           systemPrompt: tc.systemPrompt,
           context: contextPassages(tc),
+          toolCalls: output.toolCalls,
         });
         score = evalResult.score;
         evaluatorBreakdown = evalResult.metadata;
@@ -178,7 +194,7 @@ export class Runner {
       return {
         caseId: tc.id,
         runId,
-        output: output.text,
+        output: outputText,
         score: evaluatorError ? NaN : score,
         threshold,
         latencyMs: Date.now() - start,

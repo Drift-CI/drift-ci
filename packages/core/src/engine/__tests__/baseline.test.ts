@@ -121,6 +121,31 @@ describe('computeSuiteHash', () => {
     expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
   });
 
+  it('keeps the hash unchanged when tools and expectedCalls are absent', () => {
+    expect(computeSuiteHash(makeTestCase({ tools: undefined, expectedCalls: undefined }))).toBe(
+      computeSuiteHash(makeTestCase()),
+    );
+  });
+
+  it('changes when a (resolved) tool definition changes', () => {
+    const tool = (description: string) => ({
+      name: 'get_order',
+      description,
+      parameters: { type: 'object', properties: {} },
+    });
+    const a = makeTestCase({ tools: [tool('v1')] });
+    const b = makeTestCase({ tools: [tool('v2')] });
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
+  });
+
+  it('changes when expectedCalls change', () => {
+    const a = makeTestCase({ expectedCalls: [] });
+    const b = makeTestCase({ expectedCalls: [{ name: 'x', arguments: {} }] });
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
+  });
+
   it('ignores unrelated fields (id, tags, description)', () => {
     const a = makeTestCase({ id: 'alpha', description: 'first' });
     const b = makeTestCase({ id: 'beta', description: 'second' });

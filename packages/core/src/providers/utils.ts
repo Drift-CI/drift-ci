@@ -63,3 +63,21 @@ export async function withRetry<T>(
 function defaultSleep(ms: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, ms));
 }
+
+/**
+ * Parse a tool call's JSON-string arguments (OpenAI, and Ollama when it sends
+ * a string). Anything that isn't a JSON plain object comes back as
+ * `{ __unparsed: raw }`, so the tool-call evaluator reports a mismatch
+ * instead of crashing.
+ */
+export function parseArgs(raw: string): Record<string, unknown> {
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    // fall through
+  }
+  return { __unparsed: raw };
+}

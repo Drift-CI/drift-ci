@@ -177,3 +177,105 @@ describe('OllamaProvider', () => {
     expect(p.name).toBe('ollama/llama3.2');
   });
 });
+
+describe('OllamaProvider tools', () => {
+  const tools = [
+    {
+      name: 'get_weather',
+      description: 'Weather',
+      parameters: { type: 'object', properties: { city: { type: 'string' } } },
+    },
+  ];
+  const bodyOf = (fetchMock: ReturnType<typeof vi.fn>) =>
+    JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+  const withMessage = (message: Record<string, unknown>) =>
+    okBody({ message: { role: 'assistant', content: '', ...message } });
+
+  it('sends the tools as function tools in the body', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(okBody()));
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    await p.complete('hi', undefined, { tools });
+    const body = bodyOf(fetchMock);
+    expect(body.tools).toEqual([
+      {
+        type: 'function',
+        function: {
+          name: 'get_weather',
+          description: 'Weather',
+          parameters: { type: 'object', properties: { city: { type: 'string' } } },
+        },
+      },
+    ]);
+    expect(body).not.toHaveProperty('tool_choice');
+  });
+
+  it('parses one call with object arguments', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      makeFetchResponse(
+        withMessage({ tool_calls: [{ function: { name: 'get_weather', arguments: { city: 'Paris' } } }] }),
+      ),
+    );
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('');
+    expect(res.toolCalls).toEqual([{ name: 'get_weather', arguments: { city: 'Paris' } }]);
+  });
+
+  it('returns text and two calls', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      makeFetchResponse(
+        withMessage({
+          content: 'Checking.',
+          tool_calls: [
+            { function: { name: 'get_weather', arguments: { city: 'Paris' } } },
+            { function: { name: 'get_weather', arguments: { city: 'Rome' } } },
+          ],
+        }),
+      ),
+    );
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('Checking.');
+    expect(res.toolCalls).toEqual([
+      { name: 'get_weather', arguments: { city: 'Paris' } },
+      { name: 'get_weather', arguments: { city: 'Rome' } },
+    ]);
+  });
+
+  it('parses string arguments, falling back to __unparsed', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      makeFetchResponse(
+        withMessage({
+          tool_calls: [
+            { function: { name: 'get_weather', arguments: '{"city":"Oslo"}' } },
+            { function: { name: 'get_weather', arguments: 'not json' } },
+            { function: { name: 'get_weather' } },
+          ],
+        }),
+      ),
+    );
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([
+      { name: 'get_weather', arguments: { city: 'Oslo' } },
+      { name: 'get_weather', arguments: { __unparsed: 'not json' } },
+      { name: 'get_weather', arguments: {} },
+    ]);
+  });
+
+  it('returns toolCalls: [] when none called', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(okBody()));
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('hi');
+    expect(res.toolCalls).toEqual([]);
+  });
+
+  it('sends no tools key and leaves toolCalls undefined without tools', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(okBody()));
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    const res = await p.complete('hi', undefined, { tools: [] });
+    expect(bodyOf(fetchMock)).not.toHaveProperty('tools');
+    expect(res).not.toHaveProperty('toolCalls');
+  });
+});

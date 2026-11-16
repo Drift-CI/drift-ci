@@ -11,6 +11,7 @@ import {
 import { withRetry, type RetryOptions } from './utils.js';
 import type { AnthropicLike } from './anthropic.js';
 import { claudeModelRejectsSamplingParams } from './claude-models.js';
+import { readAnthropicToolCalls, toAnthropicTools } from './anthropic-tools.js';
 
 export interface BedrockAnthropicProviderConfig {
   /** Bedrock model id, e.g. `anthropic.claude-sonnet-4-5-20260101-v1:0`. Takes precedence over `model`. */
@@ -73,6 +74,7 @@ export class BedrockAnthropicProvider implements ProviderAdapter {
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
     const start = Date.now();
+    const tools = options.tools?.length ? options.tools : undefined;
 
     const system = systemPrompt
       ? [
@@ -97,6 +99,7 @@ export class BedrockAnthropicProvider implements ProviderAdapter {
             : { temperature: options.temperature ?? 0 }),
           system,
           messages: toBedrockMessages(input),
+          ...(tools ? { tools: toAnthropicTools(tools) } : {}),
         }),
       this.config.retry,
     );
@@ -119,6 +122,7 @@ export class BedrockAnthropicProvider implements ProviderAdapter {
       },
       model: response.model ?? this.modelId,
       latencyMs: Date.now() - start,
+      ...(tools ? { toolCalls: readAnthropicToolCalls(response.content) } : {}),
     };
   }
 }
