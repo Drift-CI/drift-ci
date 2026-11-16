@@ -29,7 +29,7 @@ describe('traceToCase: OpenAI shape', () => {
     expect(r.case.messages).toBeUndefined();
     expect(r.case.expected).toBe('Hello!');
     expect(r.case.tags).toEqual(['imported']);
-    expect(r.case.id).toMatch(/^prod-[0-9a-f]{8}$/);
+    expect(r.case.id).toMatch(/^prod-[0-9a-f]{12}$/);
     expect(r.redactions).toBe(0);
     expect(() => TestCaseSchema.parse(r.case)).not.toThrow();
   });
@@ -134,9 +134,42 @@ describe('traceToCase: skips', () => {
     ['starting with assistant', 'roles do not alternate', {
       messages: [qa[1], qa[0], qa[1]],
     }],
+    ['legacy function role', 'tool calls', {
+      messages: [qa[0], { role: 'function', name: 'f', content: 'r' }, qa[1]],
+    }],
+    ['legacy function_call', 'tool calls', {
+      messages: [qa[0], { role: 'assistant', content: 'calling', function_call: { name: 'f', arguments: '{}' } }],
+    }],
+    ['a redacted_thinking-only reply', 'empty content', {
+      messages: [qa[0], { role: 'assistant', content: [{ type: 'redacted_thinking', data: 'x' }] }],
+    }],
+    ['null content', 'empty content', { messages: [qa[0], { role: 'assistant', content: null }] }],
+    ['missing content', 'empty content', { messages: [qa[0], { role: 'assistant' }] }],
+    ['empty content array', 'empty content', { messages: [qa[0], { role: 'assistant', content: [] }] }],
     ['an empty reply', 'empty content', { messages: [qa[0], { role: 'assistant', content: '  ' }] }],
   ])('skips %s', (_label, reason, trace) => {
     expect(skip(trace)).toBe(reason);
+  });
+
+  it('drops thinking parts and keeps the text', () => {
+    const r = ok({
+      messages: [
+        qa[0],
+        {
+          role: 'assistant',
+          content: [
+            { type: 'thinking', thinking: 'hmm', signature: 's' },
+            { type: 'redacted_thinking', data: 'x' },
+            { type: 'text', text: 'answer' },
+          ],
+        },
+      ],
+    });
+    expect(r.case.expected).toBe('answer');
+  });
+
+  it('treats a null top-level system as absent', () => {
+    expect(ok({ system: null, messages: qa }).case.systemPrompt).toBeUndefined();
   });
 
   it('accepts an empty tool_calls array as no tool calls', () => {
@@ -160,7 +193,7 @@ describe('traceToCase: ids', () => {
   });
 
   it('falls back to the hash when the id sanitises to nothing', () => {
-    expect(ok({ id: '!!!', messages }).case.id).toMatch(/^prod-[0-9a-f]{8}$/);
+    expect(ok({ id: '!!!', messages }).case.id).toMatch(/^prod-[0-9a-f]{12}$/);
   });
 
   it('gives equal traces equal ids and different traces different ids', () => {
@@ -169,6 +202,21 @@ describe('traceToCase: ids', () => {
     const c = ok({ messages: [messages[0], { role: 'assistant', content: 'other' }] }).case.id;
     expect(a).toBe(b);
     expect(a).not.toBe(c);
+  });
+
+  it('uses a numeric trace id', () => {
+    expect(ok({ id: 42, messages }).case.id).toBe('prod-42');
+  });
+
+  it('redacts a secret in the trace id and counts it', () => {
+    const r = ok({ id: `sk-ant-${'a'.repeat(20)}`, messages });
+    expect(r.case.id).toBe('prod-redacted-anthropic-key');
+    expect(r.redactions).toBe(1);
+  });
+
+  it('hashes after redaction, so traces differing only in a secret share an id', () => {
+    const mk = (c: string) => ok({ messages: [{ role: 'user', content: `k sk-ant-${c.repeat(20)}` }, messages[1]] });
+    expect(mk('a').case.id).toBe(mk('b').case.id);
   });
 
   it('rejects an invalid prefix', () => {
@@ -188,6 +236,21 @@ describe('traceToCase: redaction', () => {
     });
     expect(r.case.systemPrompt).toBe('key [REDACTED:anthropic-key]');
     expect(r.case.input).toBe('my key is [REDACTED:anthropic-key]');
+    expect(r.redactions).toBe(2);
+  });
+
+  it('redacts secrets in earlier messages and in expected', () => {
+    const key = `sk-ant-${'a'.repeat(20)}`;
+    const r = ok({
+      messages: [
+        { role: 'user', content: `k ${key}` },
+        { role: 'assistant', content: 'b' },
+        { role: 'user', content: 'c' },
+        { role: 'assistant', content: `use ${key}` },
+      ],
+    });
+    expect(r.case.messages?.[0].content).toBe('k [REDACTED:anthropic-key]');
+    expect(r.case.expected).toBe('use [REDACTED:anthropic-key]');
     expect(r.redactions).toBe(2);
   });
 });

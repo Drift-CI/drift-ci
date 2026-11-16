@@ -39,18 +39,23 @@ function isObject(v: unknown): v is Record<string, unknown> {
 
 /** A message's text: a string, or the `text` parts of a content array joined with \n. */
 function textOf(content: unknown): string {
+  if (content === null || content === undefined) return '';
   if (typeof content === 'string') return content;
   if (!Array.isArray(content)) throw new Skip('not-a-chat-trace');
-  return content
-    .map((part) => {
-      if (isObject(part) && part.type === 'text' && typeof part.text === 'string') return part.text;
-      throw new Skip('non-text content');
-    })
-    .join('\n');
+  const texts: string[] = [];
+  for (const part of content) {
+    if (isObject(part) && (part.type === 'thinking' || part.type === 'redacted_thinking')) continue;
+    if (isObject(part) && part.type === 'text' && typeof part.text === 'string') {
+      texts.push(part.text);
+      continue;
+    }
+    throw new Skip('non-text content');
+  }
+  return texts.join('\n');
 }
 
-function caseId(rawId: unknown, prefix: string, system: string, turns: Turn[]): string {
-  if (typeof rawId === 'string') {
+function caseId(rawId: string | undefined, prefix: string, system: string, turns: Turn[]): string {
+  if (rawId !== undefined) {
     const clean = rawId
       .toLowerCase()
       .replace(/[^a-z0-9\-_]+/g, '-')
@@ -62,7 +67,7 @@ function caseId(rawId: unknown, prefix: string, system: string, turns: Turn[]): 
   const hash = createHash('sha256')
     .update(JSON.stringify({ system, turns }))
     .digest('hex')
-    .slice(0, 8);
+    .slice(0, 12);
   return `${prefix}-${hash}`;
 }
 
@@ -70,12 +75,17 @@ function build(trace: unknown, prefix: string): { case: TestCase; redactions: nu
   if (!isObject(trace) || !Array.isArray(trace.messages)) throw new Skip('not-a-chat-trace');
 
   const systemParts: string[] = [];
-  if (trace.system !== undefined) systemParts.push(textOf(trace.system));
+  if (trace.system !== undefined && trace.system !== null) systemParts.push(textOf(trace.system));
 
   const turns: Turn[] = [];
   for (const m of trace.messages) {
     if (!isObject(m) || typeof m.role !== 'string') throw new Skip('not-a-chat-trace');
-    if (m.role === 'tool' || (Array.isArray(m.tool_calls) && m.tool_calls.length > 0)) {
+    if (
+      m.role === 'tool' ||
+      m.role === 'function' ||
+      (m.function_call !== undefined && m.function_call !== null) ||
+      (Array.isArray(m.tool_calls) && m.tool_calls.length > 0)
+    ) {
       throw new Skip('tool calls');
     }
     if (m.role === 'system' || m.role === 'developer') {
@@ -101,13 +111,17 @@ function build(trace: unknown, prefix: string): { case: TestCase; redactions: nu
     return r.text;
   };
 
+  let rawId: string | undefined;
+  if (typeof trace.id === 'string') rawId = redact(trace.id);
+  else if (typeof trace.id === 'number' && Number.isFinite(trace.id)) rawId = String(trace.id);
+
   const system = systemParts.filter((s) => s.trim() !== '').join('\n\n');
   const systemPrompt = system ? redact(system) : undefined;
   const red: Turn[] = turns.map((t) => ({ role: t.role, content: redact(t.content) }));
   const prompt = red.slice(0, -1);
 
   // Built in display order (id, systemPrompt, input|messages, expected, tags), so the YAML reads well.
-  const tc: Record<string, unknown> = { id: caseId(trace.id, prefix, systemPrompt ?? '', red) };
+  const tc: Record<string, unknown> = { id: caseId(rawId, prefix, systemPrompt ?? '', red) };
   if (systemPrompt) tc.systemPrompt = systemPrompt;
   if (prompt.length === 1) tc.input = prompt[0].content;
   else tc.messages = prompt;
