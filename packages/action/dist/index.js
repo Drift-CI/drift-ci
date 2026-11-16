@@ -201093,22 +201093,31 @@ class ToolCallEvaluator {
         const scores = this.expected.map((exp) => toolCalls.slice(0, m).map((c) => (exp.name === c.name ? argScore(exp, c) : null)));
         const pair = (i, j) => scores[i][j];
         // Optimal assignment: best[i][mask] = max total for expected i.. with the actual calls in mask used.
+        // Only masks with at most i bits set are reachable when expected call i is
+        // placed, and each expected call only tries same-name actual calls.
         const size = 1 << m;
+        const bits = new Uint8Array(size);
+        for (let mask = 1; mask < size; mask++)
+            bits[mask] = bits[mask >> 1] + (mask & 1);
+        const candidates = scores.map((row) => row.flatMap((s, j) => (s === null ? [] : [[j, s]])));
         const best = Array.from({ length: n + 1 }, () => new Float64Array(size));
         for (let i = n - 1; i >= 0; i--) {
+            const next = best[i + 1];
+            const cur = best[i];
+            const cands = candidates[i];
             for (let mask = 0; mask < size; mask++) {
-                let v = best[i + 1][mask];
-                for (let j = 0; j < m; j++) {
-                    if (mask & (1 << j))
+                if (bits[mask] > i)
+                    continue;
+                let v = next[mask];
+                for (const [j, s] of cands) {
+                    const bit = 1 << j;
+                    if (mask & bit)
                         continue;
-                    const s = pair(i, j);
-                    if (s === null)
-                        continue;
-                    const cand = s + best[i + 1][mask | (1 << j)];
+                    const cand = s + next[mask | bit];
                     if (cand > v)
                         v = cand;
                 }
-                best[i][mask] = v;
+                cur[mask] = v;
             }
         }
         // Reconstruct, preferring the earliest actual call among equal totals, then a match over a skip.
