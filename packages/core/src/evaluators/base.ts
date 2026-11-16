@@ -4,6 +4,7 @@ export interface EvalInput {
   expected?: string;
   criteria?: string;
   systemPrompt?: string;
+  context?: string[];
 }
 
 export interface EvalResult {

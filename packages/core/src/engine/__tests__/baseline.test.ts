@@ -114,6 +114,13 @@ describe('computeSuiteHash', () => {
     );
   });
 
+  it('changes when context changes', () => {
+    const a = makeTestCase({ context: ['p1'] });
+    const b = makeTestCase({ context: ['p2'] });
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
+  });
+
   it('ignores unrelated fields (id, tags, description)', () => {
     const a = makeTestCase({ id: 'alpha', description: 'first' });
     const b = makeTestCase({ id: 'beta', description: 'second' });

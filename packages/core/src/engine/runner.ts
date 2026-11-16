@@ -12,6 +12,7 @@ import type {
 import type { ProviderAdapter } from '../providers/base.js';
 import type { EvaluatorChain } from '../evaluators/composite.js';
 import type { StorageAdapter } from '../storage/interface.js';
+import { contextPassages, withContext } from './context.js';
 import { classifyError } from './error-classifier.js';
 import { aggregateSamples, effectiveRuns } from './sampling.js';
 
@@ -130,12 +131,7 @@ export class Runner {
     const timeoutMs = this.opts.timeoutMs ?? 30_000;
 
     try {
-      const providerInput = tc.messages ?? tc.input;
-      if (providerInput === undefined) {
-        throw new Error(
-          `Case ${tc.id}: schema guarantees input XOR messages — one must be present`,
-        );
-      }
+      const providerInput = withContext(tc);
 
       let timeoutHandle: NodeJS.Timeout | undefined;
       const output = await Promise.race([
@@ -171,6 +167,7 @@ export class Runner {
           expected: tc.expected,
           criteria: tc.criteria,
           systemPrompt: tc.systemPrompt,
+          context: contextPassages(tc),
         });
         score = evalResult.score;
         evaluatorBreakdown = evalResult.metadata;

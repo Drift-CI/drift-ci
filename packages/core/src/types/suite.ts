@@ -84,6 +84,9 @@ export const TestCaseSchema = z
     systemPrompt: z.string().optional(),
     messages: z.array(MessageParamSchema).optional(),
     contains: z.array(z.string().min(1)).min(1).optional(),
+    context: z
+      .union([z.string().min(1), z.array(z.string().min(1)).min(1).max(20)])
+      .optional(),
     schema: z.record(z.string(), z.unknown()).optional(),
     rubric: RubricSpecSchema.optional(),
     rubricQuorum: RubricQuorumSchema.optional(),
@@ -120,6 +123,16 @@ export const TestCaseSchema = z
     {
       message:
         'A case using the `rubric-checklist` evaluator must define a `rubric` field.',
+    },
+  )
+  .refine(
+    (tc) =>
+      !tc.evaluators?.some(
+        (e) => (typeof e === 'string' ? e : e.name) === 'faithfulness',
+      ) || tc.context !== undefined,
+    {
+      message:
+        'A case using the `faithfulness` evaluator must define a `context` field.',
     },
   );
 
