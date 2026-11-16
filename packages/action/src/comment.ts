@@ -6,6 +6,8 @@ import type {
 } from '@drift-ci/core';
 import { sampleCount } from '@drift-ci/core';
 
+import { lineDiff, type BaselineChange } from './baseline-changes.js';
+
 export const COMMENT_MARKER = '<!-- drift-ci-comment -->';
 
 const TRANSIENT_STATUSES: ReadonlySet<CaseResult['status']> = new Set([
@@ -23,6 +25,8 @@ export interface RenderCommentInput {
   threshold: number;
   baselineSource: 'branch' | 'main';
   baselineChanged: string[];
+  /** Per-case changes for the "Baselines changed in this PR" section. */
+  baselineChanges?: BaselineChange[];
   dashboardUrl?: string;
   /** sha:hex map keyed by caseId → "<short>". Optional; when omitted, stale-baseline blocks omit hash detail. */
   baselineHashes?: Record<
@@ -85,6 +89,10 @@ export function renderComment(input: RenderCommentInput): string {
     rows,
   ];
 
+  if (input.baselineChanges && input.baselineChanges.length > 0) {
+    sections.push('', renderBaselineChanges(input.baselineChanges));
+  }
+
   if (staleSet.size > 0) {
     sections.push('', renderStaleBaselines([...staleSet], input.suitePath, input.baselineHashes));
   }
@@ -114,6 +122,111 @@ export function renderComment(input: RenderCommentInput): string {
   sections.push('', renderRegressionExplainer(threshold));
 
   return sections.join('\n').trim() + '\n';
+}
+
+const MAX_DIFF_LINES = 60;
+const MAX_DIFFS = 10;
+const DIFF_BUDGET_CHARS = 30_000;
+
+/**
+ * Renders the "Baselines changed in this PR" section ('' when there is
+ * nothing to show). Baseline output is untrusted model text: each diff is
+ * fenced with a backtick run longer than any run inside it.
+ */
+export function renderBaselineChanges(changes: BaselineChange[]): string {
+  if (changes.length === 0) return '';
+  const listed = changes.filter((c) => c.kind !== 'unchanged');
+  const unchangedCount = changes.length - listed.length;
+  const count = (k: BaselineChange['kind']): number => listed.filter((c) => c.kind === k).length;
+
+  const out: string[] = [`### 📝 Baselines changed in this PR (${listed.length})`];
+
+  if (listed.length > 0) {
+    const labels: Array<[BaselineChange['kind'], string]> = [
+      ['lowered', 'lowered'],
+      ['raised', 'raised'],
+      ['output-changed', 'output changed'],
+      ['added', 'added'],
+      ['removed', 'removed'],
+    ];
+    out.push(
+      labels
+        .filter(([k]) => count(k) > 0)
+        .map(([k, label]) => `${count(k)} ${label}`)
+        .join(' · '),
+    );
+    if (count('lowered') > 0) {
+      out.push(
+        '',
+        '> ⚠️ **Lowering a baseline accepts worse behaviour as the new normal.** Check the output diffs below before approving.',
+      );
+    }
+    out.push('', '| Case | Baseline score | Change |', '|---|---|---|');
+    for (const c of listed) out.push(renderBaselineRow(c));
+  }
+
+  if (unchangedCount > 0) {
+    out.push('', `<sub>Plus ${unchangedCount} re-captured with no score or output change.</sub>`);
+  }
+
+  const diffable = listed.filter(
+    (c) =>
+      (c.kind === 'lowered' || c.kind === 'raised' || c.kind === 'output-changed') &&
+      (c.oldOutput ?? '') !== (c.newOutput ?? ''),
+  );
+  let used = out.join('\n').length;
+  let budgetHit = false;
+  for (const c of diffable.slice(0, MAX_DIFFS)) {
+    const block = renderOutputDiff(c);
+    if (used + block.length > DIFF_BUDGET_CHARS) {
+      budgetHit = true;
+      break;
+    }
+    used += block.length;
+    out.push('', block);
+  }
+  if (budgetHit) {
+    out.push(
+      '',
+      "_Remaining output diffs omitted to keep this comment within GitHub's size limit; see *Files changed*._",
+    );
+  } else if (diffable.length > MAX_DIFFS) {
+    out.push(
+      '',
+      `_Output diffs for ${diffable.length - MAX_DIFFS} more case(s) omitted (limit ${MAX_DIFFS}); see *Files changed*._`,
+    );
+  }
+  return out.join('\n');
+}
+
+function renderBaselineRow(c: BaselineChange): string {
+  const id = `\`${escapeMd(c.caseId)}\``;
+  const oldS = c.oldScore === undefined ? '' : c.oldScore.toFixed(3);
+  const newS = c.newScore === undefined ? '' : c.newScore.toFixed(3);
+  const scores = `${oldS} → ${newS}`.trim();
+  const delta = (c.newScore ?? 0) - (c.oldScore ?? 0);
+  let change: string;
+  if (c.kind === 'lowered') change = `**${formatDelta(delta)}** ⬇️`;
+  else if (c.kind === 'raised') change = formatDelta(delta);
+  else if (c.kind === 'output-changed') change = 'output changed';
+  else change = c.kind;
+  return `| ${id} | ${scores} | ${change} |`;
+}
+
+function renderOutputDiff(c: BaselineChange): string {
+  const lines = lineDiff(c.oldOutput ?? '', c.newOutput ?? '').map((l) =>
+    l.op === ' ' ? `  ${l.text}` : `${l.op} ${l.text}`,
+  );
+  if (lines.length > MAX_DIFF_LINES) {
+    const more = lines.length - MAX_DIFF_LINES;
+    lines.length = MAX_DIFF_LINES;
+    lines.push(`… ${more} more lines`);
+  }
+  const body = lines.join('\n');
+  const longest = Math.max(0, ...(body.match(/`+/g) ?? []).map((r) => r.length));
+  const fence = '`'.repeat(Math.max(3, longest + 1));
+  const id = c.caseId.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  return `<details><summary>Output diff: <code>${id}</code></summary>\n\n${fence}diff\n${body}\n${fence}\n</details>`;
 }
 
 function renderRow(
