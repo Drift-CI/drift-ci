@@ -113125,7 +113125,7 @@ const errors_initializer = (inst, issues) => {
         },
     });
 };
-const ZodError = /*@__PURE__*/ (/* unused pure expression or super */ null && (core.$constructor("ZodError", errors_initializer)));
+const ZodError = /*@__PURE__*/ $constructor("ZodError", errors_initializer);
 const ZodRealError = /*@__PURE__*/ $constructor("ZodError", errors_initializer, undefined, {
     Parent: Error,
 });
@@ -114735,6 +114735,28 @@ const RubricQuorumSchema = object({
         return `majority quorum requires an odd number of judges (got ${judges.length})`;
     },
 });
+// ─── tools ──────────────────────────────────────────────────────────────
+/** A tool offered to the model. `parameters` is a JSON Schema object. */
+const ToolDefinitionSchema = object({
+    name: schemas_string().regex(/^[a-zA-Z0-9_-]{1,64}$/, 'Tool names must be 1-64 letters, digits, _ or -.'),
+    description: schemas_string().max(1024).optional(),
+    parameters: record(schemas_string(), unknown()).default({ type: 'object', properties: {} }),
+})
+    .strict()
+    .refine((t) => t.parameters.type === 'object', {
+    error: (issue) => `Tool "${issue.input.name}": parameters must be a JSON Schema object (type: object).`,
+    path: ['parameters'],
+});
+const ToolListSchema = array(ToolDefinitionSchema)
+    .max(64)
+    .refine((t) => new Set(t.map((x) => x.name)).size === t.length, {
+    message: 'Tool names must be unique.',
+});
+/** A tool call the `tool-call` evaluator expects; listed arguments only are compared. */
+const ExpectedCallSchema = object({
+    name: schemas_string().min(1),
+    arguments: record(schemas_string(), unknown()).default({}),
+});
 // ─── case ───────────────────────────────────────────────────────────────
 const suite_TestCaseSchema = object({
     id: schemas_string()
@@ -114757,6 +114779,10 @@ const suite_TestCaseSchema = object({
     schema: record(schemas_string(), unknown()).optional(),
     rubric: RubricSpecSchema.optional(),
     rubricQuorum: RubricQuorumSchema.optional(),
+    tools: ToolListSchema.optional(),
+    expectedCalls: array(ExpectedCallSchema).max(16).optional(),
+    /** Reserved for multi-step tool cases; rejected for now. */
+    toolResults: unknown().optional(),
 })
     .refine((tc) => (tc.input !== undefined) !== (tc.messages !== undefined), {
     message: 'Each case must define exactly one of `input` or `messages` (not both, not neither).',
@@ -114772,6 +114798,10 @@ const suite_TestCaseSchema = object({
 })
     .refine((tc) => !tc.evaluators?.some((e) => (typeof e === 'string' ? e : e.name) === 'faithfulness') || tc.context !== undefined, {
     message: 'A case using the `faithfulness` evaluator must define a `context` field.',
+})
+    .refine((tc) => tc.toolResults === undefined, {
+    message: "multi-step tool cases (`toolResults`) aren't supported yet.",
+    path: ['toolResults'],
 });
 const SuiteSchema = object({
     version: literal(1),
@@ -114782,6 +114812,8 @@ const SuiteSchema = object({
     default_threshold: schemas_number().min(0).max(1).optional(),
     /** Samples per case when a case has no `runs` of its own (1–5). The median score is used. */
     default_runs: schemas_number().int().min(1).max(5).optional(),
+    /** Tools offered to every case; merged into each case's `tools` by `parseSuite`. */
+    tools: ToolListSchema.optional(),
     cases: array(suite_TestCaseSchema)
         .min(1)
         .refine((cases) => new Set(cases.map((c) => c.id)).size === cases.length, {
@@ -115209,6 +115241,24 @@ async function utils_withRetry(fn, options = {}) {
 function defaultSleep(ms) {
     return new Promise((resolve) => setTimeout(resolve, ms));
 }
+/**
+ * Parse a tool call's JSON-string arguments (OpenAI, and Ollama when it sends
+ * a string). Anything that isn't a JSON plain object comes back as
+ * `{ __unparsed: raw }`, so the tool-call evaluator reports a mismatch
+ * instead of crashing.
+ */
+function parseArgs(raw) {
+    try {
+        const parsed = JSON.parse(raw);
+        if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+            return parsed;
+        }
+    }
+    catch {
+        // fall through
+    }
+    return { __unparsed: raw };
+}
 //# sourceMappingURL=utils.js.map
 ;// CONCATENATED MODULE: ../core/dist/providers/claude-models.js
 /**
@@ -115229,7 +115279,27 @@ function claudeModelRejectsSamplingParams(model) {
     return SAMPLING_PARAM_FREE.some((needle) => id.includes(needle));
 }
 //# sourceMappingURL=claude-models.js.map
+;// CONCATENATED MODULE: ../core/dist/providers/anthropic-tools.js
+/** Shared by the Anthropic and Bedrock adapters, which speak the same Messages API. */
+function toAnthropicTools(tools) {
+    return tools.map((t) => ({
+        name: t.name,
+        ...(t.description !== undefined ? { description: t.description } : {}),
+        // The suite schema validates a JSON-schema object; Anthropic types it as `{ type: 'object', ... }`.
+        input_schema: t.parameters,
+    }));
+}
+function readAnthropicToolCalls(content) {
+    return content
+        .filter((b) => b.type === 'tool_use')
+        .map((b) => ({
+        name: b.name,
+        arguments: (b.input ?? {}),
+    }));
+}
+//# sourceMappingURL=anthropic-tools.js.map
 ;// CONCATENATED MODULE: ../core/dist/providers/anthropic.js
+
 
 
 
@@ -115254,6 +115324,7 @@ class AnthropicProvider {
     }
     async complete(input, systemPrompt, options = {}) {
         const start = Date.now();
+        const tools = options.tools?.length ? options.tools : undefined;
         const system = systemPrompt
             ? [
                 {
@@ -115274,6 +115345,7 @@ class AnthropicProvider {
                 : { temperature: options.temperature ?? 0 }),
             system,
             messages: toAnthropicMessages(input),
+            ...(tools ? { tools: toAnthropicTools(tools) } : {}),
         }), this.config.retry);
         const text = response.content
             .filter((b) => b.type === 'text')
@@ -115291,6 +115363,7 @@ class AnthropicProvider {
             },
             model: response.model,
             latencyMs: Date.now() - start,
+            ...(tools ? { toolCalls: readAnthropicToolCalls(response.content) } : {}),
         };
     }
 }
@@ -115339,6 +115412,7 @@ class OllamaProvider {
     }
     async complete(input, systemPrompt, options = {}) {
         const start = Date.now();
+        const tools = options.tools?.length ? options.tools : undefined;
         const messages = [];
         if (systemPrompt)
             messages.push({ role: 'system', content: systemPrompt });
@@ -115356,6 +115430,7 @@ class OllamaProvider {
                 temperature: options.temperature ?? 0,
                 num_predict: options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
             },
+            ...(tools ? { tools: toOllamaTools(tools) } : {}),
         };
         const headers = {
             'Content-Type': 'application/json',
@@ -115390,8 +115465,34 @@ class OllamaProvider {
             },
             model: response.model ?? this.config.model,
             latencyMs: Date.now() - start,
+            ...(tools ? { toolCalls: readOllamaToolCalls(response.message?.tool_calls) } : {}),
         };
     }
+}
+function toOllamaTools(tools) {
+    return tools.map((t) => ({
+        type: 'function',
+        function: {
+            name: t.name,
+            ...(t.description !== undefined ? { description: t.description } : {}),
+            parameters: t.parameters,
+        },
+    }));
+}
+function readOllamaToolCalls(calls) {
+    return (calls ?? []).map((c) => {
+        const args = c.function?.arguments;
+        return {
+            name: c.function?.name ?? '',
+            arguments: args === undefined || args === null
+                ? {}
+                : typeof args === 'string'
+                    ? parseArgs(args)
+                    : typeof args === 'object' && !Array.isArray(args)
+                        ? args
+                        : { __unparsed: JSON.stringify(args) },
+        };
+    });
 }
 async function safeReadText(res) {
     try {
@@ -146365,6 +146466,7 @@ class OpenAIProvider {
     }
     async complete(input, systemPrompt, options = {}) {
         const start = Date.now();
+        const tools = options.tools?.length ? options.tools : undefined;
         const messages = [];
         if (systemPrompt)
             messages.push({ role: 'system', content: systemPrompt });
@@ -146379,6 +146481,7 @@ class OpenAIProvider {
             max_tokens: options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
             temperature: options.temperature ?? 0,
             messages,
+            ...(tools ? { tools: toOpenAITools(tools) } : {}),
         }), this.config.retry);
         const choice = response.choices[0];
         const text = typeof choice?.message?.content === 'string' ? choice.message.content : '';
@@ -146401,8 +146504,24 @@ class OpenAIProvider {
             },
             model: response.model ?? this.config.model,
             latencyMs: Date.now() - start,
+            ...(tools ? { toolCalls: readOpenAIToolCalls(choice?.message?.tool_calls) } : {}),
         };
     }
+}
+function toOpenAITools(tools) {
+    return tools.map((t) => ({
+        type: 'function',
+        function: {
+            name: t.name,
+            ...(t.description !== undefined ? { description: t.description } : {}),
+            parameters: t.parameters,
+        },
+    }));
+}
+function readOpenAIToolCalls(calls) {
+    return (calls ?? [])
+        .filter((c) => c.type === 'function')
+        .map((c) => ({ name: c.function.name, arguments: parseArgs(c.function.arguments) }));
 }
 //# sourceMappingURL=openai.js.map
 ;// CONCATENATED MODULE: ../core/dist/providers/azure-openai.js
@@ -170321,6 +170440,7 @@ function makeMantleBetaResource(client) {
 
 
 
+
 class BedrockAnthropicProvider {
     name;
     modelId;
@@ -170350,6 +170470,7 @@ class BedrockAnthropicProvider {
     }
     async complete(input, systemPrompt, options = {}) {
         const start = Date.now();
+        const tools = options.tools?.length ? options.tools : undefined;
         const system = systemPrompt
             ? [
                 {
@@ -170370,6 +170491,7 @@ class BedrockAnthropicProvider {
                 : { temperature: options.temperature ?? 0 }),
             system,
             messages: toBedrockMessages(input),
+            ...(tools ? { tools: toAnthropicTools(tools) } : {}),
         }), this.config.retry);
         const text = response.content
             .filter((b) => b.type === 'text')
@@ -170387,6 +170509,7 @@ class BedrockAnthropicProvider {
             },
             model: response.model ?? this.modelId,
             latencyMs: Date.now() - start,
+            ...(tools ? { toolCalls: readAnthropicToolCalls(response.content) } : {}),
         };
     }
 }
@@ -170409,6 +170532,7 @@ class BaseGoogleGenAIProvider {
     }
     async complete(input, systemPrompt, options = {}) {
         const start = Date.now();
+        const tools = options.tools?.length ? options.tools : undefined;
         const contents = toMessages(input).map((m) => ({
             // Gemini's content roles are user / model. We map our user-role
             // unchanged and rebrand `assistant` → `model`. drift-ci doesn't
@@ -170435,10 +170559,24 @@ class BaseGoogleGenAIProvider {
                         },
                     }
                     : {}),
+                ...(tools
+                    ? {
+                        tools: [
+                            {
+                                functionDeclarations: tools.map((t) => ({
+                                    name: t.name,
+                                    ...(t.description !== undefined ? { description: t.description } : {}),
+                                    parametersJsonSchema: t.parameters,
+                                })),
+                            },
+                        ],
+                    }
+                    : {}),
             },
         };
         const response = await utils_withRetry(() => this.config.client.models.generateContent(params), this.config.retry);
-        const text = response.text ?? '';
+        const read = tools ? readWithTools(response) : undefined;
+        const text = read ? read.text : (response.text ?? '');
         const usage = response.usageMetadata;
         const inputTokens = usage?.promptTokenCount ?? 0;
         const outputTokens = usage?.candidatesTokenCount ?? 0;
@@ -170455,7 +170593,38 @@ class BaseGoogleGenAIProvider {
             },
             model: response.modelVersion ?? this.config.model,
             latencyMs: Date.now() - start,
+            ...(read ? { toolCalls: read.toolCalls } : {}),
         };
+    }
+}
+/**
+ * Reads text and function calls from the first candidate's parts directly:
+ * the SDK's `text` getter warns about (and its result omits) non-text parts,
+ * and is undefined when only function calls came back. Falls back to the
+ * `functionCalls` / `text` getters when there are no candidate parts.
+ */
+function readWithTools(response) {
+    const parts = response.candidates?.[0]?.content?.parts;
+    const calls = parts
+        ? parts.flatMap((p) => (p.functionCall ? [p.functionCall] : []))
+        : (response.functionCalls ?? []);
+    const text = parts
+        ? parts
+            .filter((p) => typeof p.text === 'string' && !p.thought)
+            .map((p) => p.text)
+            .join('')
+        : safeText(response);
+    return {
+        text,
+        toolCalls: calls.map((fc) => ({ name: fc.name ?? '', arguments: fc.args ?? {} })),
+    };
+}
+function safeText(response) {
+    try {
+        return response.text ?? '';
+    }
+    catch {
+        return '';
     }
 }
 //# sourceMappingURL=google-base.js.map
@@ -200264,9 +200433,11 @@ class MockProvider {
         const text = this.responses[key] ?? this.defaultResponse;
         return this.wrap(text);
     }
-    wrap(text) {
+    wrap(result) {
+        const { text, toolCalls } = typeof result === 'string' ? { text: result, toolCalls: undefined } : result;
         return {
             text,
+            ...(toolCalls !== undefined ? { toolCalls } : {}),
             usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
             model: this.name,
             latencyMs: this.latencyMs,
@@ -200840,6 +201011,157 @@ function truncate(s, max = 60) {
     return s.length > max ? s.slice(0, max - 1) + '…' : s;
 }
 //# sourceMappingURL=refusal.js.map
+;// CONCATENATED MODULE: ../core/dist/evaluators/tool-call.js
+const MAX_PROBLEMS = 3;
+const VALUE_CHARS = 40;
+const tool_call_REASON_CHARS = 200;
+const MAX_ACTUAL_META = 16;
+/** Actual calls considered for matching; the rest count as unexpected. */
+const MAX_MATCHED = 16;
+const EPS = 1e-9;
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
+/** Deep equality; strings compare after trim, everything else exactly. */
+function valuesEqual(a, b) {
+    if (typeof a === 'string' && typeof b === 'string')
+        return a.trim() === b.trim();
+    if (Array.isArray(a) && Array.isArray(b)) {
+        return a.length === b.length && a.every((x, i) => valuesEqual(x, b[i]));
+    }
+    if (a && b && typeof a === 'object' && typeof b === 'object' && !Array.isArray(a) && !Array.isArray(b)) {
+        const ao = a;
+        const bo = b;
+        const ka = Object.keys(ao);
+        const kb = Object.keys(bo);
+        return ka.length === kb.length && ka.every((k) => k in bo && valuesEqual(ao[k], bo[k]));
+    }
+    if (typeof a === 'number' && typeof b === 'string')
+        return numEqualsString(a, b);
+    if (typeof a === 'string' && typeof b === 'number')
+        return numEqualsString(b, a);
+    return a === b;
+}
+/** `2139` equals `"02139"`; only plain decimals qualify, so `"1e3"` stays unequal. */
+function numEqualsString(n, s) {
+    const t = s.trim();
+    return PLAIN_NUMBER.test(t) && Number(t) === n;
+}
+const show = (v) => {
+    const s = v === undefined ? 'missing' : (JSON.stringify(v) ?? 'missing');
+    return s.length > VALUE_CHARS ? `${s.slice(0, VALUE_CHARS - 1)}…` : s;
+};
+function cap(s) {
+    return s.length > tool_call_REASON_CHARS ? `${s.slice(0, tool_call_REASON_CHARS - 1)}…` : s;
+}
+/**
+ * Scores the model's tool calls against `expectedCalls`. Pure; no judge.
+ * Expected calls are assigned to same-name actual calls so the total argument
+ * score is maximal (order-independent; ties keep the earliest actual calls).
+ */
+class ToolCallEvaluator {
+    expected;
+    name = 'tool-call';
+    constructor(expected) {
+        this.expected = expected;
+    }
+    async evaluate({ toolCalls }) {
+        if (!toolCalls) {
+            throw new Error('tool-call evaluator: the provider returned no tool-call data (does this provider support tools?)');
+        }
+        const metadata = { expected: this.expected.length, actual: toolCalls.slice(0, MAX_ACTUAL_META) };
+        if (this.expected.length === 0) {
+            return toolCalls.length === 0
+                ? { score: 1, reason: 'no tool call, as expected', metadata }
+                : {
+                    score: 0,
+                    reason: cap(`expected no tool call, got: ${toolCalls.map((c) => c.name).join(', ')}`),
+                    metadata,
+                };
+        }
+        const m = Math.min(toolCalls.length, MAX_MATCHED);
+        const n = this.expected.length;
+        const unparsed = (c) => Object.prototype.hasOwnProperty.call(c.arguments, '__unparsed');
+        const argScore = (exp, c) => {
+            if (unparsed(c))
+                return 0;
+            const keys = Object.keys(exp.arguments);
+            return keys.length === 0
+                ? 1
+                : keys.filter((k) => valuesEqual(exp.arguments[k], c.arguments[k])).length / keys.length;
+        };
+        // Score every expected/actual pair once; the DP below only looks these up.
+        // null = different tool names, so the pair can never match.
+        const scores = this.expected.map((exp) => toolCalls.slice(0, m).map((c) => (exp.name === c.name ? argScore(exp, c) : null)));
+        const pair = (i, j) => scores[i][j];
+        // Optimal assignment: best[i][mask] = max total for expected i.. with the actual calls in mask used.
+        const size = 1 << m;
+        const best = Array.from({ length: n + 1 }, () => new Float64Array(size));
+        for (let i = n - 1; i >= 0; i--) {
+            for (let mask = 0; mask < size; mask++) {
+                let v = best[i + 1][mask];
+                for (let j = 0; j < m; j++) {
+                    if (mask & (1 << j))
+                        continue;
+                    const s = pair(i, j);
+                    if (s === null)
+                        continue;
+                    const cand = s + best[i + 1][mask | (1 << j)];
+                    if (cand > v)
+                        v = cand;
+                }
+                best[i][mask] = v;
+            }
+        }
+        // Reconstruct, preferring the earliest actual call among equal totals, then a match over a skip.
+        const used = new Set();
+        const problems = [];
+        let total = 0;
+        let mask = 0;
+        for (let i = 0; i < n; i++) {
+            const exp = this.expected[i];
+            let pick = -1;
+            let pickScore = 0;
+            for (let j = 0; j < m; j++) {
+                if (mask & (1 << j))
+                    continue;
+                const s = pair(i, j);
+                if (s === null)
+                    continue;
+                if (Math.abs(s + best[i + 1][mask | (1 << j)] - best[i][mask]) < EPS) {
+                    pick = j;
+                    pickScore = s;
+                    break;
+                }
+            }
+            if (pick === -1) {
+                problems.push(`missing call: ${exp.name}`);
+                continue;
+            }
+            used.add(pick);
+            mask |= 1 << pick;
+            total += pickScore;
+            const actual = toolCalls[pick];
+            if (unparsed(actual)) {
+                problems.push(`${exp.name}: arguments were not valid JSON`);
+                continue;
+            }
+            for (const k of Object.keys(exp.arguments)) {
+                if (!valuesEqual(exp.arguments[k], actual.arguments[k])) {
+                    problems.push(`${exp.name}.${k}: expected ${show(exp.arguments[k])}, got ${show(actual.arguments[k])}`);
+                }
+            }
+        }
+        toolCalls.forEach((c, i) => {
+            if (!used.has(i))
+                problems.push(`unexpected call: ${c.name}`);
+        });
+        const score = total / Math.max(this.expected.length, toolCalls.length);
+        const reason = problems.length === 0
+            ? `all ${this.expected.length} calls matched`
+            : cap(problems.slice(0, MAX_PROBLEMS).join('; '));
+        return { score, reason, metadata };
+    }
+}
+//# sourceMappingURL=tool-call.js.map
 ;// CONCATENATED MODULE: ../core/dist/evaluators/rubric-checklist.js
 
 
@@ -201353,6 +201675,7 @@ function parseLlamaGuardResponse(text, classifier = 'llama-guard') {
 
 
 
+
 function createEvaluatorChain(specs, ctx) {
     if (!specs || specs.length === 0) {
         throw new Error('At least one evaluator must be configured on the suite or case.');
@@ -201393,6 +201716,12 @@ function factory_build(name, ctx) {
                 testProviderName: ctx.testProvider.name,
                 allowSelfBias: ctx.allowSelfBias,
             });
+        case 'tool-call': {
+            if (!ctx.case?.expectedCalls || !ctx.case.tools?.length) {
+                throw new Error('tool-call evaluator requires `expectedCalls` and at least one tool on the test case.');
+            }
+            return new ToolCallEvaluator(ctx.case.expectedCalls);
+        }
         case 'refusal-detection':
             return new RefusalDetectionEvaluator();
         case 'rubric-checklist': {
@@ -201546,6 +201875,9 @@ function computeSuiteHash(tc) {
         // while still invalidating a baseline whenever its requirements change.
         ...(tc.contains !== undefined ? { contains: tc.contains } : {}),
         ...(tc.context !== undefined ? { context: tc.context } : {}),
+        // Resolved (suite + case) tools, so editing a shared tool marks its cases stale.
+        ...(tc.tools !== undefined ? { tools: tc.tools } : {}),
+        ...(tc.expectedCalls !== undefined ? { expectedCalls: tc.expectedCalls } : {}),
         schema: tc.schema ?? null,
         systemPrompt: tc.systemPrompt ?? null,
         // Rubric edits / reorders / mode swaps / quorum changes invalidate
@@ -201852,6 +202184,7 @@ function judgeHashForProvider({ provider, promptTemplate, }) {
 }
 //# sourceMappingURL=judge-hash.js.map
 ;// CONCATENATED MODULE: ../core/dist/evaluators/index.js
+
 
 
 
@@ -202258,6 +202591,17 @@ function sampleCount(c) {
 
 
 
+/**
+ * The output text stored and shown to evaluators: the model's text, then one
+ * `→ <name> <json args>` line per tool call (blank line between when both are present).
+ */
+function renderOutput(text, toolCalls) {
+    if (!toolCalls || toolCalls.length === 0)
+        return text;
+    const lines = toolCalls.map((c) => `→ ${c.name} ${JSON.stringify(c.arguments)}`).join('\n');
+    const t = text.trim();
+    return t ? `${t}\n\n${lines}` : lines;
+}
 const RUN_ABORTED_TRANSIENT = 'RUN_ABORTED_TRANSIENT';
 class RunAbortedTransientError extends Error {
     transientCount;
@@ -202337,6 +202681,7 @@ class Runner {
                 this.opts.provider.complete(providerInput, tc.systemPrompt, {
                     temperature: 0,
                     maxTokens: tc.maxTokens,
+                    ...(tc.tools?.length ? { tools: tc.tools } : {}),
                 }),
                 new Promise((_, reject) => {
                     timeoutHandle = setTimeout(() => {
@@ -202349,6 +202694,7 @@ class Runner {
                 if (timeoutHandle)
                     clearTimeout(timeoutHandle);
             });
+            const outputText = renderOutput(output.text, output.toolCalls);
             let score = 0;
             let evaluatorBreakdown;
             let evaluatorError;
@@ -202360,11 +202706,12 @@ class Runner {
                     input: typeof tc.input === 'string'
                         ? tc.input
                         : JSON.stringify(tc.messages ?? tc.input),
-                    output: output.text,
+                    output: outputText,
                     expected: tc.expected,
                     criteria: tc.criteria,
                     systemPrompt: tc.systemPrompt,
                     context: contextPassages(tc),
+                    toolCalls: output.toolCalls,
                 });
                 score = evalResult.score;
                 evaluatorBreakdown = evalResult.metadata;
@@ -202375,7 +202722,7 @@ class Runner {
             return {
                 caseId: tc.id,
                 runId,
-                output: output.text,
+                output: outputText,
                 score: evaluatorError ? NaN : score,
                 threshold,
                 latencyMs: Date.now() - start,
@@ -206657,9 +207004,63 @@ var CHOMPING_KEEP = CHOMPING_MODE.KEEP;
 
 
 
+
+/**
+ * Merges the suite's `tools` into every case. A case's effective tools are the suite tools in
+ * suite order, each replaced by a same-named case tool, followed by the case-only tools in case
+ * order. A case with no effective tools has no `tools` field.
+ */
+function resolveSuiteTools(suite) {
+    const shared = suite.tools ?? [];
+    return {
+        ...suite,
+        cases: suite.cases.map((tc) => {
+            const own = tc.tools ?? [];
+            const sharedNames = new Set(shared.map((t) => t.name));
+            const merged = [
+                ...shared.map((t) => own.find((o) => o.name === t.name) ?? t),
+                ...own.filter((o) => !sharedNames.has(o.name)),
+            ];
+            const { tools: _ignored, ...rest } = tc;
+            void _ignored;
+            return merged.length > 0 ? { ...rest, tools: merged } : rest;
+        }),
+    };
+}
+const usesEvaluator = (tc, name) => tc.evaluators?.some((e) => (typeof e === 'string' ? e : e.name) === name) ?? false;
+/** Rules that need the resolved tools; returned as Zod issues so callers render them like schema errors. */
+function toolIssues(suite) {
+    const issues = [];
+    suite.cases.forEach((tc, i) => {
+        const names = new Set((tc.tools ?? []).map((t) => t.name));
+        if (usesEvaluator(tc, 'tool-call') && (tc.expectedCalls === undefined || names.size === 0)) {
+            issues.push({
+                code: 'custom',
+                path: ['cases', i],
+                message: `case ${tc.id}: the \`tool-call\` evaluator requires \`expectedCalls\` and at least one tool.`,
+                input: tc,
+            });
+        }
+        tc.expectedCalls?.forEach((call, j) => {
+            if (!names.has(call.name)) {
+                issues.push({
+                    code: 'custom',
+                    path: ['cases', i, 'expectedCalls', j, 'name'],
+                    message: `case ${tc.id}: expectedCalls names unknown tool "${call.name}"`,
+                    input: call.name,
+                });
+            }
+        });
+    });
+    return issues;
+}
 function parseSuite(yamlText) {
     const raw = load(yamlText);
-    return SuiteSchema.parse(raw);
+    const suite = resolveSuiteTools(SuiteSchema.parse(raw));
+    const issues = toolIssues(suite);
+    if (issues.length > 0)
+        throw new ZodError(issues);
+    return suite;
 }
 function loadSuiteFromFile(path) {
     const text = (0,external_node_fs_.readFileSync)(path, 'utf8');
