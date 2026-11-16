@@ -31,6 +31,49 @@ describe('redactSecrets', () => {
     expect(redactions).toEqual([{ kind: 'openai-key', count: 1 }]);
   });
 
+  it.each([
+    ['project', `sk-proj-${'Ab1_-'.repeat(30)}`],
+    ['service account', `sk-svcacct-${'Zz9'.repeat(30)}`],
+    ['admin', `sk-admin-${'q'.repeat(60)}`],
+  ])('redacts current OpenAI %s keys', (_label, key) => {
+    const { text, redactions } = redactSecrets(`OPENAI_API_KEY=${key} end`);
+    expect(text).toBe('OPENAI_API_KEY=[REDACTED:openai-key] end');
+    expect(redactions).toEqual([{ kind: 'openai-key', count: 1 }]);
+  });
+
+  it.each([
+    ['personal', `ghp_${'a1B2'.repeat(9)}`],
+    ['OAuth', `gho_${'a1B2'.repeat(9)}`],
+    ['server', `ghs_${'a1B2'.repeat(9)}`],
+    ['fine-grained', `github_pat_${'A1b2_'.repeat(16)}`],
+  ])('redacts GitHub %s tokens', (_label, token) => {
+    const { text, redactions } = redactSecrets(`token ${token} here`);
+    expect(text).toBe('token [REDACTED:github-token] here');
+    expect(redactions).toEqual([{ kind: 'github-token', count: 1 }]);
+  });
+
+  it.each([
+    // Built at runtime so no token-shaped literal sits in the source (push protection).
+    ['bot', ['xoxb', '1'.repeat(10), '2'.repeat(13), 'Ab'.repeat(12)].join('-')],
+    ['user', ['xoxp', '1'.repeat(10), '2'.repeat(10), '3'.repeat(13), 'f0'.repeat(16)].join('-')],
+  ])('redacts Slack %s tokens', (_label, token) => {
+    const { text, redactions } = redactSecrets(`slack ${token}`);
+    expect(text).toBe('slack [REDACTED:slack-token]');
+    expect(redactions).toEqual([{ kind: 'slack-token', count: 1 }]);
+  });
+
+  it('redacts an OpenAI key glued to an underscore-joined name', () => {
+    const { text } = redactSecrets(`OPENAI_KEY_sk-proj-${'x'.repeat(40)}`);
+    expect(text).toBe('OPENAI_KEY_[REDACTED:openai-key]');
+  });
+
+  it('leaves ordinary words that start like key prefixes alone', () => {
+    const input = 'the sk-proj- prefix, ghp_ short, xoxb- alone, task-admin-panel';
+    const { text, redactions } = redactSecrets(input);
+    expect(text).toBe(input);
+    expect(redactions).toEqual([]);
+  });
+
   it('redacts JWTs', () => {
     const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.abcXYZ-_123';
     const { text, redactions } = redactSecrets(`Authorization: Bearer ${jwt}`);

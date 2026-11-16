@@ -201350,8 +201350,23 @@ const SCANNERS = [
         pattern: /sk-ant-[a-zA-Z0-9_-]{8,}/g,
     },
     {
+        // Current OpenAI keys: project, service-account and admin.
+        kind: 'openai-key',
+        pattern: /(?<![A-Za-z0-9])sk-(?:proj|svcacct|admin)-[A-Za-z0-9_-]{20,}/g,
+    },
+    {
+        // Legacy OpenAI user keys.
         kind: 'openai-key',
         pattern: /sk-[a-zA-Z0-9]{48}/g,
+    },
+    {
+        // Classic (ghp_, gho_, ghu_, ghs_, ghr_) and fine-grained (github_pat_) tokens.
+        kind: 'github-token',
+        pattern: /\b(?:gh[pousr]_[A-Za-z0-9]{36,}|github_pat_[A-Za-z0-9_]{22,})/g,
+    },
+    {
+        kind: 'slack-token',
+        pattern: /\bxox[abposr]-[A-Za-z0-9-]{10,}/g,
     },
     {
         kind: 'jwt',
@@ -201371,8 +201386,13 @@ function redaction_redactSecrets(text) {
             count += 1;
             return `[REDACTED:${kind}]`;
         });
-        if (count > 0)
-            counts.push({ kind, count });
+        if (count > 0) {
+            const existing = counts.find((c) => c.kind === kind);
+            if (existing)
+                existing.count += count;
+            else
+                counts.push({ kind, count });
+        }
     }
     return { text: current, redactions: counts };
 }
