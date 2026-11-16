@@ -27,6 +27,8 @@ export interface RenderCommentInput {
   baselineChanged: string[];
   /** Per-case changes for the "Baselines changed in this PR" section. */
   baselineChanges?: BaselineChange[];
+  /** Number of changed baseline files that could not be parsed and were skipped. */
+  baselineSkipped?: number;
   dashboardUrl?: string;
   /** sha:hex map keyed by caseId → "<short>". Optional; when omitted, stale-baseline blocks omit hash detail. */
   baselineHashes?: Record<
@@ -41,6 +43,13 @@ export interface RenderCommentInput {
  * first line so subsequent runs can find and update the same comment.
  */
 export function renderComment(input: RenderCommentInput): string {
+  const full = renderCommentWith(input, false);
+  return full.length > MAX_COMMENT_CHARS ? renderCommentWith(input, true) : full;
+}
+
+const MAX_COMMENT_CHARS = 65_000;
+
+function renderCommentWith(input: RenderCommentInput, compact: boolean): string {
   const { run, suite, deltas, threshold, baselineSource, baselineChanged, dashboardUrl } = input;
   const { summary } = run;
 
@@ -89,9 +98,8 @@ export function renderComment(input: RenderCommentInput): string {
     rows,
   ];
 
-  if (input.baselineChanges && input.baselineChanges.length > 0) {
-    sections.push('', renderBaselineChanges(input.baselineChanges));
-  }
+  const baselineSection = safeBaselineSection(input, compact);
+  if (baselineSection) sections.push('', baselineSection);
 
   if (staleSet.size > 0) {
     sections.push('', renderStaleBaselines([...staleSet], input.suitePath, input.baselineHashes));
@@ -126,48 +134,117 @@ export function renderComment(input: RenderCommentInput): string {
 
 const MAX_DIFF_LINES = 60;
 const MAX_DIFFS = 10;
+const MAX_TABLE_ROWS = 50;
+const MAX_ID_CHARS = 120;
 const DIFF_BUDGET_CHARS = 30_000;
+
+/** Never lets a rendering failure take down the whole comment. */
+function safeBaselineSection(input: RenderCommentInput, compact: boolean): string {
+  try {
+    return renderBaselineChanges(input.baselineChanges ?? [], {
+      skipped: input.baselineSkipped,
+      compact,
+    });
+  } catch {
+    return '';
+  }
+}
+
+/** Case ID safe for one line of markdown/HTML: no control chars, bounded, never empty. */
+function displayId(id: string): string {
+  const cleaned = stripControl(String(id)).trim();
+  if (cleaned === '') return 'unnamed';
+  const chars = [...cleaned];
+  return chars.length > MAX_ID_CHARS ? chars.slice(0, MAX_ID_CHARS).join('') + '…' : cleaned;
+}
+
+function stripControl(s: string): string {
+  return s.replace(new RegExp('[\u0000-\u001f\u007f\u2028\u2029]', 'g'), ' ');
+}
+
+function htmlEscapeId(s: string): string {
+  return s
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/@/g, '&#64;')
+    .replace(/\[/g, '&#91;')
+    .replace(/\]/g, '&#93;');
+}
+
+export interface BaselineSectionOptions {
+  /** Files that could not be parsed and were skipped. */
+  skipped?: number;
+  /** Heading + summary only (used when the whole comment is too large). */
+  compact?: boolean;
+}
 
 /**
  * Renders the "Baselines changed in this PR" section ('' when there is
  * nothing to show). Baseline output is untrusted model text: each diff is
  * fenced with a backtick run longer than any run inside it.
  */
-export function renderBaselineChanges(changes: BaselineChange[]): string {
-  if (changes.length === 0) return '';
+export function renderBaselineChanges(
+  changes: BaselineChange[],
+  opts: BaselineSectionOptions = {},
+): string {
+  const skipped = opts.skipped ?? 0;
   const listed = changes.filter((c) => c.kind !== 'unchanged');
   const unchangedCount = changes.length - listed.length;
-  const count = (k: BaselineChange['kind']): number => listed.filter((c) => c.kind === k).length;
+  const out: string[] = [];
+  const skippedLine = `<sub>${skipped} baseline file(s) could not be read and are not shown.</sub>`;
 
-  const out: string[] = [`### 📝 Baselines changed in this PR (${listed.length})`];
-
-  if (listed.length > 0) {
-    const labels: Array<[BaselineChange['kind'], string]> = [
-      ['lowered', 'lowered'],
-      ['raised', 'raised'],
-      ['output-changed', 'output changed'],
-      ['added', 'added'],
-      ['removed', 'removed'],
-    ];
-    out.push(
-      labels
-        .filter(([k]) => count(k) > 0)
-        .map(([k, label]) => `${count(k)} ${label}`)
-        .join(' · '),
-    );
-    if (count('lowered') > 0) {
+  if (listed.length === 0) {
+    if (unchangedCount > 0) {
       out.push(
-        '',
-        '> ⚠️ **Lowering a baseline accepts worse behaviour as the new normal.** Check the output diffs below before approving.',
+        `<sub>📝 ${unchangedCount} baseline file(s) re-captured with no score or output change.</sub>`,
       );
     }
-    out.push('', '| Case | Baseline score | Change |', '|---|---|---|');
-    for (const c of listed) out.push(renderBaselineRow(c));
+    if (skipped > 0) out.push(skippedLine);
+    return out.join('\n\n');
+  }
+
+  const count = (k: BaselineChange['kind']): number => listed.filter((c) => c.kind === k).length;
+  out.push(`### 📝 Baselines changed in this PR (${listed.length})`);
+  const labels: Array<[BaselineChange['kind'], string]> = [
+    ['lowered', 'lowered'],
+    ['raised', 'raised'],
+    ['output-changed', 'output changed'],
+    ['added', 'added'],
+    ['removed', 'removed'],
+  ];
+  out.push(
+    labels
+      .filter(([k]) => count(k) > 0)
+      .map(([k, label]) => `${count(k)} ${label}`)
+      .join(' · '),
+  );
+
+  if (opts.compact) {
+    out.push(
+      '',
+      "_Details omitted to keep this comment within GitHub's size limit; see *Files changed*._",
+    );
+    if (skipped > 0) out.push('', skippedLine);
+    return out.join('\n');
+  }
+
+  if (count('lowered') > 0) {
+    out.push(
+      '',
+      '> ⚠️ **Lowering a baseline accepts worse behaviour as the new normal.** Check the output diffs below before approving.',
+    );
+  }
+  out.push('', '| Case | Baseline score | Change |', '|---|---|---|');
+  for (const c of listed.slice(0, MAX_TABLE_ROWS)) out.push(renderBaselineRow(c));
+  if (listed.length > MAX_TABLE_ROWS) {
+    out.push(`| … ${listed.length - MAX_TABLE_ROWS} more — see *Files changed* | | |`);
   }
 
   if (unchangedCount > 0) {
     out.push('', `<sub>Plus ${unchangedCount} re-captured with no score or output change.</sub>`);
   }
+  if (skipped > 0) out.push('', skippedLine);
 
   const diffable = listed.filter(
     (c) =>
@@ -175,32 +252,25 @@ export function renderBaselineChanges(changes: BaselineChange[]): string {
       (c.oldOutput ?? '') !== (c.newOutput ?? ''),
   );
   let used = out.join('\n').length;
-  let budgetHit = false;
+  let shown = 0;
   for (const c of diffable.slice(0, MAX_DIFFS)) {
     const block = renderOutputDiff(c);
-    if (used + block.length > DIFF_BUDGET_CHARS) {
-      budgetHit = true;
-      break;
-    }
+    if (used + block.length > DIFF_BUDGET_CHARS) break;
     used += block.length;
     out.push('', block);
+    shown++;
   }
-  if (budgetHit) {
+  if (shown < diffable.length) {
     out.push(
       '',
-      "_Remaining output diffs omitted to keep this comment within GitHub's size limit; see *Files changed*._",
-    );
-  } else if (diffable.length > MAX_DIFFS) {
-    out.push(
-      '',
-      `_Output diffs for ${diffable.length - MAX_DIFFS} more case(s) omitted (limit ${MAX_DIFFS}); see *Files changed*._`,
+      `_${diffable.length - shown} more output diff(s) omitted to keep this comment within GitHub's size limit; see *Files changed*._`,
     );
   }
   return out.join('\n');
 }
 
 function renderBaselineRow(c: BaselineChange): string {
-  const id = `\`${escapeMd(c.caseId)}\``;
+  const id = `\`${escapeMd(displayId(c.caseId))}\``;
   const oldS = c.oldScore === undefined ? '' : c.oldScore.toFixed(3);
   const newS = c.newScore === undefined ? '' : c.newScore.toFixed(3);
   const scores = `${oldS} → ${newS}`.trim();
@@ -223,9 +293,10 @@ function renderOutputDiff(c: BaselineChange): string {
     lines.push(`… ${more} more lines`);
   }
   const body = lines.join('\n');
-  const longest = Math.max(0, ...(body.match(/`+/g) ?? []).map((r) => r.length));
+  let longest = 0;
+  for (const m of body.matchAll(/`+/g)) longest = Math.max(longest, m[0].length);
   const fence = '`'.repeat(Math.max(3, longest + 1));
-  const id = c.caseId.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+  const id = htmlEscapeId(displayId(c.caseId));
   return `<details><summary>Output diff: <code>${id}</code></summary>\n\n${fence}diff\n${body}\n${fence}\n</details>`;
 }
 
@@ -430,7 +501,7 @@ function escapeMd(s: string): string {
   // attacker-supplied `\` can't neutralise the `\|` escape that follows and
   // break out of the table cell. Backticks are swapped for a homoglyph (they
   // can't be reliably backslash-escaped inside a cell).
-  return s
+  return stripControl(s)
     .replace(/\\/g, '\\\\')
     .replace(/\|/g, '\\|')
     .replace(/`/g, 'ˋ');

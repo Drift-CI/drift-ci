@@ -4,6 +4,8 @@ import { execFileSync } from 'node:child_process';
 import { mkdirSync } from 'node:fs';
 import { join } from 'node:path';
 
+import { isMissingAtRevision } from './git-errors.js';
+
 import {
   runAction,
   type GitOps,
@@ -126,6 +128,7 @@ function buildCommentApi(): CommentApi | undefined {
 }
 
 function buildGitOps(): GitOps {
+  const mergeBases = new Map<string, string>();
   return {
     materialiseMainBaseline(runnerTemp: string): string {
       const targetDir = join(runnerTemp, 'drift-main-baseline');
@@ -143,33 +146,52 @@ function buildGitOps(): GitOps {
       return join(targetDir, '.drift', 'baseline');
     },
     readBaseFile(baseRef: string, path: string): string | null {
-      const sha = execFileSync('git', ['merge-base', `origin/${baseRef}`, 'HEAD'], {
-        encoding: 'utf8',
-        stdio: ['ignore', 'pipe', 'pipe'],
-      }).trim();
-      try {
-        return execFileSync('git', ['show', `${sha}:${path}`], {
-          encoding: 'utf8',
-          stdio: ['ignore', 'pipe', 'pipe'],
-        });
-      } catch (err) {
-        const stderr = String((err as { stderr?: unknown }).stderr ?? '');
-        if (/does not exist|exists on disk, but not in/.test(stderr)) return null;
-        throw err;
+      let sha = mergeBases.get(baseRef);
+      if (sha === undefined) {
+        sha = gitText(['merge-base', `origin/${baseRef}`, 'HEAD']).trim();
+        mergeBases.set(baseRef, sha);
       }
+      return gitShowOrNull(`${sha}:${path}`);
+    },
+    readHeadFile(path: string): string | null {
+      return gitShowOrNull(`HEAD:${path}`);
     },
     diffBaselineFiles(baseRef: string): string[] {
-      const out = execFileSync(
-        'git',
-        ['diff', '--name-only', `origin/${baseRef}...HEAD`, '--', '.drift/baseline/'],
-        { encoding: 'utf8' },
-      );
-      return out
-        .split('\n')
-        .map((s) => s.trim())
-        .filter(Boolean);
+      // --no-renames: a rename shows as delete + add so a lowered score can't hide.
+      // -z: NUL-separated, unquoted paths (core.quotePath would mangle non-ASCII).
+      const out = gitText([
+        'diff',
+        '--name-only',
+        '--no-renames',
+        '-z',
+        `origin/${baseRef}...HEAD`,
+        '--',
+        '.drift/baseline/',
+      ]);
+      return out.split('\0').filter(Boolean);
     },
   };
+}
+
+// LC_ALL=C keeps git's stderr in English so isMissingAtRevision can classify it.
+const gitEnv = { ...process.env, LC_ALL: 'C' };
+
+function gitText(args: string[]): string {
+  return execFileSync('git', args, {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    env: gitEnv,
+  });
+}
+
+function gitShowOrNull(spec: string): string | null {
+  try {
+    return gitText(['show', spec]);
+  } catch (err) {
+    const stderr = String((err as { stderr?: unknown }).stderr ?? '');
+    if (isMissingAtRevision(stderr)) return null;
+    throw err;
+  }
 }
 
 const writers: RunActionWriters = {

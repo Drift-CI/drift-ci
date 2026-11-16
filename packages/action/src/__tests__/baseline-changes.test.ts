@@ -34,6 +34,22 @@ describe('lineDiff', () => {
     expect(lineDiff('', 'a')).toEqual([{ op: '+', text: 'a' }]);
     expect(lineDiff('a', '')).toEqual([{ op: '-', text: 'a' }]);
   });
+  it('ignores a single trailing newline difference', () => {
+    expect(lineDiff('a\n', 'a').every((l) => l.op === ' ')).toBe(true);
+  });
+  it('handles large unrelated inputs quickly and boundedly', () => {
+    const a = Array.from({ length: 5000 }, (_, i) => `a${i}`).join('\n');
+    const b = Array.from({ length: 5000 }, (_, i) => `b${i}`).join('\n');
+    const t = Date.now();
+    const d = lineDiff(a, b);
+    expect(Date.now() - t).toBeLessThan(2000);
+    expect(d.length).toBeGreaterThan(0);
+    expect(d.length).toBeLessThanOrEqual(4000);
+  });
+  it('strips common prefix and suffix', () => {
+    const d = lineDiff('p\nold\ns', 'p\nnew\ns');
+    expect(d.map((l) => l.op).join('')).toBe(' -+ ');
+  });
   it('normalises CRLF to LF', () => {
     expect(lineDiff('a\r\nb', 'a\nb').every((l) => l.op === ' ')).toBe(true);
   });
@@ -41,7 +57,7 @@ describe('lineDiff', () => {
 
 const bl = (o: Record<string, unknown>): string => JSON.stringify(o);
 
-function run(
+function runFull(
   base: Record<string, string | null>,
   head: Record<string, string | null>,
   warnings: string[] = [],
@@ -52,6 +68,13 @@ function run(
     (p) => head[p] ?? null,
     (m) => warnings.push(m),
   );
+}
+function run(
+  base: Record<string, string | null>,
+  head: Record<string, string | null>,
+  warnings: string[] = [],
+) {
+  return runFull(base, head, warnings).changes;
 }
 
 describe('summariseBaselineChanges', () => {
@@ -87,6 +110,11 @@ describe('summariseBaselineChanges', () => {
     expect(added.oldScore).toBeUndefined();
     const removed = out.find((c) => c.kind === 'removed')!;
     expect(removed.oldScore).toBe(0.8);
+  });
+
+  it('reports the skipped count', () => {
+    const r = runFull({ 'a.json': '{nope' }, { 'a.json': bl({ score: 1 }) });
+    expect(r.skipped).toBe(1);
   });
 
   it('skips unparseable JSON with a warning', () => {

@@ -1,4 +1,4 @@
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 
 import {
@@ -99,6 +99,11 @@ export interface GitOps {
    * there; throws on any other git failure (e.g. a shallow clone).
    */
   readBaseFile(baseRef: string, path: string): string | null;
+  /**
+   * Read `path` (repo-relative) as committed at HEAD. Returns null when the
+   * file does not exist there; throws on any other git failure.
+   */
+  readHeadFile(path: string): string | null;
 }
 
 export interface RunActionDeps {
@@ -247,7 +252,8 @@ export async function runAction(
         threshold: regressionThreshold,
         baselineSource: inputs.baselineSource,
         baselineChanged: baselineChangedFiles,
-        baselineChanges,
+        baselineChanges: baselineChanges?.changes,
+        baselineSkipped: baselineChanges?.skipped,
         dashboardUrl: inputs.dashboardUrl,
       });
       try {
@@ -357,7 +363,7 @@ function collectBaselineChanges(
   inputs: RunActionInputs,
   deps: RunActionDeps,
   writers: RunActionWriters,
-): BaselineChange[] | undefined {
+): { changes: BaselineChange[]; skipped: number } | undefined {
   const gitOps = deps.gitOps;
   const baseRef = inputs.baseRef;
   if (files.length === 0 || !gitOps || !baseRef) return undefined;
@@ -365,7 +371,7 @@ function collectBaselineChanges(
     return summariseBaselineChanges(
       files,
       (p) => gitOps.readBaseFile(baseRef, p),
-      (p) => (existsSync(p) ? readFileSync(p, 'utf8') : null),
+      (p) => gitOps.readHeadFile(p),
       (m) => writers.warning(`drift-ci: ${m}`),
     );
   } catch (err) {
