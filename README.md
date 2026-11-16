@@ -154,6 +154,8 @@ cases:
 
 Cases can also take a multi-turn `messages` conversation instead of a single `input`. Each sample is a real provider call, so repeated sampling multiplies the cost of that case. Use it where answers actually vary.
 
+To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns production chat logs into test cases. See [Importing production traces](packages/cli/README.md#importing-production-traces).
+
 ### Evaluators
 
 | Evaluator | Use it for |
@@ -209,7 +211,7 @@ drift-ci is a **CI gate**: tests before merge, with baselines kept as code. It i
 | **Evaluators** | exact-match, contains, json-schema, cosine-similarity, llm-judge, rubric-checklist, refusal-detection, safety-classifier |
 | **Reporters** | Live terminal, plain text, JSON, JUnit XML |
 | **Run history** | In-memory, SQLite, Postgres, or HTTP sync to a dashboard |
-| **CLI commands** | `init`, `run`, `baseline`, `compare`, `config` |
+| **CLI commands** | `init`, `run`, `baseline`, `compare`, `config`, `import` |
 | **Packages** | [`@drift-ci/cli`](packages/cli), [`@drift-ci/core`](packages/core), [action](packages/action), [dashboard](packages/dashboard) |
 
 ## Documentation
