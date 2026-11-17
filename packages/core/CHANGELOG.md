@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.9.0...core-v1.9.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **core:** make secret redaction linear-time on crafted input ([#202](https://github.com/Drift-CI/drift-ci/issues/202)) ([1c42e25](https://github.com/Drift-CI/drift-ci/commit/1c42e2512e0b0bff86906f5d2623b52552eb41c7))
+
 ## [1.9.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.8.0...core-v1.9.0) (2026-11-17)
 
 
