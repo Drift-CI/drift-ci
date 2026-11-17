@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 // `@drift-ci/core/import` is used by drift-hosted's Cloudflare worker, so its
 // import graph must stay free of provider SDKs, the embedding model and other heavy packages.
 const SRC = resolve(dirname(fileURLToPath(import.meta.url)), '../..');
-const ALLOWED_BARE = new Set(['zod', 'node:crypto']);
+const ALLOWED_BARE = new Set(['zod', 'node:crypto', 'yaml', 'js-yaml']);
 
 function specifiers(file: string): string[] {
   const text = readFileSync(file, 'utf8');
@@ -47,7 +47,7 @@ describe('@drift-ci/core/import entry', () => {
     });
   });
 
-  it('only reaches zod and node:crypto', () => {
+  it('only reaches zod, node:crypto, yaml and js-yaml', () => {
     const bare = walk(join(SRC, 'import', 'index.ts'));
     expect([...bare].filter((s) => !ALLOWED_BARE.has(s))).toEqual([]);
     expect(bare.has('zod')).toBe(true);
