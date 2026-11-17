@@ -59,3 +59,37 @@ export function isConversation(input: CompletionInput): input is ConversationTur
     )
   );
 }
+
+/** The number of tool calls the conversation's assistant turns already carry (0 for plain input). */
+export function countToolCalls(input: CompletionInput): number {
+  return isConversation(input)
+    ? input.reduce(
+        (n, t: ConversationTurn) => n + (t.role === 'assistant' ? (t.toolCalls?.length ?? 0) : 0),
+        0,
+      )
+    : 0;
+}
+
+/**
+ * Gives every call without an id a `call_<n>`, numbering on from the tool calls already in the
+ * conversation, so ids stay unique across the steps of one conversation. Calls with an id (the
+ * provider's own) keep it.
+ */
+export function withCallIds(calls: ToolCall[], input: CompletionInput): ToolCall[] {
+  const earlier = countToolCalls(input);
+  return calls.map((c, i) => (c.id !== undefined ? c : { id: `call_${earlier + i + 1}`, ...c }));
+}
+
+/** True for an id made by {@link withCallIds} rather than returned by a provider. */
+export function isGeneratedCallId(id: string): boolean {
+  return /^call_\d+$/.test(id);
+}
+
+/**
+ * The id of the k-th (1-based) tool call in a conversation: its own, or the `call_<k>` that
+ * {@link withCallIds} would have given it. Adapters use it when mapping turns, so a call that
+ * somehow lost its id still pairs with a result echoing the generated one.
+ */
+export function callIdAt(call: ToolCall, ordinal: number): string {
+  return call.id ?? `call_${ordinal}`;
+}

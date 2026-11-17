@@ -2,6 +2,7 @@ import { describe, it, expect, vi } from 'vitest';
 
 import { GoogleGeminiProvider } from '../google-gemini.js';
 import type { GoogleGenAILike } from '../google-base.js';
+import type { ConversationTurn } from '../base.js';
 
 function okResponse(overrides: Record<string, unknown> = {}) {
   return {
@@ -266,7 +267,7 @@ describe('GoogleGeminiProvider tools', () => {
     const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
     const res = await p.complete('hi', undefined, { tools });
     expect(res.text).toBe('');
-    expect(res.toolCalls).toEqual([{ name: 'get_weather', arguments: { city: 'Paris' } }]);
+    expect(res.toolCalls).toEqual([{ id: 'call_1', name: 'get_weather', arguments: { city: 'Paris' } }]);
   });
 
   it('returns text and two calls, skipping thought text', async () => {
@@ -282,8 +283,8 @@ describe('GoogleGeminiProvider tools', () => {
     const res = await p.complete('hi', undefined, { tools });
     expect(res.text).toBe('Checking.');
     expect(res.toolCalls).toEqual([
-      { name: 'get_weather', arguments: { city: 'Paris' } },
-      { name: 'get_weather', arguments: {} },
+      { id: 'call_1', name: 'get_weather', arguments: { city: 'Paris' } },
+      { id: 'call_2', name: 'get_weather', arguments: {} },
     ]);
   });
 
@@ -294,7 +295,7 @@ describe('GoogleGeminiProvider tools', () => {
     const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
     const res = await p.complete('hi', undefined, { tools });
     expect(res.text).toBe('');
-    expect(res.toolCalls).toEqual([{ name: 'get_weather', arguments: { city: 'Rome' } }]);
+    expect(res.toolCalls).toEqual([{ id: 'call_1', name: 'get_weather', arguments: { city: 'Rome' } }]);
   });
 
   it('reads a throwing text getter as empty', async () => {
@@ -327,5 +328,136 @@ describe('GoogleGeminiProvider tools', () => {
     expect(args).not.toHaveProperty('tools');
     expect(args.config).not.toHaveProperty('tools');
     expect(res).not.toHaveProperty('toolCalls');
+  });
+});
+
+describe('GoogleGeminiProvider tool conversations', () => {
+  const tools = [{ name: 'get_order', parameters: { type: 'object' } }];
+  const withParts = (parts: Array<Record<string, unknown>>) =>
+    okResponse({ text: undefined, candidates: [{ content: { role: 'model', parts } }] });
+  const conversation: ConversationTurn[] = [
+    { role: 'user', content: 'Refund ORD-1' },
+    {
+      role: 'assistant',
+      content: 'Looking.',
+      toolCalls: [
+        { id: 'call_1', name: 'get_order', arguments: { id: 'ORD-1' } },
+        { id: 'fc_given', name: 'refund', arguments: { id: 'ORD-1' } },
+        { id: 'call_3', name: 'note', arguments: {} },
+      ],
+    },
+    {
+      role: 'tool',
+      results: [
+        { callId: 'call_1', name: 'get_order', content: '{"status":"delivered"}' },
+        { callId: 'fc_given', name: 'refund', content: 'no result scripted', isError: true },
+        { callId: 'call_3', name: 'note', content: 'saved' },
+      ],
+    },
+  ];
+
+  it('sends model functionCall parts and user functionResponse parts', async () => {
+    const { client, generateContent } = makeClient();
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    await p.complete(conversation, undefined, { tools });
+    expect(generateContent.mock.calls[0][0].contents).toEqual([
+      { role: 'user', parts: [{ text: 'Refund ORD-1' }] },
+      {
+        role: 'model',
+        parts: [
+          { text: 'Looking.' },
+          { functionCall: { name: 'get_order', args: { id: 'ORD-1' } } },
+          { functionCall: { name: 'refund', args: { id: 'ORD-1' }, id: 'fc_given' } },
+          { functionCall: { name: 'note', args: {} } },
+        ],
+      },
+      {
+        role: 'user',
+        parts: [
+          { functionResponse: { name: 'get_order', response: { status: 'delivered' } } },
+          { functionResponse: { name: 'refund', response: { error: 'no result scripted' }, id: 'fc_given' } },
+          { functionResponse: { name: 'note', response: { result: 'saved' } } },
+        ],
+      },
+    ]);
+  });
+
+  it('wraps a JSON result that is not an object', async () => {
+    const { client, generateContent } = makeClient();
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    await p.complete(
+      [
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: '', toolCalls: [{ id: 'call_1', name: 'get_order', arguments: {} }] },
+        { role: 'tool', results: [{ callId: 'call_1', name: 'get_order', content: '[1,2]' }] },
+      ],
+      undefined,
+      { tools },
+    );
+    const contents = generateContent.mock.calls[0][0].contents;
+    expect(contents[1]).toEqual({ role: 'model', parts: [{ functionCall: { name: 'get_order', args: {} } }] });
+    expect(contents[2].parts[0].functionResponse.response).toEqual({ result: '[1,2]' });
+  });
+
+  it('generates call ids numbered on from the calls already in the conversation', async () => {
+    const { client } = makeClient(
+      withParts([
+        { functionCall: { name: 'get_order', args: {} } },
+        { functionCall: { name: 'get_order', args: { id: 'x' } } },
+      ]),
+    );
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    const res = await p.complete(conversation, undefined, { tools });
+    expect(res.toolCalls).toEqual([
+      { id: 'call_4', name: 'get_order', arguments: {} },
+      { id: 'call_5', name: 'get_order', arguments: { id: 'x' } },
+    ]);
+  });
+
+  it('returns a functionCall id when Gemini gives one, and sends it back', async () => {
+    const { client, generateContent } = makeClient(
+      withParts([{ functionCall: { id: 'g-123', name: 'get_order', args: {} } }]),
+    );
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    const res = await p.complete(conversation, undefined, { tools });
+    expect(res.toolCalls).toEqual([{ id: 'g-123', name: 'get_order', arguments: {} }]);
+    await p.complete(
+      [
+        ...conversation,
+        { role: 'assistant', content: '', toolCalls: res.toolCalls },
+        { role: 'tool', results: [{ callId: 'g-123', name: 'get_order', content: '{}' }] },
+      ],
+      undefined,
+      { tools },
+    );
+    const contents = generateContent.mock.calls[1][0].contents;
+    expect(contents[3].parts[0].functionCall.id).toBe('g-123');
+    expect(contents[4].parts[0].functionResponse).toEqual({ name: 'get_order', response: {}, id: 'g-123' });
+  });
+
+  it('sends a text-only conversation exactly as before', async () => {
+    const { client, generateContent } = makeClient();
+    const p = new GoogleGeminiProvider({ model: 'gemini-2.5-flash', client });
+    await p.complete(
+      [
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: 'hey' },
+        { role: 'user', content: 'again' },
+      ],
+      'sys',
+    );
+    expect(generateContent.mock.calls[0][0]).toStrictEqual({
+      model: 'gemini-2.5-flash',
+      contents: [
+        { role: 'user', parts: [{ text: 'hi' }] },
+        { role: 'model', parts: [{ text: 'hey' }] },
+        { role: 'user', parts: [{ text: 'again' }] },
+      ],
+      config: {
+        temperature: 0,
+        maxOutputTokens: 1024,
+        systemInstruction: { role: 'user', parts: [{ text: 'sys' }] },
+      },
+    });
   });
 });

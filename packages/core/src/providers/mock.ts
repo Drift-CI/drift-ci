@@ -2,11 +2,10 @@ import type {
   CompletionInput,
   CompletionOptions,
   CompletionResponse,
-  ConversationTurn,
   ProviderAdapter,
   ToolCall,
 } from './base.js';
-import { isConversation, toMessages } from './base.js';
+import { isConversation, toMessages, withCallIds } from './base.js';
 
 /** Receives the input as-is, including a multi-step tool conversation. */
 export type MockResponder = (
@@ -64,24 +63,10 @@ export class MockProvider implements ProviderAdapter {
     const { text, toolCalls } = typeof result === 'string' ? { text: result, toolCalls: undefined } : result;
     return {
       text,
-      ...(toolCalls !== undefined ? { toolCalls: withIds(toolCalls, input) } : {}),
+      ...(toolCalls !== undefined ? { toolCalls: withCallIds(toolCalls, input) } : {}),
       usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
       model: this.name,
       latencyMs: this.latencyMs,
     };
   }
-}
-
-/**
- * Gives every call without an id a `call_<n>`, numbering on from the tool calls already in the
- * conversation, so ids stay unique across the steps of one conversation.
- */
-function withIds(calls: ToolCall[], input: CompletionInput): ToolCall[] {
-  const earlier = isConversation(input)
-    ? input.reduce(
-        (n, t: ConversationTurn) => n + (t.role === 'assistant' ? (t.toolCalls?.length ?? 0) : 0),
-        0,
-      )
-    : 0;
-  return calls.map((c, i) => (c.id !== undefined ? c : { id: `call_${earlier + i + 1}`, ...c }));
 }
