@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.8.0](https://github.com/Drift-CI/drift-ci/compare/cli-v1.7.1...cli-v1.8.0) (2026-11-17)
+
+
+### Features
+
+* **core:** appendCasesToSuite shared by drift-ci import and drift-ci.com ([#206](https://github.com/Drift-CI/drift-ci/issues/206)) ([dd054cb](https://github.com/Drift-CI/drift-ci/commit/dd054cb2de793a825441a2a03053fb8cadf9b9fa))
+
 ## [1.7.1](https://github.com/Drift-CI/drift-ci/compare/cli-v1.7.0...cli-v1.7.1) (2026-11-17)
 
 
