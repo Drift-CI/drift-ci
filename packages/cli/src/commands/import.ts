@@ -1,11 +1,13 @@
 import { InvalidArgumentError, type Command } from 'commander';
 import { existsSync, mkdirSync, readFileSync, renameSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname } from 'node:path';
-import { Document, isMap, isScalar, isSeq, parseDocument, stringify } from 'yaml';
+import { stringify } from 'yaml';
 import {
   loadConfigFromFile,
-  parseSuite,
+  appendCasesToSuite,
+  SuiteEditError,
   traceToCase,
+  type AppendCasesResult,
   type TestCase,
   type TraceSkipReason,
 } from '@drift-ci/core';
@@ -28,8 +30,6 @@ export interface ImportIO {
 const consoleIO: ImportIO = { out: (l) => console.log(l), err: (l) => console.error(l) };
 
 const PREFIX_RE = /^[a-z0-9\-_]+$/;
-/** Evaluators that compare free text with `expected` usefully. */
-const REFERENCE_EVALUATORS = new Set(['llm-judge', 'cosine-similarity']);
 const MAX_SKIP_LINES = 20;
 const DEFAULT_SUITE = '.drift/suite.yaml';
 const DEFAULT_CONFIG = '.drift/config.yaml';
@@ -45,7 +45,6 @@ export const KNOWN_EVALUATORS = [
   'rubric-checklist',
   'safety-classifier',
 ];
-const YAML_OPTS = { lineWidth: 0, flowCollectionPadding: false } as const;
 
 /* c8 ignore start -- Commander wiring; executeImport is tested directly. */
 export function registerImportCommand(program: Command): void {
@@ -125,20 +124,6 @@ function writeAtomically(path: string, content: string): void {
   }
 }
 
-function isBlankDocument(doc: Document): boolean {
-  return doc.contents === null || (isScalar(doc.contents) && doc.contents.value == null);
-}
-
-function joinComments(...parts: (string | null | undefined)[]): string | undefined {
-  const present = parts.filter((p): p is string => !!p);
-  return present.length > 0 ? present.join('\n') : undefined;
-}
-
-function evaluatorNames(specs: unknown): string[] {
-  if (!Array.isArray(specs)) return ['exact-match']; // the runner's default
-  return specs.map((s) => (typeof s === 'string' ? s : String((s as { name?: unknown }).name)));
-}
-
 /** Returns the process exit code: 0 ok, 1 nothing imported / invalid result, 2 unreadable input. */
 export function executeImport(file: string, opts: ImportOptions, io: ImportIO = consoleIO): number {
   if (!PREFIX_RE.test(opts.prefix)) {
@@ -166,58 +151,23 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
     return 2;
   }
 
-  let doc: Document | undefined;
-  let leadingComment: string | undefined;
+  let suiteText: string | null = null;
   if (existsSync(suitePath)) {
     try {
-      doc = parseDocument(readFileSync(suitePath, 'utf8'));
+      suiteText = readFileSync(suitePath, 'utf8');
     } catch (e) {
       io.err(`Can't read ${suitePath}: ${(e as Error).message}`);
       return 2;
     }
-    if (doc.errors.length > 0) {
-      io.err(`Can't parse ${suitePath}: ${doc.errors[0].message}`);
-      return 2;
-    }
-    if (isBlankDocument(doc)) {
-      leadingComment = joinComments(
-        doc.commentBefore,
-        isScalar(doc.contents) ? doc.contents.commentBefore : undefined,
-      );
-      doc = undefined; // empty, comments-only, `---` or `null`
-    }
-  }
-  if (!doc) {
-    doc = new Document({
-      version: 1,
-      id: 'imported',
-      name: 'Imported production traces',
-      evaluators: ['llm-judge'],
-      cases: [],
-    });
-    if (leadingComment) doc.commentBefore = leadingComment;
   }
 
-  const cases = doc.get('cases', true);
-  if (!isSeq(cases)) {
-    io.err(`${suitePath} has no \`cases\` list.`);
-    return 2;
-  }
-  cases.flow = false;
-  const seen = new Set<string>();
-  for (const item of cases.items) {
-    const id = isMap(item) ? item.get('id') : undefined;
-    if (typeof id === 'string') seen.add(id);
-  }
-
-  const added: TestCase[] = [];
+  const candidates: TestCase[] = [];
+  const lineOf = new Map<string, number>();
+  const redactionsOf = new Map<string, number>();
   const skips: { line: number; reason: TraceSkipReason }[] = [];
-  let present = 0;
-  let redactions = 0;
 
   const lines = text.split(/\r?\n/);
   for (let i = 0; i < lines.length; i++) {
-    if (opts.limit !== undefined && added.length >= opts.limit) break;
     const line = lines[i].trim();
     if (!line) continue;
     let trace: unknown;
@@ -232,54 +182,48 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
       skips.push({ line: i + 1, reason: r.reason });
       continue;
     }
-    if (seen.has(r.case.id)) {
-      present += 1;
-      continue;
+    candidates.push(r.case);
+    if (!lineOf.has(r.case.id)) {
+      lineOf.set(r.case.id, i + 1);
+      redactionsOf.set(r.case.id, r.redactions);
     }
-    seen.add(r.case.id);
-    added.push(withEvaluators(r.case, opts.evaluator));
-    redactions += r.redactions;
   }
 
-  const warnEvaluators =
-    added.length > 0 &&
-    !opts.evaluator?.length &&
-    !evaluatorNames(doc.toJS().evaluators).some((n) => REFERENCE_EVALUATORS.has(n));
+  let result: AppendCasesResult;
+  try {
+    result = appendCasesToSuite(suiteText, candidates, { evaluators: opts.evaluator, limit: opts.limit });
+  } catch (e) {
+    if (!(e instanceof SuiteEditError)) throw e;
+    if (e.code === 'parse') {
+      io.err(`Can't parse ${suitePath}: ${e.message}`);
+      return 2;
+    }
+    if (e.code === 'no-cases') {
+      io.err(`${suitePath} has no \`cases\` list.`);
+      return 2;
+    }
+    io.err(`The updated suite is invalid, nothing written:`);
+    for (const issue of e.issues ?? [e.message]) io.err(`  ${issue}`);
+    return 1;
+  }
 
-  if (added.length === 0) {
-    report(io, { suitePath, added: 0, present, skips, redactions, dryRun: !!opts.dryRun });
+  // --limit: lines after the last imported one are not reported on.
+  const addedIds = result.added;
+  const cutoff =
+    opts.limit !== undefined && addedIds.length >= opts.limit
+      ? Math.max(...addedIds.map((id) => lineOf.get(id) ?? 0))
+      : Infinity;
+  const reportSkips = skips.filter((s) => s.line <= cutoff);
+  const present = result.present.filter((id) => (lineOf.get(id) ?? 0) <= cutoff).length;
+  const redactions = addedIds.reduce((n, id) => n + (redactionsOf.get(id) ?? 0), 0);
+
+  if (addedIds.length === 0) {
+    report(io, { suitePath, added: 0, present, skips: reportSkips, redactions, dryRun: !!opts.dryRun });
     // Re-importing the same file is a no-op, not a failure.
     return present > 0 ? 0 : 1;
   }
 
-  for (const tc of added) cases.add(doc.createNode(tc));
-  const output = doc.toString(YAML_OPTS);
-  try {
-    parseSuite(output);
-  } catch (e) {
-    const issues = (e as { issues?: { path: PropertyKey[]; message: string }[] }).issues;
-    io.err(`The updated suite is invalid, nothing written:`);
-    if (!issues) io.err(`  ${(e as Error).message.split(String.fromCharCode(10))[0]}`);
-    else {
-      const parsed = doc.toJS() as { cases?: { id?: unknown }[] };
-      for (const issue of issues) {
-        let label = issue.path.join('.');
-        if (issue.path[0] === 'cases' && typeof issue.path[1] === 'number') {
-          const id = parsed.cases?.[issue.path[1]]?.id;
-          if (typeof id === 'string') label = [id, ...issue.path.slice(2)].join('.');
-        }
-        const id0 = issue.path[0] === 'cases' && typeof issue.path[1] === 'number' ? parsed.cases?.[issue.path[1]]?.id : undefined;
-        io.err(
-          typeof id0 === 'string' && issue.message.startsWith(`case ${id0}:`)
-            ? `  ${issue.message}`
-            : `  ${label}: ${issue.message}`,
-        );
-      }
-    }
-    return 1;
-  }
-
-  if (warnEvaluators) {
+  if (result.evaluatorWarning) {
     io.err(
       "Warning: the suite's evaluators won't compare imported cases with the production reply " +
         'in a useful way. Pass --evaluator llm-judge (or cosine-similarity) to set one per case.',
@@ -287,32 +231,26 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
   }
 
   if (opts.dryRun) {
-    report(io, { suitePath, added: added.length, present, skips, redactions, dryRun: true });
+    report(io, { suitePath, added: addedIds.length, present, skips: reportSkips, redactions, dryRun: true });
     io.out('');
-    io.out(stringify(added, { lineWidth: 0 }).trimEnd());
+    io.out(stringify(result.addedCases, { lineWidth: 0 }).trimEnd());
     return 0;
   }
 
   try {
-    writeAtomically(suitePath, output);
+    writeAtomically(suitePath, result.text);
   } catch (e) {
     io.err(`Can't write ${suitePath}: ${(e as Error).message} (nothing written)`);
     return 2;
   }
 
-  report(io, { suitePath, added: added.length, present, skips, redactions, dryRun: false });
+  report(io, { suitePath, added: addedIds.length, present, skips: reportSkips, redactions, dryRun: false });
   io.out('');
   io.out(
     `Next: run \`drift-ci run\`, then \`drift-ci baseline accept ${suitePath} --all\` to record ` +
       "today's scores, and commit the suite and .drift/baseline/.",
   );
   return 0;
-}
-
-function withEvaluators(c: TestCase, evaluators: string[] | undefined): TestCase {
-  if (!evaluators?.length) return c;
-  const { tags, ...rest } = c;
-  return { ...rest, evaluators: [...evaluators], ...(tags ? { tags } : {}) } as TestCase;
 }
 
 function report(
