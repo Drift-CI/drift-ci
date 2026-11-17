@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { AnthropicProvider } from '../anthropic.js';
+import type { ConversationTurn } from '../base.js';
 
 function makeClient(response: Record<string, unknown>) {
   return {
@@ -190,7 +191,7 @@ describe('AnthropicProvider tools', () => {
     const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
     const res = await p.complete('hi', undefined, { tools });
     expect(res.text).toBe('');
-    expect(res.toolCalls).toEqual([{ name: 'get_weather', arguments: { city: 'Paris' } }]);
+    expect(res.toolCalls).toEqual([{ id: 'tu_1', name: 'get_weather', arguments: { city: 'Paris' } }]);
   });
 
   it('returns text and two calls', async () => {
@@ -207,8 +208,8 @@ describe('AnthropicProvider tools', () => {
     const res = await p.complete('hi', undefined, { tools });
     expect(res.text).toBe('Checking.');
     expect(res.toolCalls).toEqual([
-      { name: 'get_weather', arguments: { city: 'Paris' } },
-      { name: 'get_weather', arguments: { city: 'Rome' } },
+      { id: 'tu_1', name: 'get_weather', arguments: { city: 'Paris' } },
+      { id: 'tu_2', name: 'get_weather', arguments: { city: 'Rome' } },
     ]);
   });
 
@@ -227,5 +228,140 @@ describe('AnthropicProvider tools', () => {
     const args = client.messages.create.mock.calls[0][0];
     expect(args).not.toHaveProperty('tools');
     expect(res).not.toHaveProperty('toolCalls');
+  });
+});
+
+describe('AnthropicProvider tool conversations', () => {
+  const tools = [{ name: 'get_order', parameters: { type: 'object' } }];
+  const conversation: ConversationTurn[] = [
+    { role: 'user', content: 'Refund ORD-1' },
+    {
+      role: 'assistant',
+      content: 'Looking.',
+      toolCalls: [
+        { id: 'tu_1', name: 'get_order', arguments: { id: 'ORD-1' } },
+        { id: 'tu_2', name: 'refund', arguments: { id: 'ORD-1' } },
+      ],
+    },
+    {
+      role: 'tool',
+      results: [
+        { callId: 'tu_1', name: 'get_order', content: '{"status":"delivered"}' },
+        { callId: 'tu_2', name: 'refund', content: 'no result scripted', isError: true },
+      ],
+    },
+  ];
+
+  it('sends tool_use blocks and a user message of tool_result blocks', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    await p.complete(conversation, undefined, { tools });
+    expect(client.messages.create.mock.calls[0][0].messages).toEqual([
+      { role: 'user', content: 'Refund ORD-1' },
+      {
+        role: 'assistant',
+        content: [
+          { type: 'text', text: 'Looking.' },
+          { type: 'tool_use', id: 'tu_1', name: 'get_order', input: { id: 'ORD-1' } },
+          { type: 'tool_use', id: 'tu_2', name: 'refund', input: { id: 'ORD-1' } },
+        ],
+      },
+      {
+        role: 'user',
+        content: [
+          { type: 'tool_result', tool_use_id: 'tu_1', content: '{"status":"delivered"}' },
+          { type: 'tool_result', tool_use_id: 'tu_2', content: 'no result scripted', is_error: true },
+        ],
+      },
+    ]);
+  });
+
+  it('leaves out the text block when the assistant turn has no text', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    await p.complete(
+      [
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: '', toolCalls: [{ id: 'tu_1', name: 'get_order', arguments: {} }] },
+        { role: 'tool', results: [{ callId: 'tu_1', name: 'get_order', content: 'ok' }] },
+      ],
+      undefined,
+      { tools },
+    );
+    expect(client.messages.create.mock.calls[0][0].messages[1]).toEqual({
+      role: 'assistant',
+      content: [{ type: 'tool_use', id: 'tu_1', name: 'get_order', input: {} }],
+    });
+  });
+
+  it('returns the provider ids, which round-trip into the next request', async () => {
+    const client = makeClient(
+      baseResponse({
+        content: [{ type: 'tool_use', id: 'toolu_next', name: 'get_order', input: { id: 'ORD-2' } }],
+      }),
+    );
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    const res = await p.complete(conversation, undefined, { tools });
+    expect(res.toolCalls).toEqual([{ id: 'toolu_next', name: 'get_order', arguments: { id: 'ORD-2' } }]);
+    await p.complete(
+      [
+        ...conversation,
+        { role: 'assistant', content: '', toolCalls: res.toolCalls },
+        { role: 'tool', results: [{ callId: 'toolu_next', name: 'get_order', content: 'ok' }] },
+      ],
+      undefined,
+      { tools },
+    );
+    const messages = client.messages.create.mock.calls[1][0].messages;
+    expect(messages[3].content[0].id).toBe('toolu_next');
+    expect(messages[4].content[0].tool_use_id).toBe('toolu_next');
+  });
+
+  it('sends a text-only conversation exactly as before', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    await p.complete(
+      [
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: 'hey', toolCalls: [] },
+        { role: 'user', content: 'again' },
+      ],
+      'sys',
+      { tools },
+    );
+    expect(client.messages.create.mock.calls[0][0]).toStrictEqual({
+      model: 'claude-sonnet-4-5',
+      max_tokens: 1024,
+      temperature: 0,
+      system: [{ type: 'text', text: 'sys' }],
+      messages: [
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: 'hey' },
+        { role: 'user', content: 'again' },
+      ],
+      tools: [{ name: 'get_order', input_schema: { type: 'object' } }],
+    });
+  });
+});
+
+describe('AnthropicProvider providerMeta', () => {
+  it('ignores a tool call\'s providerMeta', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    await p.complete([
+        { role: 'user', content: 'hi' },
+        {
+          role: 'assistant',
+          content: '',
+          toolCalls: [
+            { id: 'c1', name: 'get_order', arguments: {}, providerMeta: { thoughtSignature: 'SIG123' } },
+          ],
+        },
+        { role: 'tool', results: [{ callId: 'c1', name: 'get_order', content: 'ok' }] },
+      ]);
+    expect(client.messages.create.mock.calls[0][0].messages[1]).toStrictEqual({
+      role: 'assistant',
+      content: [{ type: 'tool_use', id: 'c1', name: 'get_order', input: {} }],
+    });
   });
 });

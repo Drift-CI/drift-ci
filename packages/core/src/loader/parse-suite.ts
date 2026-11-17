@@ -51,6 +51,34 @@ function toolIssues(suite: Suite): z.core.$ZodIssue[] {
         });
       }
     });
+    if (tc.toolResults !== undefined) {
+      if (names.size === 0) {
+        issues.push({
+          code: 'custom',
+          path: ['cases', i, 'toolResults'],
+          message: `case ${tc.id}: toolResults needs at least one tool`,
+          input: tc.toolResults,
+        });
+      } else {
+        tc.toolResults.forEach((r, j) => {
+          if (!names.has(r.name)) {
+            issues.push({
+              code: 'custom',
+              path: ['cases', i, 'toolResults', j, 'name'],
+              message: `case ${tc.id}: toolResults names unknown tool "${r.name}"`,
+              input: r.name,
+            });
+          }
+        });
+      }
+    } else if (tc.maxSteps !== undefined) {
+      issues.push({
+        code: 'custom',
+        path: ['cases', i, 'maxSteps'],
+        message: `case ${tc.id}: \`maxSteps\` is only allowed together with \`toolResults\``,
+        input: tc.maxSteps,
+      });
+    }
   });
   return issues;
 }

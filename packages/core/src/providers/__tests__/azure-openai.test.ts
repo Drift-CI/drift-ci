@@ -143,6 +143,6 @@ describe('AzureOpenAIProvider tools (inherited from OpenAIProvider)', () => {
     expect(create.mock.calls[0][0].tools).toEqual([
       { type: 'function', function: { name: 'lookup', parameters: { type: 'object' } } },
     ]);
-    expect(res.toolCalls).toEqual([{ name: 'lookup', arguments: { id: 'a1' } }]);
+    expect(res.toolCalls).toEqual([{ id: 'c1', name: 'lookup', arguments: { id: 'a1' } }]);
   });
 });

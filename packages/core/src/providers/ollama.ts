@@ -1,6 +1,8 @@
-import type { MessageParam } from '../types/index.js';
 import {
+  isConversation,
   toMessages,
+  withCallIds,
+  type CompletionInput,
   type CompletionOptions,
   type CompletionResponse,
   type ProviderAdapter,
@@ -19,10 +21,14 @@ export interface OllamaProviderConfig {
   fetch?: typeof fetch;
 }
 
-interface OllamaChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
+type OllamaChatMessage =
+  | { role: 'system' | 'user'; content: string }
+  | {
+      role: 'assistant';
+      content: string;
+      tool_calls?: Array<{ function: { name: string; arguments: Record<string, unknown> } }>;
+    }
+  | { role: 'tool'; content: string; tool_name: string };
 
 interface OllamaChatResponse {
   model: string;
@@ -58,7 +64,7 @@ export class OllamaProvider implements ProviderAdapter {
   }
 
   async complete(
-    input: string | MessageParam[],
+    input: CompletionInput,
     systemPrompt?: string,
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
@@ -67,12 +73,7 @@ export class OllamaProvider implements ProviderAdapter {
 
     const messages: OllamaChatMessage[] = [];
     if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-    for (const m of toMessages(input)) {
-      messages.push({
-        role: m.role,
-        content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
-      });
-    }
+    messages.push(...toOllamaMessages(input));
 
     const body = {
       model: this.config.model,
@@ -124,9 +125,39 @@ export class OllamaProvider implements ProviderAdapter {
       },
       model: response.model ?? this.config.model,
       latencyMs: Date.now() - start,
-      ...(tools ? { toolCalls: readOllamaToolCalls(response.message?.tool_calls) } : {}),
+      ...(tools ? { toolCalls: withCallIds(readOllamaToolCalls(response.message?.tool_calls), input) } : {}),
     };
   }
+}
+
+/**
+ * Plain input becomes `{ role, content }` messages, as always. A tool conversation maps an
+ * assistant turn's calls to `tool_calls` and a tool turn to one `role: 'tool'` message per result,
+ * named by `tool_name` (Ollama has no call ids).
+ */
+function toOllamaMessages(input: CompletionInput): OllamaChatMessage[] {
+  if (!isConversation(input)) {
+    return toMessages(input).map((m) => ({
+      role: m.role,
+      content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+    }));
+  }
+  return input.flatMap((turn): OllamaChatMessage[] => {
+    if (turn.role === 'user') return [{ role: 'user', content: turn.content }];
+    if (turn.role === 'assistant') {
+      if (!turn.toolCalls?.length) return [{ role: 'assistant', content: turn.content }];
+      return [
+        {
+          role: 'assistant',
+          content: turn.content,
+          tool_calls: turn.toolCalls.map((c) => ({
+            function: { name: c.name, arguments: c.arguments },
+          })),
+        },
+      ];
+    }
+    return turn.results.map((r) => ({ role: 'tool' as const, content: r.content, tool_name: r.name }));
+  });
 }
 
 function toOllamaTools(tools: ToolDefinition[]) {

@@ -1,6 +1,10 @@
-import type { MessageParam } from '../types/index.js';
 import {
+  callIdAt,
+  isConversation,
+  isGeneratedCallId,
   toMessages,
+  withCallIds,
+  type CompletionInput,
   type CompletionOptions,
   type CompletionResponse,
   type ProviderAdapter,
@@ -58,11 +62,25 @@ export interface GooglePart {
   text?: string;
   thought?: boolean;
   functionCall?: GoogleFunctionCall;
+  /** Gemini 3 puts this on (the first) functionCall part; it must be sent back on that part. */
+  thoughtSignature?: string;
 }
+
+export interface GoogleFunctionResponse {
+  id?: string;
+  name: string;
+  response: Record<string, unknown>;
+}
+
+/** A request part: text, a function call the model made, or the result sent back for one. */
+export type ContentPart =
+  | { text: string }
+  | { functionCall: GoogleFunctionCall; thoughtSignature?: string }
+  | { functionResponse: GoogleFunctionResponse };
 
 export interface ContentEntry {
   role: 'user' | 'model';
-  parts: Array<{ text: string }>;
+  parts: ContentPart[];
 }
 
 export interface GenerateContentResponseLike {
@@ -97,26 +115,14 @@ export class BaseGoogleGenAIProvider implements ProviderAdapter {
   }
 
   async complete(
-    input: string | MessageParam[],
+    input: CompletionInput,
     systemPrompt?: string,
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
     const start = Date.now();
     const tools = options.tools?.length ? options.tools : undefined;
 
-    const contents = toMessages(input).map<ContentEntry>((m) => ({
-      // Gemini's content roles are user / model. We map our user-role
-      // unchanged and rebrand `assistant` → `model`. drift-ci doesn't
-      // emit `system` in MessageParam[]; that's the systemInstruction
-      // below, sent separately.
-      role: m.role === 'assistant' ? 'model' : 'user',
-      parts: [
-        {
-          text:
-            typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
-        },
-      ],
-    }));
+    const contents = toGoogleContents(input);
 
     const params: GenerateContentParams = {
       model: this.config.model,
@@ -153,7 +159,7 @@ export class BaseGoogleGenAIProvider implements ProviderAdapter {
       this.config.retry,
     );
 
-    const read = tools ? readWithTools(response) : undefined;
+    const read = tools ? readWithTools(response, input) : undefined;
     const text = read ? read.text : (response.text ?? '');
     const usage = response.usageMetadata;
     const inputTokens = usage?.promptTokenCount ?? 0;
@@ -179,19 +185,88 @@ export class BaseGoogleGenAIProvider implements ProviderAdapter {
 }
 
 /**
+ * Plain input becomes one text part per message, as always (`assistant` is Gemini's `model`;
+ * the system prompt goes separately in systemInstruction). A tool conversation maps an assistant
+ * turn's calls to `functionCall` parts and a tool turn to a user turn of `functionResponse` parts.
+ * Ids are sent only when Gemini made them, not for the `call_<n>` ids drift-ci generated, and a
+ * call's thought signature goes back on its own functionCall part.
+ */
+function toGoogleContents(input: CompletionInput): ContentEntry[] {
+  if (!isConversation(input)) {
+    return toMessages(input).map<ContentEntry>((m) => ({
+      role: m.role === 'assistant' ? 'model' : 'user',
+      parts: [
+        {
+          text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+        },
+      ],
+    }));
+  }
+  let ordinal = 0;
+  const providerId = (id: string) => (isGeneratedCallId(id) ? {} : { id });
+  return input.map((turn): ContentEntry => {
+    if (turn.role === 'user') return { role: 'user', parts: [{ text: turn.content }] };
+    if (turn.role === 'assistant') {
+      if (!turn.toolCalls?.length) return { role: 'model', parts: [{ text: turn.content }] };
+      return {
+        role: 'model',
+        parts: [
+          ...(turn.content ? [{ text: turn.content }] : []),
+          ...turn.toolCalls.map((c) => ({
+            functionCall: { name: c.name, args: c.arguments, ...providerId(callIdAt(c, ++ordinal)) },
+            ...(c.providerMeta?.thoughtSignature
+              ? { thoughtSignature: c.providerMeta.thoughtSignature }
+              : {}),
+          })),
+        ],
+      };
+    }
+    return {
+      role: 'user',
+      parts: turn.results.map((r) => ({
+        functionResponse: {
+          name: r.name,
+          response: r.isError ? { error: r.content } : parsedOrWrapped(r.content),
+          ...providerId(r.callId),
+        },
+      })),
+    };
+  });
+}
+
+/** A JSON object result as-is; anything else (plain text, arrays, scalars) as `{ result }`. */
+function parsedOrWrapped(content: string): Record<string, unknown> {
+  try {
+    const parsed: unknown = JSON.parse(content);
+    if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+      return parsed as Record<string, unknown>;
+    }
+  } catch {
+    // not JSON: wrapped below
+  }
+  return { result: content };
+}
+
+/**
  * Reads text and function calls from the first candidate's parts directly:
  * the SDK's `text` getter warns about (and its result omits) non-text parts,
  * and is undefined when only function calls came back. Falls back to the
- * `functionCalls` / `text` getters when there are no candidate parts.
+ * `functionCalls` / `text` getters when there are no candidate parts. A call keeps
+ * the thought signature of the part that carried it.
  */
-function readWithTools(response: GenerateContentResponseLike): {
+function readWithTools(
+  response: GenerateContentResponseLike,
+  input: CompletionInput,
+): {
   text: string;
   toolCalls: ToolCall[];
 } {
   const parts = response.candidates?.[0]?.content?.parts;
-  const calls = parts
-    ? parts.flatMap((p) => (p.functionCall ? [p.functionCall] : []))
-    : (response.functionCalls ?? []);
+  const calls: Array<{ fc: GoogleFunctionCall; thoughtSignature?: string }> = parts
+    ? parts.flatMap((p) =>
+        p.functionCall ? [{ fc: p.functionCall, thoughtSignature: p.thoughtSignature }] : [],
+      )
+    : (response.functionCalls ?? []).map((fc) => ({ fc }));
   const text = parts
     ? parts
         .filter((p) => typeof p.text === 'string' && !p.thought)
@@ -200,7 +275,15 @@ function readWithTools(response: GenerateContentResponseLike): {
     : safeText(response);
   return {
     text,
-    toolCalls: calls.map((fc) => ({ name: fc.name ?? '', arguments: fc.args ?? {} })),
+    toolCalls: withCallIds(
+      calls.map(({ fc, thoughtSignature }) => ({
+        ...(fc.id ? { id: fc.id } : {}),
+        name: fc.name ?? '',
+        arguments: fc.args ?? {},
+        ...(thoughtSignature ? { providerMeta: { thoughtSignature } } : {}),
+      })),
+      input,
+    ),
   };
 }
 

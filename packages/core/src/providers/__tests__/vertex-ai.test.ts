@@ -214,7 +214,7 @@ describe('VertexAIProvider tools (shared Google base)', () => {
     expect(generateContent.mock.calls[0][0].config.tools).toEqual([
       { functionDeclarations: [{ name: 'lookup', parametersJsonSchema: { type: 'object' } }] },
     ]);
-    expect(res.toolCalls).toEqual([{ name: 'lookup', arguments: { id: 'a1' } }]);
+    expect(res.toolCalls).toEqual([{ id: 'call_1', name: 'lookup', arguments: { id: 'a1' } }]);
   });
 
   it('sends no tools key without tools', async () => {

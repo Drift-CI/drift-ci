@@ -1,9 +1,8 @@
 import { AnthropicBedrock } from '@anthropic-ai/bedrock-sdk';
 import type Anthropic from '@anthropic-ai/sdk';
 
-import type { MessageParam } from '../types/index.js';
 import {
-  toMessages,
+  type CompletionInput,
   type CompletionOptions,
   type CompletionResponse,
   type ProviderAdapter,
@@ -11,7 +10,7 @@ import {
 import { withRetry, type RetryOptions } from './utils.js';
 import type { AnthropicLike } from './anthropic.js';
 import { claudeModelRejectsSamplingParams } from './claude-models.js';
-import { readAnthropicToolCalls, toAnthropicTools } from './anthropic-tools.js';
+import { readAnthropicToolCalls, toAnthropicMessages, toAnthropicTools } from './anthropic-tools.js';
 
 export interface BedrockAnthropicProviderConfig {
   /** Bedrock model id, e.g. `anthropic.claude-sonnet-4-5-20260101-v1:0`. Takes precedence over `model`. */
@@ -69,7 +68,7 @@ export class BedrockAnthropicProvider implements ProviderAdapter {
   }
 
   async complete(
-    input: string | MessageParam[],
+    input: CompletionInput,
     systemPrompt?: string,
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
@@ -98,7 +97,7 @@ export class BedrockAnthropicProvider implements ProviderAdapter {
             ? {}
             : { temperature: options.temperature ?? 0 }),
           system,
-          messages: toBedrockMessages(input),
+          messages: toAnthropicMessages(input),
           ...(tools ? { tools: toAnthropicTools(tools) } : {}),
         }),
       this.config.retry,
@@ -125,13 +124,4 @@ export class BedrockAnthropicProvider implements ProviderAdapter {
       ...(tools ? { toolCalls: readAnthropicToolCalls(response.content) } : {}),
     };
   }
-}
-
-function toBedrockMessages(
-  input: string | MessageParam[],
-): Anthropic.MessageParam[] {
-  return toMessages(input).map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
 }

@@ -123324,6 +123324,21 @@ const ExpectedCallSchema = object({
     name: schemas_string().min(1),
     arguments: record(schemas_string(), unknown()).default({}),
 });
+/**
+ * A scripted result for a multi-step case: answers the model's call to `name` (and, when
+ * `arguments` is listed, only calls whose listed arguments match). `result` is any JSON value.
+ */
+const ToolResultSchema = object({
+    name: schemas_string().min(1),
+    arguments: record(schemas_string(), unknown()).optional(),
+    result: unknown(),
+})
+    .refine((r) => r.result !== undefined, {
+    message: 'Each `toolResults` entry must define a `result`.',
+    path: ['result'],
+});
+/** Steps a multi-step case may take when it doesn't set `maxSteps`. */
+const DEFAULT_MAX_STEPS = 5;
 // ─── case ───────────────────────────────────────────────────────────────
 const suite_TestCaseSchema = object({
     id: schemas_string()
@@ -123348,8 +123363,10 @@ const suite_TestCaseSchema = object({
     rubricQuorum: RubricQuorumSchema.optional(),
     tools: ToolListSchema.optional(),
     expectedCalls: array(ExpectedCallSchema).max(16).optional(),
-    /** Reserved for multi-step tool cases; rejected for now. */
-    toolResults: unknown().optional(),
+    /** Scripted tool results; makes the case multi-step. Names must be effective tools. */
+    toolResults: array(ToolResultSchema).min(1).max(32).optional(),
+    /** Provider calls a multi-step case may take (default 5); only with `toolResults`. */
+    maxSteps: schemas_number().int().min(1).max(10).optional(),
 })
     .refine((tc) => (tc.input !== undefined) !== (tc.messages !== undefined), {
     message: 'Each case must define exactly one of `input` or `messages` (not both, not neither).',
@@ -123365,10 +123382,6 @@ const suite_TestCaseSchema = object({
 })
     .refine((tc) => !tc.evaluators?.some((e) => (typeof e === 'string' ? e : e.name) === 'faithfulness') || tc.context !== undefined, {
     message: 'A case using the `faithfulness` evaluator must define a `context` field.',
-})
-    .refine((tc) => tc.toolResults === undefined, {
-    message: "multi-step tool cases (`toolResults`) aren't supported yet.",
-    path: ['toolResults'],
 });
 const SuiteSchema = object({
     version: literal(1),
@@ -123757,13 +123770,6 @@ function alerts_alertDedupeKey(ruleId, runId) {
 //# sourceMappingURL=index.js.map
 // EXTERNAL MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.104.2_zod@4.6.7/node_modules/@anthropic-ai/sdk/index.mjs + 79 modules
 var sdk = __nccwpck_require__(41683);
-;// CONCATENATED MODULE: ../core/dist/providers/base.js
-function toMessages(input) {
-    return typeof input === 'string'
-        ? [{ role: 'user', content: input }]
-        : input;
-}
-//# sourceMappingURL=base.js.map
 ;// CONCATENATED MODULE: ../core/dist/providers/utils.js
 const DEFAULT_RETRY_OPTIONS = {
     maxRetries: 3,
@@ -123846,7 +123852,50 @@ function claudeModelRejectsSamplingParams(model) {
     return SAMPLING_PARAM_FREE.some((needle) => id.includes(needle));
 }
 //# sourceMappingURL=claude-models.js.map
+;// CONCATENATED MODULE: ../core/dist/providers/base.js
+function toMessages(input) {
+    return typeof input === 'string'
+        ? [{ role: 'user', content: input }]
+        : input;
+}
+/**
+ * True when `input` is a tool conversation rather than plain text or messages: it has a `tool`
+ * turn or an assistant turn with tool calls. Adapters map such input to their tool formats.
+ */
+function isConversation(input) {
+    return (Array.isArray(input) &&
+        input.some((t) => t.role === 'tool' || (t.role === 'assistant' && (t.toolCalls?.length ?? 0) > 0)));
+}
+/** The number of tool calls the conversation's assistant turns already carry (0 for plain input). */
+function countToolCalls(input) {
+    return isConversation(input)
+        ? input.reduce((n, t) => n + (t.role === 'assistant' ? (t.toolCalls?.length ?? 0) : 0), 0)
+        : 0;
+}
+/**
+ * Gives every call without an id a `call_<n>`, numbering on from the tool calls already in the
+ * conversation, so ids stay unique across the steps of one conversation. Calls with an id (the
+ * provider's own) keep it.
+ */
+function withCallIds(calls, input) {
+    const earlier = countToolCalls(input);
+    return calls.map((c, i) => (c.id !== undefined ? c : { ...c, id: `call_${earlier + i + 1}` }));
+}
+/** True for an id made by {@link withCallIds} rather than returned by a provider. */
+function isGeneratedCallId(id) {
+    return /^call_\d+$/.test(id);
+}
+/**
+ * The id of the k-th (1-based) tool call in a conversation: its own, or the `call_<k>` that
+ * {@link withCallIds} would have given it. Adapters use it when mapping turns, so a call that
+ * somehow lost its id still pairs with a result echoing the generated one.
+ */
+function callIdAt(call, ordinal) {
+    return call.id ?? `call_${ordinal}`;
+}
+//# sourceMappingURL=base.js.map
 ;// CONCATENATED MODULE: ../core/dist/providers/anthropic-tools.js
+
 /** Shared by the Anthropic and Bedrock adapters, which speak the same Messages API. */
 function toAnthropicTools(tools) {
     return tools.map((t) => ({
@@ -123856,17 +123905,58 @@ function toAnthropicTools(tools) {
         input_schema: t.parameters,
     }));
 }
+/** Tool calls with the provider's own `tool_use` ids, which the next step echoes back. */
 function readAnthropicToolCalls(content) {
     return content
         .filter((b) => b.type === 'tool_use')
         .map((b) => ({
+        id: b.id,
         name: b.name,
         arguments: (b.input ?? {}),
     }));
 }
+/**
+ * Plain input becomes `{ role, content }` messages, as always. A tool conversation maps an
+ * assistant turn's calls to `tool_use` blocks (after its text, when there is any: the API rejects
+ * empty text blocks) and a tool turn to a user message of `tool_result` blocks.
+ */
+function toAnthropicMessages(input) {
+    if (!isConversation(input)) {
+        return toMessages(input).map((m) => ({ role: m.role, content: m.content }));
+    }
+    let ordinal = 0;
+    return input.map((turn) => {
+        if (turn.role === 'user')
+            return { role: 'user', content: turn.content };
+        if (turn.role === 'assistant') {
+            if (!turn.toolCalls?.length)
+                return { role: 'assistant', content: turn.content };
+            return {
+                role: 'assistant',
+                content: [
+                    ...(turn.content ? [{ type: 'text', text: turn.content }] : []),
+                    ...turn.toolCalls.map((c) => ({
+                        type: 'tool_use',
+                        id: callIdAt(c, ++ordinal),
+                        name: c.name,
+                        input: c.arguments,
+                    })),
+                ],
+            };
+        }
+        return {
+            role: 'user',
+            content: turn.results.map((r) => ({
+                type: 'tool_result',
+                tool_use_id: r.callId,
+                content: r.content,
+                ...(r.isError ? { is_error: true } : {}),
+            })),
+        };
+    });
+}
 //# sourceMappingURL=anthropic-tools.js.map
 ;// CONCATENATED MODULE: ../core/dist/providers/anthropic.js
-
 
 
 
@@ -123934,12 +124024,6 @@ class AnthropicProvider {
         };
     }
 }
-function toAnthropicMessages(input) {
-    return toMessages(input).map((m) => ({
-        role: m.role,
-        content: m.content,
-    }));
-}
 //# sourceMappingURL=anthropic.js.map
 ;// CONCATENATED MODULE: ../core/dist/util/url.js
 /**
@@ -123983,12 +124067,7 @@ class OllamaProvider {
         const messages = [];
         if (systemPrompt)
             messages.push({ role: 'system', content: systemPrompt });
-        for (const m of toMessages(input)) {
-            messages.push({
-                role: m.role,
-                content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
-            });
-        }
+        messages.push(...toOllamaMessages(input));
         const body = {
             model: this.config.model,
             messages,
@@ -124032,9 +124111,40 @@ class OllamaProvider {
             },
             model: response.model ?? this.config.model,
             latencyMs: Date.now() - start,
-            ...(tools ? { toolCalls: readOllamaToolCalls(response.message?.tool_calls) } : {}),
+            ...(tools ? { toolCalls: withCallIds(readOllamaToolCalls(response.message?.tool_calls), input) } : {}),
         };
     }
+}
+/**
+ * Plain input becomes `{ role, content }` messages, as always. A tool conversation maps an
+ * assistant turn's calls to `tool_calls` and a tool turn to one `role: 'tool'` message per result,
+ * named by `tool_name` (Ollama has no call ids).
+ */
+function toOllamaMessages(input) {
+    if (!isConversation(input)) {
+        return toMessages(input).map((m) => ({
+            role: m.role,
+            content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+        }));
+    }
+    return input.flatMap((turn) => {
+        if (turn.role === 'user')
+            return [{ role: 'user', content: turn.content }];
+        if (turn.role === 'assistant') {
+            if (!turn.toolCalls?.length)
+                return [{ role: 'assistant', content: turn.content }];
+            return [
+                {
+                    role: 'assistant',
+                    content: turn.content,
+                    tool_calls: turn.toolCalls.map((c) => ({
+                        function: { name: c.name, arguments: c.arguments },
+                    })),
+                },
+            ];
+        }
+        return turn.results.map((r) => ({ role: 'tool', content: r.content, tool_name: r.name }));
+    });
 }
 function toOllamaTools(tools) {
     return tools.map((t) => ({
@@ -155037,12 +155147,7 @@ class OpenAIProvider {
         const messages = [];
         if (systemPrompt)
             messages.push({ role: 'system', content: systemPrompt });
-        for (const m of toMessages(input)) {
-            messages.push({
-                role: m.role,
-                content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
-            });
-        }
+        messages.push(...toOpenAIMessages(input));
         const response = await utils_withRetry(() => this.client.chat.completions.create({
             model: this.config.model,
             max_tokens: options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
@@ -155071,9 +155176,47 @@ class OpenAIProvider {
             },
             model: response.model ?? this.config.model,
             latencyMs: Date.now() - start,
-            ...(tools ? { toolCalls: readOpenAIToolCalls(choice?.message?.tool_calls) } : {}),
+            ...(tools ? { toolCalls: withCallIds(readOpenAIToolCalls(choice?.message?.tool_calls), input) } : {}),
         };
     }
+}
+/**
+ * Plain input becomes `{ role, content }` messages, as always. A tool conversation maps an
+ * assistant turn's calls to `tool_calls` (JSON-string arguments; `content: null` without text)
+ * and a tool turn to one `role: 'tool'` message per result.
+ */
+function toOpenAIMessages(input) {
+    if (!isConversation(input)) {
+        return toMessages(input).map((m) => ({
+            role: m.role,
+            content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+        }));
+    }
+    let ordinal = 0;
+    return input.flatMap((turn) => {
+        if (turn.role === 'user')
+            return [{ role: 'user', content: turn.content }];
+        if (turn.role === 'assistant') {
+            if (!turn.toolCalls?.length)
+                return [{ role: 'assistant', content: turn.content }];
+            return [
+                {
+                    role: 'assistant',
+                    content: turn.content || null,
+                    tool_calls: turn.toolCalls.map((c) => ({
+                        id: callIdAt(c, ++ordinal),
+                        type: 'function',
+                        function: { name: c.name, arguments: JSON.stringify(c.arguments) },
+                    })),
+                },
+            ];
+        }
+        return turn.results.map((r) => ({
+            role: 'tool',
+            tool_call_id: r.callId,
+            content: r.content,
+        }));
+    });
 }
 function toOpenAITools(tools) {
     return tools.map((t) => ({
@@ -155088,7 +155231,12 @@ function toOpenAITools(tools) {
 function readOpenAIToolCalls(calls) {
     return (calls ?? [])
         .filter((c) => c.type === 'function')
-        .map((c) => ({ name: c.function.name, arguments: parseArgs(c.function.arguments) }));
+        .map((c) => ({
+        // OpenAI always sends an id; an OpenAI-compatible server might not, so withCallIds fills it.
+        ...(c.id ? { id: c.id } : {}),
+        name: c.function.name,
+        arguments: parseArgs(c.function.arguments),
+    }));
 }
 //# sourceMappingURL=openai.js.map
 ;// CONCATENATED MODULE: ../core/dist/providers/azure-openai.js
@@ -179007,7 +179155,6 @@ function makeMantleBetaResource(client) {
 
 
 
-
 class BedrockAnthropicProvider {
     name;
     modelId;
@@ -179057,7 +179204,7 @@ class BedrockAnthropicProvider {
                 ? {}
                 : { temperature: options.temperature ?? 0 }),
             system,
-            messages: toBedrockMessages(input),
+            messages: toAnthropicMessages(input),
             ...(tools ? { tools: toAnthropicTools(tools) } : {}),
         }), this.config.retry);
         const text = response.content
@@ -179080,12 +179227,6 @@ class BedrockAnthropicProvider {
         };
     }
 }
-function toBedrockMessages(input) {
-    return toMessages(input).map((m) => ({
-        role: m.role,
-        content: m.content,
-    }));
-}
 //# sourceMappingURL=bedrock.js.map
 ;// CONCATENATED MODULE: ../core/dist/providers/google-base.js
 
@@ -179100,18 +179241,7 @@ class BaseGoogleGenAIProvider {
     async complete(input, systemPrompt, options = {}) {
         const start = Date.now();
         const tools = options.tools?.length ? options.tools : undefined;
-        const contents = toMessages(input).map((m) => ({
-            // Gemini's content roles are user / model. We map our user-role
-            // unchanged and rebrand `assistant` → `model`. drift-ci doesn't
-            // emit `system` in MessageParam[]; that's the systemInstruction
-            // below, sent separately.
-            role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [
-                {
-                    text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
-                },
-            ],
-        }));
+        const contents = toGoogleContents(input);
         const params = {
             model: this.config.model,
             contents,
@@ -179142,7 +179272,7 @@ class BaseGoogleGenAIProvider {
             },
         };
         const response = await utils_withRetry(() => this.config.client.models.generateContent(params), this.config.retry);
-        const read = tools ? readWithTools(response) : undefined;
+        const read = tools ? readWithTools(response, input) : undefined;
         const text = read ? read.text : (response.text ?? '');
         const usage = response.usageMetadata;
         const inputTokens = usage?.promptTokenCount ?? 0;
@@ -179165,16 +179295,81 @@ class BaseGoogleGenAIProvider {
     }
 }
 /**
+ * Plain input becomes one text part per message, as always (`assistant` is Gemini's `model`;
+ * the system prompt goes separately in systemInstruction). A tool conversation maps an assistant
+ * turn's calls to `functionCall` parts and a tool turn to a user turn of `functionResponse` parts.
+ * Ids are sent only when Gemini made them, not for the `call_<n>` ids drift-ci generated, and a
+ * call's thought signature goes back on its own functionCall part.
+ */
+function toGoogleContents(input) {
+    if (!isConversation(input)) {
+        return toMessages(input).map((m) => ({
+            role: m.role === 'assistant' ? 'model' : 'user',
+            parts: [
+                {
+                    text: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+                },
+            ],
+        }));
+    }
+    let ordinal = 0;
+    const providerId = (id) => (isGeneratedCallId(id) ? {} : { id });
+    return input.map((turn) => {
+        if (turn.role === 'user')
+            return { role: 'user', parts: [{ text: turn.content }] };
+        if (turn.role === 'assistant') {
+            if (!turn.toolCalls?.length)
+                return { role: 'model', parts: [{ text: turn.content }] };
+            return {
+                role: 'model',
+                parts: [
+                    ...(turn.content ? [{ text: turn.content }] : []),
+                    ...turn.toolCalls.map((c) => ({
+                        functionCall: { name: c.name, args: c.arguments, ...providerId(callIdAt(c, ++ordinal)) },
+                        ...(c.providerMeta?.thoughtSignature
+                            ? { thoughtSignature: c.providerMeta.thoughtSignature }
+                            : {}),
+                    })),
+                ],
+            };
+        }
+        return {
+            role: 'user',
+            parts: turn.results.map((r) => ({
+                functionResponse: {
+                    name: r.name,
+                    response: r.isError ? { error: r.content } : parsedOrWrapped(r.content),
+                    ...providerId(r.callId),
+                },
+            })),
+        };
+    });
+}
+/** A JSON object result as-is; anything else (plain text, arrays, scalars) as `{ result }`. */
+function parsedOrWrapped(content) {
+    try {
+        const parsed = JSON.parse(content);
+        if (typeof parsed === 'object' && parsed !== null && !Array.isArray(parsed)) {
+            return parsed;
+        }
+    }
+    catch {
+        // not JSON: wrapped below
+    }
+    return { result: content };
+}
+/**
  * Reads text and function calls from the first candidate's parts directly:
  * the SDK's `text` getter warns about (and its result omits) non-text parts,
  * and is undefined when only function calls came back. Falls back to the
- * `functionCalls` / `text` getters when there are no candidate parts.
+ * `functionCalls` / `text` getters when there are no candidate parts. A call keeps
+ * the thought signature of the part that carried it.
  */
-function readWithTools(response) {
+function readWithTools(response, input) {
     const parts = response.candidates?.[0]?.content?.parts;
     const calls = parts
-        ? parts.flatMap((p) => (p.functionCall ? [p.functionCall] : []))
-        : (response.functionCalls ?? []);
+        ? parts.flatMap((p) => p.functionCall ? [{ fc: p.functionCall, thoughtSignature: p.thoughtSignature }] : [])
+        : (response.functionCalls ?? []).map((fc) => ({ fc }));
     const text = parts
         ? parts
             .filter((p) => typeof p.text === 'string' && !p.thought)
@@ -179183,7 +179378,12 @@ function readWithTools(response) {
         : safeText(response);
     return {
         text,
-        toolCalls: calls.map((fc) => ({ name: fc.name ?? '', arguments: fc.args ?? {} })),
+        toolCalls: withCallIds(calls.map(({ fc, thoughtSignature }) => ({
+            ...(fc.id ? { id: fc.id } : {}),
+            name: fc.name ?? '',
+            arguments: fc.args ?? {},
+            ...(thoughtSignature ? { providerMeta: { thoughtSignature } } : {}),
+        })), input),
     };
 }
 function safeText(response) {
@@ -208993,18 +209193,23 @@ class MockProvider {
             const result = await this.responder(input, systemPrompt, options);
             if (result instanceof Error)
                 throw result;
-            return this.wrap(result);
+            return this.wrap(result, input);
         }
-        const messages = toMessages(input);
-        const key = typeof input === 'string' ? input : JSON.stringify(messages);
-        const text = this.responses[key] ?? this.defaultResponse;
-        return this.wrap(text);
+        const key = typeof input === 'string'
+            ? input
+            : JSON.stringify(isConversation(input) ? input : toMessages(input));
+        // A lone user turn (step 1 of a multi-step case) matches by its content, like a string input.
+        const single = Array.isArray(input) && input.length === 1 && input[0]?.role === 'user' ? input[0] : undefined;
+        const text = (single && 'content' in single ? this.responses[single.content] : undefined) ??
+            this.responses[key] ??
+            this.defaultResponse;
+        return this.wrap(text, input);
     }
-    wrap(result) {
+    wrap(result, input) {
         const { text, toolCalls } = typeof result === 'string' ? { text: result, toolCalls: undefined } : result;
         return {
             text,
-            ...(toolCalls !== undefined ? { toolCalls } : {}),
+            ...(toolCalls !== undefined ? { toolCalls: withCallIds(toolCalls, input) } : {}),
             usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
             model: this.name,
             latencyMs: this.latencyMs,
@@ -209578,14 +209783,8 @@ function truncate(s, max = 60) {
     return s.length > max ? s.slice(0, max - 1) + '…' : s;
 }
 //# sourceMappingURL=refusal.js.map
-;// CONCATENATED MODULE: ../core/dist/evaluators/tool-call.js
-const MAX_PROBLEMS = 3;
-const VALUE_CHARS = 40;
-const tool_call_REASON_CHARS = 200;
-const MAX_ACTUAL_META = 16;
-/** Actual calls considered for matching; the rest count as unexpected. */
-const MAX_MATCHED = 16;
-const EPS = 1e-9;
+;// CONCATENATED MODULE: ../core/dist/evaluators/args-match.js
+// Argument matching shared by the `tool-call` evaluator and the multi-step tool loop.
 const PLAIN_NUMBER = /^-?\d+(\.\d+)?$/;
 /** Deep equality; strings compare after trim, everything else exactly. */
 function valuesEqual(a, b) {
@@ -209612,6 +209811,23 @@ function numEqualsString(n, s) {
     const t = s.trim();
     return PLAIN_NUMBER.test(t) && Number(t) === n;
 }
+/**
+ * True when every key listed in `listed` equals (`valuesEqual`) the actual value at that key.
+ * Unlisted keys are ignored at the top level only; nothing listed always matches.
+ */
+function argsMatch(listed, actual) {
+    return Object.entries(listed ?? {}).every(([k, v]) => valuesEqual(v, actual[k]));
+}
+//# sourceMappingURL=args-match.js.map
+;// CONCATENATED MODULE: ../core/dist/evaluators/tool-call.js
+
+const MAX_PROBLEMS = 3;
+const VALUE_CHARS = 40;
+const tool_call_REASON_CHARS = 200;
+const MAX_ACTUAL_META = 16;
+/** Actual calls considered for matching; the rest count as unexpected. */
+const MAX_MATCHED = 16;
+const EPS = 1e-9;
 const show = (v) => {
     const s = v === undefined ? 'missing' : (JSON.stringify(v) ?? 'missing');
     return s.length > VALUE_CHARS ? `${s.slice(0, VALUE_CHARS - 1)}…` : s;
@@ -209630,11 +209846,16 @@ class ToolCallEvaluator {
     constructor(expected) {
         this.expected = expected;
     }
-    async evaluate({ toolCalls }) {
+    async evaluate({ toolCalls, toolLoop }) {
         if (!toolCalls) {
             throw new Error('tool-call evaluator: the provider returned no tool-call data (does this provider support tools?)');
         }
-        const metadata = { expected: this.expected.length, actual: toolCalls.slice(0, MAX_ACTUAL_META) };
+        const metadata = {
+            expected: this.expected.length,
+            // providerMeta is opaque provider data (e.g. Gemini thought signatures), not part of the result.
+            actual: toolCalls.slice(0, MAX_ACTUAL_META).map(({ providerMeta: _meta, ...c }) => c),
+            ...(toolLoop ? { toolLoop } : {}),
+        };
         if (this.expected.length === 0) {
             return toolCalls.length === 0
                 ? { score: 1, reason: 'no tool call, as expected', metadata }
@@ -210496,6 +210717,8 @@ function computeSuiteHash(tc) {
         // Resolved (suite + case) tools, so editing a shared tool marks its cases stale.
         ...(tc.tools !== undefined ? { tools: tc.tools } : {}),
         ...(tc.expectedCalls !== undefined ? { expectedCalls: tc.expectedCalls } : {}),
+        ...(tc.toolResults !== undefined ? { toolResults: tc.toolResults } : {}),
+        ...(tc.maxSteps !== undefined ? { maxSteps: tc.maxSteps } : {}),
         schema: tc.schema ?? null,
         systemPrompt: tc.systemPrompt ?? null,
         // Rubric edits / reorders / mode swaps / quorum changes invalidate
@@ -210802,6 +211025,7 @@ function judgeHashForProvider({ provider, promptTemplate, }) {
 }
 //# sourceMappingURL=judge-hash.js.map
 ;// CONCATENATED MODULE: ../core/dist/evaluators/index.js
+
 
 
 
@@ -211203,7 +211427,119 @@ function sampleCount(c) {
     return Array.isArray(s) && s.length > 0 ? s.length : 1;
 }
 //# sourceMappingURL=sampling.js.map
+;// CONCATENATED MODULE: ../core/dist/engine/tool-loop.js
+
+
+
+
+/** Characters of a tool result shown on a `←` transcript line. */
+const RESULT_CHARS = 200;
+function timeoutError() {
+    const e = new Error('Timeout');
+    e.code = 'TIMEOUT';
+    return e;
+}
+/** Rejects with a `TIMEOUT` error when `promise` takes longer than `ms`. */
+async function tool_loop_withTimeout(promise, ms) {
+    let handle;
+    return Promise.race([
+        promise,
+        new Promise((_, reject) => {
+            handle = setTimeout(() => reject(timeoutError()), ms);
+        }),
+    ]).finally(() => {
+        if (handle)
+            clearTimeout(handle);
+    });
+}
+function addUsage(a, b) {
+    const cached = a.cachedInputTokens !== undefined || b.cachedInputTokens !== undefined
+        ? { cachedInputTokens: (a.cachedInputTokens ?? 0) + (b.cachedInputTokens ?? 0) }
+        : {};
+    return {
+        inputTokens: a.inputTokens + b.inputTokens,
+        outputTokens: a.outputTokens + b.outputTokens,
+        totalTokens: a.totalTokens + b.totalTokens,
+        ...cached,
+    };
+}
+/** Truncates by code points, so a surrogate pair (an emoji, say) is never split. */
+const tool_loop_truncate = (s) => {
+    const points = Array.from(s);
+    return points.length > RESULT_CHARS ? `${points.slice(0, RESULT_CHARS - 1).join('')}…` : s;
+};
+/**
+ * Runs a multi-step tool case: calls the provider, answers each tool call from the case's
+ * `toolResults` (first entry with the same name whose listed arguments match; otherwise an
+ * error result), and repeats until the model answers without a call or `maxSteps` is reached.
+ * Each provider call gets `timeoutMs`, and the whole loop at most `timeoutMs × maxSteps`.
+ * Provider errors propagate for the runner to classify.
+ */
+async function runToolLoop(provider, tc, opts) {
+    const scripted = tc.toolResults ?? [];
+    const maxSteps = tc.maxSteps ?? DEFAULT_MAX_STEPS;
+    const deadline = Date.now() + opts.timeoutMs * maxSteps;
+    const base = withContext(tc);
+    const turns = typeof base === 'string' ? [{ role: 'user', content: base }] : base.map((m) => ({ ...m }));
+    const transcript = [];
+    const allCalls = [];
+    let usage = { inputTokens: 0, outputTokens: 0, totalTokens: 0 };
+    let steps = 0;
+    for (;;) {
+        steps++;
+        const left = deadline - Date.now();
+        if (left <= 0)
+            throw timeoutError();
+        const res = await tool_loop_withTimeout(provider.complete(turns, tc.systemPrompt, {
+            temperature: 0,
+            maxTokens: tc.maxTokens,
+            ...(tc.tools?.length ? { tools: tc.tools } : {}),
+        }), Math.min(opts.timeoutMs, left));
+        usage = addUsage(usage, res.usage);
+        const calls = (res.toolCalls ?? []).map((c, i) => ({
+            ...c,
+            id: callIdAt(c, allCalls.length + i + 1),
+        }));
+        if (calls.length === 0) {
+            const final = res.text.trim();
+            if (transcript.length === 0) {
+                return { output: res.text, toolCalls: allCalls, usage, steps, stoppedAtStepLimit: false };
+            }
+            const output = final ? `${transcript.join('\n')}\n\n${final}` : transcript.join('\n');
+            return { output, toolCalls: allCalls, usage, steps, stoppedAtStepLimit: false };
+        }
+        const text = res.text.trim();
+        if (text)
+            transcript.push(text);
+        for (const c of calls)
+            transcript.push(`→ ${c.name} ${JSON.stringify(c.arguments)}`);
+        allCalls.push(...calls);
+        // The step's text is already in the transcript, so it isn't repeated as a final answer.
+        if (steps >= maxSteps) {
+            return { output: transcript.join('\n'), toolCalls: allCalls, usage, steps, stoppedAtStepLimit: true };
+        }
+        turns.push({ role: 'assistant', content: res.text, toolCalls: calls });
+        const results = calls.map((c) => {
+            const match = scripted.find((r) => r.name === c.name && argsMatch(r.arguments, c.arguments));
+            if (!match) {
+                return {
+                    callId: c.id,
+                    name: c.name,
+                    content: `no result scripted for ${c.name} with these arguments`,
+                    isError: true,
+                };
+            }
+            const content = typeof match.result === 'string' ? match.result : JSON.stringify(match.result);
+            return { callId: c.id, name: c.name, content };
+        });
+        for (const r of results)
+            transcript.push(`← ${tool_loop_truncate(r.content)}`);
+        turns.push({ role: 'tool', results });
+    }
+}
+//# sourceMappingURL=tool-loop.js.map
 ;// CONCATENATED MODULE: ../core/dist/engine/runner.js
+
 
 
 
@@ -211287,32 +211623,36 @@ class Runner {
         }
         return aggregateSamples(samples);
     }
-    /** One provider call + evaluation (the pre-sampling runCase, unchanged). */
+    /**
+     * One sample: a provider call (or, for a case with `toolResults`, the multi-step tool loop)
+     * followed by evaluation.
+     */
     async runSample(runId, tc, defaultThreshold) {
         const start = Date.now();
         const threshold = tc.threshold ?? defaultThreshold;
         const timeoutMs = this.opts.timeoutMs ?? 30_000;
         try {
-            const providerInput = withContext(tc);
-            let timeoutHandle;
-            const output = await Promise.race([
-                this.opts.provider.complete(providerInput, tc.systemPrompt, {
+            let outputText;
+            let toolCalls;
+            let usage;
+            let toolLoop;
+            if (tc.toolResults) {
+                const loop = await runToolLoop(this.opts.provider, tc, { timeoutMs });
+                outputText = loop.output;
+                toolCalls = loop.toolCalls;
+                usage = loop.usage;
+                toolLoop = { steps: loop.steps, stoppedAtStepLimit: loop.stoppedAtStepLimit };
+            }
+            else {
+                const output = await tool_loop_withTimeout(this.opts.provider.complete(withContext(tc), tc.systemPrompt, {
                     temperature: 0,
                     maxTokens: tc.maxTokens,
                     ...(tc.tools?.length ? { tools: tc.tools } : {}),
-                }),
-                new Promise((_, reject) => {
-                    timeoutHandle = setTimeout(() => {
-                        const e = new Error('Timeout');
-                        e.code = 'TIMEOUT';
-                        reject(e);
-                    }, timeoutMs);
-                }),
-            ]).finally(() => {
-                if (timeoutHandle)
-                    clearTimeout(timeoutHandle);
-            });
-            const outputText = renderOutput(output.text, output.toolCalls);
+                }), timeoutMs);
+                outputText = renderOutput(output.text, output.toolCalls);
+                toolCalls = output.toolCalls;
+                usage = output.usage;
+            }
             let score = 0;
             let evaluatorBreakdown;
             let evaluatorError;
@@ -211329,7 +211669,8 @@ class Runner {
                     criteria: tc.criteria,
                     systemPrompt: tc.systemPrompt,
                     context: contextPassages(tc),
-                    toolCalls: output.toolCalls,
+                    toolCalls,
+                    ...(toolLoop ? { toolLoop } : {}),
                 });
                 score = evalResult.score;
                 evaluatorBreakdown = evalResult.metadata;
@@ -211346,7 +211687,7 @@ class Runner {
                 latencyMs: Date.now() - start,
                 status: evaluatorError ? 'evaluator-error' : 'pass',
                 error: evaluatorError,
-                tokenUsage: output.usage,
+                tokenUsage: usage,
                 evaluatorBreakdown,
             };
         }
@@ -215668,6 +216009,36 @@ function toolIssues(suite) {
                 });
             }
         });
+        if (tc.toolResults !== undefined) {
+            if (names.size === 0) {
+                issues.push({
+                    code: 'custom',
+                    path: ['cases', i, 'toolResults'],
+                    message: `case ${tc.id}: toolResults needs at least one tool`,
+                    input: tc.toolResults,
+                });
+            }
+            else {
+                tc.toolResults.forEach((r, j) => {
+                    if (!names.has(r.name)) {
+                        issues.push({
+                            code: 'custom',
+                            path: ['cases', i, 'toolResults', j, 'name'],
+                            message: `case ${tc.id}: toolResults names unknown tool "${r.name}"`,
+                            input: r.name,
+                        });
+                    }
+                });
+            }
+        }
+        else if (tc.maxSteps !== undefined) {
+            issues.push({
+                code: 'custom',
+                path: ['cases', i, 'maxSteps'],
+                message: `case ${tc.id}: \`maxSteps\` is only allowed together with \`toolResults\``,
+                input: tc.maxSteps,
+            });
+        }
     });
     return issues;
 }

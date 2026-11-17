@@ -77,6 +77,8 @@ export function computeSuiteHash(tc: TestCase): string {
     // Resolved (suite + case) tools, so editing a shared tool marks its cases stale.
     ...(tc.tools !== undefined ? { tools: tc.tools } : {}),
     ...(tc.expectedCalls !== undefined ? { expectedCalls: tc.expectedCalls } : {}),
+    ...(tc.toolResults !== undefined ? { toolResults: tc.toolResults } : {}),
+    ...(tc.maxSteps !== undefined ? { maxSteps: tc.maxSteps } : {}),
     schema: tc.schema ?? null,
     systemPrompt: tc.systemPrompt ?? null,
     // Rubric edits / reorders / mode swaps / quorum changes invalidate

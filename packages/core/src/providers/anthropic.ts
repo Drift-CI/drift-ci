@@ -1,15 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-import type { MessageParam } from '../types/index.js';
 import {
-  toMessages,
+  type CompletionInput,
   type CompletionOptions,
   type CompletionResponse,
   type ProviderAdapter,
 } from './base.js';
 import { withRetry, type RetryOptions } from './utils.js';
 import { claudeModelRejectsSamplingParams } from './claude-models.js';
-import { readAnthropicToolCalls, toAnthropicTools } from './anthropic-tools.js';
+import { readAnthropicToolCalls, toAnthropicMessages, toAnthropicTools } from './anthropic-tools.js';
 
 export interface AnthropicProviderConfig {
   model: string;
@@ -48,7 +47,7 @@ export class AnthropicProvider implements ProviderAdapter {
   }
 
   async complete(
-    input: string | MessageParam[],
+    input: CompletionInput,
     systemPrompt?: string,
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
@@ -104,13 +103,4 @@ export class AnthropicProvider implements ProviderAdapter {
       ...(tools ? { toolCalls: readAnthropicToolCalls(response.content) } : {}),
     };
   }
-}
-
-function toAnthropicMessages(
-  input: string | MessageParam[],
-): Anthropic.MessageParam[] {
-  return toMessages(input).map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
 }

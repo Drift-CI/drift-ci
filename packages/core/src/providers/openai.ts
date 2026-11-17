@@ -1,8 +1,11 @@
 import OpenAI from 'openai';
 
-import type { MessageParam } from '../types/index.js';
 import {
+  callIdAt,
+  isConversation,
   toMessages,
+  withCallIds,
+  type CompletionInput,
   type CompletionOptions,
   type CompletionResponse,
   type ProviderAdapter,
@@ -62,7 +65,7 @@ export class OpenAIProvider implements ProviderAdapter {
   }
 
   async complete(
-    input: string | MessageParam[],
+    input: CompletionInput,
     systemPrompt?: string,
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
@@ -71,13 +74,7 @@ export class OpenAIProvider implements ProviderAdapter {
 
     const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
     if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-    for (const m of toMessages(input)) {
-      messages.push({
-        role: m.role,
-        content:
-          typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
-      });
-    }
+    messages.push(...toOpenAIMessages(input));
 
     const response = await withRetry(
       () =>
@@ -116,9 +113,48 @@ export class OpenAIProvider implements ProviderAdapter {
       },
       model: response.model ?? this.config.model,
       latencyMs: Date.now() - start,
-      ...(tools ? { toolCalls: readOpenAIToolCalls(choice?.message?.tool_calls) } : {}),
+      ...(tools ? { toolCalls: withCallIds(readOpenAIToolCalls(choice?.message?.tool_calls), input) } : {}),
     };
   }
+}
+
+/**
+ * Plain input becomes `{ role, content }` messages, as always. A tool conversation maps an
+ * assistant turn's calls to `tool_calls` (JSON-string arguments; `content: null` without text)
+ * and a tool turn to one `role: 'tool'` message per result.
+ */
+function toOpenAIMessages(
+  input: CompletionInput,
+): OpenAI.Chat.Completions.ChatCompletionMessageParam[] {
+  if (!isConversation(input)) {
+    return toMessages(input).map((m) => ({
+      role: m.role,
+      content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+    }));
+  }
+  let ordinal = 0;
+  return input.flatMap((turn): OpenAI.Chat.Completions.ChatCompletionMessageParam[] => {
+    if (turn.role === 'user') return [{ role: 'user', content: turn.content }];
+    if (turn.role === 'assistant') {
+      if (!turn.toolCalls?.length) return [{ role: 'assistant', content: turn.content }];
+      return [
+        {
+          role: 'assistant',
+          content: turn.content || null,
+          tool_calls: turn.toolCalls.map((c) => ({
+            id: callIdAt(c, ++ordinal),
+            type: 'function' as const,
+            function: { name: c.name, arguments: JSON.stringify(c.arguments) },
+          })),
+        },
+      ];
+    }
+    return turn.results.map((r) => ({
+      role: 'tool' as const,
+      tool_call_id: r.callId,
+      content: r.content,
+    }));
+  });
 }
 
 function toOpenAITools(
@@ -142,5 +178,10 @@ function readOpenAIToolCalls(
       (c): c is OpenAI.Chat.Completions.ChatCompletionMessageFunctionToolCall =>
         c.type === 'function',
     )
-    .map((c) => ({ name: c.function.name, arguments: parseArgs(c.function.arguments) }));
+    .map((c) => ({
+      // OpenAI always sends an id; an OpenAI-compatible server might not, so withCallIds fills it.
+      ...(c.id ? { id: c.id } : {}),
+      name: c.function.name,
+      arguments: parseArgs(c.function.arguments),
+    }));
 }

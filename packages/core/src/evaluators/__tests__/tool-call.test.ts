@@ -16,6 +16,20 @@ describe('ToolCallEvaluator', () => {
     expect(res.metadata).toEqual({ expected: 1, actual: [call('a', { x: 1 })] });
   });
 
+  it('scores calls from every step of a multi-step case and copies the loop info', async () => {
+    const res = await new ToolCallEvaluator([call('refund', { id: 1 }), call('get', { id: 1 })]).evaluate({
+      ...base,
+      toolCalls: [call('get', { id: 1 }), call('refund', { id: 1 })],
+      toolLoop: { steps: 3, stoppedAtStepLimit: false },
+    });
+    expect(res.score).toBe(1);
+    expect(res.metadata).toEqual({
+      expected: 2,
+      actual: [call('get', { id: 1 }), call('refund', { id: 1 })],
+      toolLoop: { steps: 3, stoppedAtStepLimit: false },
+    });
+  });
+
   it('gives partial credit for a wrong argument value', async () => {
     const res = await run([call('a', { x: 1, y: 'p' })], [call('a', { x: 1, y: 'q' })]);
     expect(res.score).toBe(0.5);
@@ -96,6 +110,15 @@ describe('ToolCallEvaluator', () => {
     );
     expect(res.reason!.length).toBeLessThanOrEqual(200);
     expect(res.reason).toContain(`"${'x'.repeat(38)}…`);
+  });
+
+  it('leaves providerMeta out of the metadata and the comparison', async () => {
+    const res = await new ToolCallEvaluator([call('a', { x: 1 })]).evaluate({
+      ...base,
+      toolCalls: [{ id: 'call_1', name: 'a', arguments: { x: 1 }, providerMeta: { thoughtSignature: 'SIG' } }],
+    });
+    expect(res.score).toBe(1);
+    expect(res.metadata).toStrictEqual({ expected: 1, actual: [{ id: 'call_1', name: 'a', arguments: { x: 1 } }] });
   });
 
   it('caps actual calls in metadata at 16', async () => {

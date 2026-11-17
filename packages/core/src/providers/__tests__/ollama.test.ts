@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { OllamaProvider } from '../ollama.js';
+import type { ConversationTurn } from '../base.js';
 
 function makeFetchResponse(body: unknown, init: Partial<ResponseInit> = {}): Response {
   return new Response(JSON.stringify(body), {
@@ -218,7 +219,7 @@ describe('OllamaProvider tools', () => {
     const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
     const res = await p.complete('hi', undefined, { tools });
     expect(res.text).toBe('');
-    expect(res.toolCalls).toEqual([{ name: 'get_weather', arguments: { city: 'Paris' } }]);
+    expect(res.toolCalls).toEqual([{ id: 'call_1', name: 'get_weather', arguments: { city: 'Paris' } }]);
   });
 
   it('returns text and two calls', async () => {
@@ -237,8 +238,8 @@ describe('OllamaProvider tools', () => {
     const res = await p.complete('hi', undefined, { tools });
     expect(res.text).toBe('Checking.');
     expect(res.toolCalls).toEqual([
-      { name: 'get_weather', arguments: { city: 'Paris' } },
-      { name: 'get_weather', arguments: { city: 'Rome' } },
+      { id: 'call_1', name: 'get_weather', arguments: { city: 'Paris' } },
+      { id: 'call_2', name: 'get_weather', arguments: { city: 'Rome' } },
     ]);
   });
 
@@ -257,9 +258,9 @@ describe('OllamaProvider tools', () => {
     const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
     const res = await p.complete('hi', undefined, { tools });
     expect(res.toolCalls).toEqual([
-      { name: 'get_weather', arguments: { city: 'Oslo' } },
-      { name: 'get_weather', arguments: { __unparsed: 'not json' } },
-      { name: 'get_weather', arguments: {} },
+      { id: 'call_1', name: 'get_weather', arguments: { city: 'Oslo' } },
+      { id: 'call_2', name: 'get_weather', arguments: { __unparsed: 'not json' } },
+      { id: 'call_3', name: 'get_weather', arguments: {} },
     ]);
   });
 
@@ -277,5 +278,116 @@ describe('OllamaProvider tools', () => {
     const res = await p.complete('hi', undefined, { tools: [] });
     expect(bodyOf(fetchMock)).not.toHaveProperty('tools');
     expect(res).not.toHaveProperty('toolCalls');
+  });
+});
+
+describe('OllamaProvider tool conversations', () => {
+  const tools = [{ name: 'get_order', parameters: { type: 'object' } }];
+  const conversation: ConversationTurn[] = [
+    { role: 'user', content: 'Refund ORD-1' },
+    {
+      role: 'assistant',
+      content: '',
+      toolCalls: [
+        { id: 'call_1', name: 'get_order', arguments: { id: 'ORD-1' } },
+        { id: 'call_2', name: 'refund', arguments: { id: 'ORD-1' } },
+      ],
+    },
+    {
+      role: 'tool',
+      results: [
+        { callId: 'call_1', name: 'get_order', content: '{"status":"delivered"}' },
+        { callId: 'call_2', name: 'refund', content: 'no result scripted', isError: true },
+      ],
+    },
+  ];
+  const sentBody = (fetchMock: ReturnType<typeof vi.fn>, n = 0) =>
+    JSON.parse((fetchMock.mock.calls[n][1] as RequestInit).body as string);
+
+  it('sends assistant tool_calls and one tool message per result', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(okBody()));
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    await p.complete(conversation, 'sys', { tools });
+    expect(sentBody(fetchMock).messages).toEqual([
+      { role: 'system', content: 'sys' },
+      { role: 'user', content: 'Refund ORD-1' },
+      {
+        role: 'assistant',
+        content: '',
+        tool_calls: [
+          { function: { name: 'get_order', arguments: { id: 'ORD-1' } } },
+          { function: { name: 'refund', arguments: { id: 'ORD-1' } } },
+        ],
+      },
+      { role: 'tool', content: '{"status":"delivered"}', tool_name: 'get_order' },
+      { role: 'tool', content: 'no result scripted', tool_name: 'refund' },
+    ]);
+  });
+
+  it('generates call ids numbered on from the calls already in the conversation', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(
+      makeFetchResponse(
+        okBody({
+          message: {
+            role: 'assistant',
+            content: '',
+            tool_calls: [{ function: { name: 'get_order', arguments: { id: 'ORD-2' } } }],
+          },
+        }),
+      ),
+    );
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    const res = await p.complete(conversation, undefined, { tools });
+    expect(res.toolCalls).toEqual([{ id: 'call_3', name: 'get_order', arguments: { id: 'ORD-2' } }]);
+  });
+
+  it('sends a text-only conversation exactly as before', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(okBody()));
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    await p.complete(
+      [
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: 'hey' },
+        { role: 'user', content: 'again' },
+      ],
+      'sys',
+    );
+    expect((fetchMock.mock.calls[0][1] as RequestInit).body).toBe(
+      JSON.stringify({
+        model: 'llama3.2',
+        messages: [
+          { role: 'system', content: 'sys' },
+          { role: 'user', content: 'hi' },
+          { role: 'assistant', content: 'hey' },
+          { role: 'user', content: 'again' },
+        ],
+        stream: false,
+        options: { temperature: 0, num_predict: 1024 },
+      }),
+    );
+  });
+});
+
+describe('OllamaProvider providerMeta', () => {
+  it('ignores a tool call\'s providerMeta', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(okBody()));
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    await p.complete([
+        { role: 'user', content: 'hi' },
+        {
+          role: 'assistant',
+          content: '',
+          toolCalls: [
+            { id: 'c1', name: 'get_order', arguments: {}, providerMeta: { thoughtSignature: 'SIG123' } },
+          ],
+        },
+        { role: 'tool', results: [{ callId: 'c1', name: 'get_order', content: 'ok' }] },
+      ]);
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.messages[1]).toStrictEqual({
+      role: 'assistant',
+      content: '',
+      tool_calls: [{ function: { name: 'get_order', arguments: {} } }],
+    });
   });
 });

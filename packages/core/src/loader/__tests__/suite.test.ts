@@ -376,6 +376,87 @@ cases:
     expect(issue.path).toEqual(['cases', 0, 'expectedCalls', 0, 'name']);
   });
 
+  const issueOf = (yaml: string): z.core.$ZodIssue => {
+    try {
+      parseSuite(yaml);
+    } catch (e) {
+      expect(e).toBeInstanceOf(z.ZodError);
+      return (e as z.ZodError).issues[0];
+    }
+    throw new Error('expected parseSuite to throw');
+  };
+
+  it('accepts toolResults naming effective tools (suite and case tools)', () => {
+    const s = parseSuite(
+      suite(`tools:
+  - name: get_order
+cases:
+  - id: c1
+    input: q
+    tools:
+      - name: refund_order
+    toolResults:
+      - name: get_order
+        arguments: { order_id: ORD-1 }
+        result: { status: delivered }
+      - name: refund_order
+        result: { ok: true }
+    maxSteps: 4
+    expectedCalls:
+      - name: get_order
+    evaluators: [tool-call]
+`),
+    );
+    expect(s.cases[0].toolResults?.map((r) => r.name)).toEqual(['get_order', 'refund_order']);
+    expect(s.cases[0].maxSteps).toBe(4);
+  });
+
+  it('rejects a toolResults name that is not an effective tool', () => {
+    const issue = issueOf(
+      suite(`tools:
+  - name: a
+cases:
+  - id: c1
+    input: q
+    toolResults:
+      - name: a
+        result: 1
+      - name: nope
+        result: 1
+`),
+    );
+    expect(issue.message).toBe('case c1: toolResults names unknown tool "nope"');
+    expect(issue.path).toEqual(['cases', 0, 'toolResults', 1, 'name']);
+  });
+
+  it('rejects toolResults on a case without any tools', () => {
+    const issue = issueOf(
+      suite(`cases:
+  - id: c1
+    input: q
+    toolResults:
+      - name: a
+        result: 1
+`),
+    );
+    expect(issue.message).toBe('case c1: toolResults needs at least one tool');
+    expect(issue.path).toEqual(['cases', 0, 'toolResults']);
+  });
+
+  it('rejects maxSteps without toolResults', () => {
+    const issue = issueOf(
+      suite(`tools:
+  - name: a
+cases:
+  - id: c1
+    input: q
+    maxSteps: 3
+`),
+    );
+    expect(issue.message).toBe('case c1: `maxSteps` is only allowed together with `toolResults`');
+    expect(issue.path).toEqual(['cases', 0, 'maxSteps']);
+  });
+
   it('parses every example suite exactly as the schema does (except tools.yaml, which merges tools)', () => {
     const dir = fileURLToPath(new URL('../../../../../examples/suites', import.meta.url));
     const files = readdirSync(dir).filter((f) => f.endsWith('.yaml') && f !== 'tools.yaml');
@@ -390,7 +471,7 @@ cases:
     const dir = fileURLToPath(new URL('../../../../../examples/suites', import.meta.url));
     const suite = parseSuite(readFileSync(join(dir, 'tools.yaml'), 'utf8'));
     const byId = Object.fromEntries(suite.cases.map((c) => [c.id, c]));
-    expect(suite.cases).toHaveLength(4);
+    expect(suite.cases).toHaveLength(5);
     expect(byId.order_lookup.tools?.map((t) => t.name)).toEqual(['get_order', 'cancel_order']);
     expect(byId.thanks_no_tool.expectedCalls).toEqual([]);
     expect(byId.case_level_tool.tools?.map((t) => t.name)).toEqual([
@@ -398,6 +479,8 @@ cases:
       'cancel_order',
       'send_receipt',
     ]);
+    expect(byId.cancel_if_unshipped.toolResults?.map((r) => r.name)).toEqual(['get_order', 'cancel_order']);
+    expect(byId.cancel_if_unshipped.maxSteps).toBe(4);
   });
 
   it('rejects a tool whose parameters are not an object schema', () => {

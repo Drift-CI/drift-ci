@@ -9,6 +9,8 @@ export interface EvalInput {
   context?: string[];
   /** The model's tool calls, when the case offered tools. */
   toolCalls?: ToolCall[];
+  /** Set for a multi-step case (`toolResults`): provider calls made and whether `maxSteps` cut it off. */
+  toolLoop?: { steps: number; stoppedAtStepLimit: boolean };
 }
 
 export interface EvalResult {

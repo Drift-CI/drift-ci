@@ -8,14 +8,17 @@ import type {
   RunSummary,
   Suite,
   TestCase,
+  TokenUsage,
   ToolCall,
 } from '../types/index.js';
 import type { ProviderAdapter } from '../providers/base.js';
+import type { EvalInput } from '../evaluators/base.js';
 import type { EvaluatorChain } from '../evaluators/composite.js';
 import type { StorageAdapter } from '../storage/interface.js';
 import { contextPassages, withContext } from './context.js';
 import { classifyError } from './error-classifier.js';
 import { aggregateSamples, effectiveRuns } from './sampling.js';
+import { runToolLoop, withTimeout } from './tool-loop.js';
 
 /**
  * The output text stored and shown to evaluators: the model's text, then one
@@ -132,7 +135,10 @@ export class Runner {
     return aggregateSamples(samples);
   }
 
-  /** One provider call + evaluation (the pre-sampling runCase, unchanged). */
+  /**
+   * One sample: a provider call (or, for a case with `toolResults`, the multi-step tool loop)
+   * followed by evaluation.
+   */
   private async runSample(
     runId: string,
     tc: TestCase,
@@ -143,27 +149,29 @@ export class Runner {
     const timeoutMs = this.opts.timeoutMs ?? 30_000;
 
     try {
-      const providerInput = withContext(tc);
-
-      let timeoutHandle: NodeJS.Timeout | undefined;
-      const output = await Promise.race([
-        this.opts.provider.complete(providerInput, tc.systemPrompt, {
-          temperature: 0,
-          maxTokens: tc.maxTokens,
-          ...(tc.tools?.length ? { tools: tc.tools } : {}),
-        }),
-        new Promise<never>((_, reject) => {
-          timeoutHandle = setTimeout(() => {
-            const e = new Error('Timeout');
-            (e as Error & { code?: string }).code = 'TIMEOUT';
-            reject(e);
-          }, timeoutMs);
-        }),
-      ]).finally(() => {
-        if (timeoutHandle) clearTimeout(timeoutHandle);
-      });
-
-      const outputText = renderOutput(output.text, output.toolCalls);
+      let outputText: string;
+      let toolCalls: ToolCall[] | undefined;
+      let usage: TokenUsage;
+      let toolLoop: EvalInput['toolLoop'];
+      if (tc.toolResults) {
+        const loop = await runToolLoop(this.opts.provider, tc, { timeoutMs });
+        outputText = loop.output;
+        toolCalls = loop.toolCalls;
+        usage = loop.usage;
+        toolLoop = { steps: loop.steps, stoppedAtStepLimit: loop.stoppedAtStepLimit };
+      } else {
+        const output = await withTimeout(
+          this.opts.provider.complete(withContext(tc), tc.systemPrompt, {
+            temperature: 0,
+            maxTokens: tc.maxTokens,
+            ...(tc.tools?.length ? { tools: tc.tools } : {}),
+          }),
+          timeoutMs,
+        );
+        outputText = renderOutput(output.text, output.toolCalls);
+        toolCalls = output.toolCalls;
+        usage = output.usage;
+      }
 
       let score = 0;
       let evaluatorBreakdown: Record<string, unknown> | undefined;
@@ -183,7 +191,8 @@ export class Runner {
           criteria: tc.criteria,
           systemPrompt: tc.systemPrompt,
           context: contextPassages(tc),
-          toolCalls: output.toolCalls,
+          toolCalls,
+          ...(toolLoop ? { toolLoop } : {}),
         });
         score = evalResult.score;
         evaluatorBreakdown = evalResult.metadata;
@@ -200,7 +209,7 @@ export class Runner {
         latencyMs: Date.now() - start,
         status: evaluatorError ? 'evaluator-error' : 'pass',
         error: evaluatorError,
-        tokenUsage: output.usage,
+        tokenUsage: usage,
         evaluatorBreakdown,
       };
     } catch (err) {
