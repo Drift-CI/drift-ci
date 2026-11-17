@@ -16,6 +16,20 @@ describe('ToolCallEvaluator', () => {
     expect(res.metadata).toEqual({ expected: 1, actual: [call('a', { x: 1 })] });
   });
 
+  it('scores calls from every step of a multi-step case and copies the loop info', async () => {
+    const res = await new ToolCallEvaluator([call('refund', { id: 1 }), call('get', { id: 1 })]).evaluate({
+      ...base,
+      toolCalls: [call('get', { id: 1 }), call('refund', { id: 1 })],
+      toolLoop: { steps: 3, stoppedAtStepLimit: false },
+    });
+    expect(res.score).toBe(1);
+    expect(res.metadata).toEqual({
+      expected: 2,
+      actual: [call('get', { id: 1 }), call('refund', { id: 1 })],
+      toolLoop: { steps: 3, stoppedAtStepLimit: false },
+    });
+  });
+
   it('gives partial credit for a wrong argument value', async () => {
     const res = await run([call('a', { x: 1, y: 'p' })], [call('a', { x: 1, y: 'q' })]);
     expect(res.score).toBe(0.5);

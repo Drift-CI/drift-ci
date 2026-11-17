@@ -29,13 +29,17 @@ export class ToolCallEvaluator implements Evaluator {
 
   constructor(private readonly expected: ExpectedCall[]) {}
 
-  async evaluate({ toolCalls }: EvalInput): Promise<EvalResult> {
+  async evaluate({ toolCalls, toolLoop }: EvalInput): Promise<EvalResult> {
     if (!toolCalls) {
       throw new Error(
         'tool-call evaluator: the provider returned no tool-call data (does this provider support tools?)',
       );
     }
-    const metadata = { expected: this.expected.length, actual: toolCalls.slice(0, MAX_ACTUAL_META) };
+    const metadata = {
+      expected: this.expected.length,
+      actual: toolCalls.slice(0, MAX_ACTUAL_META),
+      ...(toolLoop ? { toolLoop } : {}),
+    };
     if (this.expected.length === 0) {
       return toolCalls.length === 0
         ? { score: 1, reason: 'no tool call, as expected', metadata }
