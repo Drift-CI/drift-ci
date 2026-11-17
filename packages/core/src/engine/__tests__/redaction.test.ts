@@ -102,4 +102,28 @@ describe('redactSecrets', () => {
     expect(byKind['anthropic-key']).toBe(1);
     expect(byKind['jwt']).toBe(1);
   });
+
+  it('still redacts a JWT that follows punctuation or a space', () => {
+    const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.abcXYZ-_123';
+    expect(redactSecrets(`token=${jwt}`).text).toBe('token=[REDACTED:jwt]');
+    expect(redactSecrets(`"${jwt}"`).text).toBe('"[REDACTED:jwt]"');
+  });
+
+  it('redacts several private keys and leaves text after the last END alone', () => {
+    const key = ['-----BEGIN PRIVATE KEY-----', 'abc', '-----END PRIVATE KEY-----'].join(String.fromCharCode(10));
+    const { text, redactions } = redactSecrets(`${key} mid ${key} tail -----BEGIN PRIVATE KEY----- no end`);
+    expect(text).toBe('[REDACTED:rsa-private-key] mid [REDACTED:rsa-private-key] tail -----BEGIN PRIVATE KEY----- no end');
+    expect(redactions).toEqual([{ kind: 'rsa-private-key', count: 2 }]);
+  });
+
+  it.each([
+    ['repeated JWT prefixes', 'eyJ'.repeat(300_000)],
+    ['repeated PEM headers with no END', '-----BEGIN PRIVATE KEY-----'.repeat(40_000)],
+    ['PEM headers then one END at the start', '-----END PRIVATE KEY-----' + '-----BEGIN PRIVATE KEY-----'.repeat(40_000)],
+    ['repeated key prefixes', 'sk-ant-sk-proj-ghp_xoxb-'.repeat(40_000)],
+  ])('runs in linear time on %s (about 1 MB)', (_label, input) => {
+    const start = Date.now();
+    redactSecrets(input);
+    expect(Date.now() - start).toBeLessThan(1500);
+  });
 });
