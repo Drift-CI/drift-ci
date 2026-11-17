@@ -214,7 +214,34 @@ The `tool-call` evaluator is pure, with no judge. It assigns expected calls to a
 
 drift-ci shows the calls in the stored output, one line per call after any text the model wrote, such as `→ get_order {"order_id":"ORD-123"}`. So baselines, PR comments and the other evaluators see them too. Other evaluators on a tool case, such as `json-schema` or `faithfulness`, see those `→` lines in the output too, so use `tool-call` to check tool use.
 
-Every bundled provider supports tools. Tools are sent once and the model's first reply is scored; drift-ci doesn't execute the tools. Multi-step cases, where you script tool results and the model continues, aren't supported yet.
+Every bundled provider supports tools. drift-ci never executes the tools: a case without `toolResults` sends the tools once and scores the model's first reply.
+
+#### Multi-step cases
+
+To check a flow that takes more than one call, script the tool results with `toolResults`. The model's calls are answered from that script and it continues until it answers without calling a tool:
+
+```yaml
+- id: refund-flow
+  input: Refund order ORD-123
+  toolResults:
+    - name: get_order
+      arguments: { order_id: ORD-123 }   # optional; listed keys must match
+      result: { status: delivered, total: 42 }
+    - name: refund_order
+      result: { ok: true }
+  maxSteps: 5
+  expectedCalls:
+    - { name: get_order, arguments: { order_id: ORD-123 } }
+    - { name: refund_order, arguments: { order_id: ORD-123 } }
+  evaluators: [tool-call]
+```
+
+- **`toolResults`:** 1 to 32 entries of `name`, optional `arguments` and `result`. Each name must be one of the case's tools, and the case needs at least one tool; both are checked when the suite loads. `result` is any JSON value: a string is sent to the model as-is, anything else as JSON.
+- **Matching:** each call is answered with the first entry that has the same name and whose listed `arguments` match the call's, using the same comparison as `expectedCalls` (unlisted keys are ignored). An entry without `arguments` answers any call to that tool. A call that no entry matches gets an error result, `no result scripted for <name> with these arguments`, and the model carries on.
+- **`maxSteps`:** the number of model replies the case may take, 1 to 10 (default 5), and only allowed with `toolResults`. When the last allowed reply still calls tools, the case stops there and is scored as it stands.
+- **Output:** the stored output is a transcript, then a blank line and the model's final answer. Each step lists any text the model wrote, a `→ <name> <arguments>` line per call and a `← <result>` line per result (cut to 200 characters). If the model calls no tool, the output is just its answer.
+- **Scoring:** `tool-call` scores the calls from every step together, with the same order-independent matching as above, and adds `toolLoop: { steps, stoppedAtStepLimit }` to its metadata. Other evaluators, such as `llm-judge`, see the whole transcript as the output.
+- **Usage and timeouts:** token usage, and so cost, is summed across steps. The case timeout applies to each model reply, and the whole case gets at most the timeout × `maxSteps`. An error from the provider at any step fails the case with the usual status.
 
 To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns production chat logs into test cases. See [Importing production traces](packages/cli/README.md#importing-production-traces).
 

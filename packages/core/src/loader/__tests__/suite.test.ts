@@ -471,7 +471,7 @@ cases:
     const dir = fileURLToPath(new URL('../../../../../examples/suites', import.meta.url));
     const suite = parseSuite(readFileSync(join(dir, 'tools.yaml'), 'utf8'));
     const byId = Object.fromEntries(suite.cases.map((c) => [c.id, c]));
-    expect(suite.cases).toHaveLength(4);
+    expect(suite.cases).toHaveLength(5);
     expect(byId.order_lookup.tools?.map((t) => t.name)).toEqual(['get_order', 'cancel_order']);
     expect(byId.thanks_no_tool.expectedCalls).toEqual([]);
     expect(byId.case_level_tool.tools?.map((t) => t.name)).toEqual([
@@ -479,6 +479,8 @@ cases:
       'cancel_order',
       'send_receipt',
     ]);
+    expect(byId.cancel_if_unshipped.toolResults?.map((r) => r.name)).toEqual(['get_order', 'cancel_order']);
+    expect(byId.cancel_if_unshipped.maxSteps).toBe(4);
   });
 
   it('rejects a tool whose parameters are not an object schema', () => {
