@@ -120,10 +120,29 @@ describe('redactSecrets', () => {
     ['repeated JWT prefixes', 'eyJ'.repeat(300_000)],
     ['repeated PEM headers with no END', '-----BEGIN PRIVATE KEY-----'.repeat(40_000)],
     ['PEM headers then one END at the start', '-----END PRIVATE KEY-----' + '-----BEGIN PRIVATE KEY-----'.repeat(40_000)],
+    ['PEM headers then a fake END line', '-----BEGIN PRIVATE KEY-----'.repeat(40_000) + '-----END XX PRIVATE KEY-----'],
     ['repeated key prefixes', 'sk-ant-sk-proj-ghp_xoxb-'.repeat(40_000)],
   ])('runs in linear time on %s (about 1 MB)', (_label, input) => {
     const start = Date.now();
     redactSecrets(input);
     expect(Date.now() - start).toBeLessThan(1500);
+  });
+
+  it('matches the old lazy-regex behaviour for private keys', () => {
+    const LAZY = /-----BEGIN (?:RSA |OPENSSH |DSA |EC |ENCRYPTED |)PRIVATE KEY-----[\s\S]*?-----END (?:RSA |OPENSSH |DSA |EC |ENCRYPTED |)PRIVATE KEY-----/g;
+    const B = '-----BEGIN PRIVATE KEY-----';
+    const RB = '-----BEGIN RSA PRIVATE KEY-----';
+    const E = '-----END PRIVATE KEY-----';
+    const RE = '-----END RSA PRIVATE KEY-----';
+    const parts = [B, RB, E, RE, 'x', ' ', '-----END XX PRIVATE KEY-----'];
+    let seed = 7;
+    const rand = (n: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    for (let i = 0; i < 500; i++) {
+      const text = Array.from({ length: rand(8) + 1 }, () => parts[rand(parts.length)]).join('');
+      expect(redactSecrets(text).text).toBe(text.replace(LAZY, '[REDACTED:rsa-private-key]'));
+    }
   });
 });
