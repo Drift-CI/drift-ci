@@ -356,7 +356,7 @@ describe('Runner repeated sampling', () => {
     const tools = [{ name: 'get_order', parameters: { type: 'object', properties: {} } }];
     const run = await runner.run(makeSuite({ cases: [{ id: 'c1', input: 'q', tools }] }));
     expect((opts[0] as { tools?: unknown }).tools).toEqual(tools);
-    expect(inputs[0].toolCalls).toEqual([{ name: 'get_order', arguments: { order_id: 'ORD-1' } }]);
+    expect(inputs[0].toolCalls).toEqual([{ id: 'call_1', name: 'get_order', arguments: { order_id: 'ORD-1' } }]);
     expect(inputs[0].output).toBe('→ get_order {"order_id":"ORD-1"}');
     expect(run.cases[0].output).toBe('→ get_order {"order_id":"ORD-1"}');
   });

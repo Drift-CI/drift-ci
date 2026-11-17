@@ -146,6 +146,21 @@ describe('computeSuiteHash', () => {
     expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
   });
 
+  it('keeps the hash unchanged when toolResults and maxSteps are absent', () => {
+    expect(computeSuiteHash(makeTestCase({ toolResults: undefined, maxSteps: undefined }))).toBe(
+      'sha256:ebf23e1873674af6881761e45790c8a161d6c95c4d4c57a1bf6b6707dfea4286',
+    );
+  });
+
+  it('changes when toolResults or maxSteps change', () => {
+    const a = makeTestCase({ toolResults: [{ name: 'x', result: { ok: true } }] });
+    const b = makeTestCase({ toolResults: [{ name: 'x', result: { ok: false } }] });
+    const c = makeTestCase({ toolResults: [{ name: 'x', result: { ok: true } }], maxSteps: 2 });
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(c));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
+  });
+
   it('ignores unrelated fields (id, tags, description)', () => {
     const a = makeTestCase({ id: 'alpha', description: 'first' });
     const b = makeTestCase({ id: 'beta', description: 'second' });

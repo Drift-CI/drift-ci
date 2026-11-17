@@ -98,11 +98,49 @@ describe('TestCase and Suite tools', () => {
     expect(SuiteSchema.safeParse(withCase({ expectedCalls: [{ name: '' }] })).success).toBe(false);
   });
 
-  it('rejects toolResults with the reserved message', () => {
-    const r = SuiteSchema.safeParse(withCase({ toolResults: [{ name: 'a', result: 1 }] }));
-    expect(r.success).toBe(false);
-    expect(JSON.stringify(r.error?.issues)).toContain(
-      "multi-step tool cases (`toolResults`) aren't supported yet.",
+  it('accepts toolResults with any JSON result and optional arguments', () => {
+    const r = SuiteSchema.parse(
+      withCase({
+        toolResults: [
+          { name: 'a', arguments: { id: 1 }, result: { ok: true } },
+          { name: 'b', result: 'plain text' },
+          { name: 'c', result: null },
+        ],
+        maxSteps: 3,
+      }),
     );
+    expect(r.cases[0].toolResults).toEqual([
+      { name: 'a', arguments: { id: 1 }, result: { ok: true } },
+      { name: 'b', result: 'plain text' },
+      { name: 'c', result: null },
+    ]);
+    expect(r.cases[0].maxSteps).toBe(3);
+  });
+
+  it('rejects empty, oversized and malformed toolResults', () => {
+    const entry = { name: 'a', result: 1 };
+    expect(SuiteSchema.safeParse(withCase({ toolResults: [] })).success).toBe(false);
+    expect(
+      SuiteSchema.safeParse(withCase({ toolResults: Array.from({ length: 33 }, () => entry) })).success,
+    ).toBe(false);
+    expect(
+      SuiteSchema.safeParse(withCase({ toolResults: Array.from({ length: 32 }, () => entry) })).success,
+    ).toBe(true);
+    expect(SuiteSchema.safeParse(withCase({ toolResults: [{ name: '', result: 1 }] })).success).toBe(false);
+    expect(SuiteSchema.safeParse(withCase({ toolResults: [{ name: 'a' }] })).success).toBe(false);
+    expect(
+      SuiteSchema.safeParse(withCase({ toolResults: [{ name: 'a', arguments: 'x', result: 1 }] })).success,
+    ).toBe(false);
+  });
+
+  it('bounds maxSteps to integers from 1 to 10 and leaves it undefined by default', () => {
+    const tr = [{ name: 'a', result: 1 }];
+    expect(SuiteSchema.parse(withCase({ toolResults: tr })).cases[0].maxSteps).toBeUndefined();
+    for (const maxSteps of [1, 10]) {
+      expect(SuiteSchema.safeParse(withCase({ toolResults: tr, maxSteps })).success).toBe(true);
+    }
+    for (const maxSteps of [0, 11, 2.5]) {
+      expect(SuiteSchema.safeParse(withCase({ toolResults: tr, maxSteps })).success).toBe(false);
+    }
   });
 });

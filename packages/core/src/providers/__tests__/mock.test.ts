@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { MockProvider } from '../mock.js';
+import type { ConversationTurn } from '../base.js';
 import { createProvider } from '../factory.js';
 
 describe('MockProvider', () => {
@@ -33,7 +34,56 @@ describe('MockProvider', () => {
     });
     const r = await p.complete('x');
     expect(r.text).toBe('looking');
-    expect(r.toolCalls).toEqual([{ name: 'get_order', arguments: { id: 1 } }]);
+    expect(r.toolCalls).toEqual([{ id: 'call_1', name: 'get_order', arguments: { id: 1 } }]);
+  });
+
+  it('keeps ids the responder sets and numbers the rest after the calls already in the conversation', async () => {
+    const p = new MockProvider({
+      responder: () => ({
+        text: '',
+        toolCalls: [
+          { id: 'given', name: 'a', arguments: {} },
+          { name: 'b', arguments: {} },
+        ],
+      }),
+    });
+    expect((await p.complete('x')).toolCalls?.map((c) => c.id)).toEqual(['given', 'call_2']);
+    const conversation: ConversationTurn[] = [
+      { role: 'user', content: 'q' },
+      {
+        role: 'assistant',
+        content: '',
+        toolCalls: [
+          { id: 'call_1', name: 'a', arguments: {} },
+          { id: 'call_2', name: 'a', arguments: {} },
+        ],
+      },
+      {
+        role: 'tool',
+        results: [
+          { callId: 'call_1', name: 'a', content: 'ok' },
+          { callId: 'call_2', name: 'a', content: 'ok' },
+        ],
+      },
+    ];
+    expect((await p.complete(conversation)).toolCalls?.map((c) => c.id)).toEqual(['given', 'call_4']);
+  });
+
+  it('passes a tool conversation to the responder as-is', async () => {
+    const seen: unknown[] = [];
+    const conversation: ConversationTurn[] = [
+      { role: 'user', content: 'q' },
+      { role: 'assistant', content: 'looking', toolCalls: [{ id: 'call_1', name: 'a', arguments: { x: 1 } }] },
+      { role: 'tool', results: [{ callId: 'call_1', name: 'a', content: 'boom', isError: true }] },
+    ];
+    const p = new MockProvider({
+      responder: (input) => {
+        seen.push(input);
+        return 'done';
+      },
+    });
+    expect((await p.complete(conversation)).text).toBe('done');
+    expect(seen[0]).toBe(conversation);
   });
 
   it('leaves toolCalls undefined for a plain string or an object without calls', async () => {

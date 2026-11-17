@@ -93,11 +93,47 @@ export const ExpectedCallSchema = z.object({
 export type ToolDefinition = z.infer<typeof ToolDefinitionSchema>;
 export type ExpectedCall = z.infer<typeof ExpectedCallSchema>;
 
+/**
+ * A scripted result for a multi-step case: answers the model's call to `name` (and, when
+ * `arguments` is listed, only calls whose listed arguments match). `result` is any JSON value.
+ */
+export const ToolResultSchema = z
+  .object({
+    name: z.string().min(1),
+    arguments: z.record(z.string(), z.unknown()).optional(),
+    result: z.unknown(),
+  })
+  .refine((r) => r.result !== undefined, {
+    message: 'Each `toolResults` entry must define a `result`.',
+    path: ['result'],
+  });
+
+export type ToolResult = z.infer<typeof ToolResultSchema>;
+
+/** Steps a multi-step case may take when it doesn't set `maxSteps`. */
+export const DEFAULT_MAX_STEPS = 5;
+
 /** A tool call made by the model, as returned by a provider. */
 export interface ToolCall {
+  /** The provider's call id, or a generated `call_<n>`; echoed back with the call's result. */
+  id?: string;
   name: string;
   arguments: Record<string, unknown>;
 }
+
+/** One result in a `tool` turn, answering the call with id `callId`. */
+export interface ToolResultContent {
+  callId: string;
+  name: string;
+  content: string;
+  isError?: boolean;
+}
+
+/** A turn of a multi-step tool conversation (internal to the engine and providers). */
+export type ConversationTurn =
+  | { role: 'user'; content: string }
+  | { role: 'assistant'; content: string; toolCalls?: ToolCall[] }
+  | { role: 'tool'; results: ToolResultContent[] };
 
 // ─── case ───────────────────────────────────────────────────────────────
 
@@ -130,8 +166,10 @@ export const TestCaseSchema = z
     rubricQuorum: RubricQuorumSchema.optional(),
     tools: ToolListSchema.optional(),
     expectedCalls: z.array(ExpectedCallSchema).max(16).optional(),
-    /** Reserved for multi-step tool cases; rejected for now. */
-    toolResults: z.unknown().optional(),
+    /** Scripted tool results; makes the case multi-step. Names must be effective tools. */
+    toolResults: z.array(ToolResultSchema).min(1).max(32).optional(),
+    /** Provider calls a multi-step case may take (default 5); only with `toolResults`. */
+    maxSteps: z.number().int().min(1).max(10).optional(),
   })
   .refine((tc) => (tc.input !== undefined) !== (tc.messages !== undefined), {
     message:
@@ -176,11 +214,7 @@ export const TestCaseSchema = z
       message:
         'A case using the `faithfulness` evaluator must define a `context` field.',
     },
-  )
-  .refine((tc) => tc.toolResults === undefined, {
-    message: "multi-step tool cases (`toolResults`) aren't supported yet.",
-    path: ['toolResults'],
-  });
+  );
 
 export const SuiteSchema = z.object({
   version: z.literal(1),
