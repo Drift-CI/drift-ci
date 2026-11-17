@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.10.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.9.1...core-v1.10.0) (2026-11-17)
+
+
+### Features
+
+* **core:** appendCasesToSuite shared by drift-ci import and drift-ci.com ([#206](https://github.com/Drift-CI/drift-ci/issues/206)) ([dd054cb](https://github.com/Drift-CI/drift-ci/commit/dd054cb2de793a825441a2a03053fb8cadf9b9fa))
+* **core:** multi-step tool cases with scripted tool results ([#211](https://github.com/Drift-CI/drift-ci/issues/211)) ([b0d8429](https://github.com/Drift-CI/drift-ci/commit/b0d8429a4d39ae40e17b57771993555a7da3a948))
+
+
+### Bug Fixes
+
+* **core:** scan private-key blocks in one pass ([#205](https://github.com/Drift-CI/drift-ci/issues/205)) ([f86fc1c](https://github.com/Drift-CI/drift-ci/commit/f86fc1ccaf9b688bed349965f418d45560dcf548))
+
 ## [1.9.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.9.0...core-v1.9.1) (2026-11-17)
 
 
