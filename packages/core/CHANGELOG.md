@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.9.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.8.0...core-v1.9.0) (2026-11-17)
+
+
+### Features
+
+* **core:** light @drift-ci/core/import entry for trace conversion ([#198](https://github.com/Drift-CI/drift-ci/issues/198)) ([365f93e](https://github.com/Drift-CI/drift-ci/commit/365f93e2fff35f25fecbd44025dbc58cfdf5662a))
+
 ## [1.8.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.7.0...core-v1.8.0) (2026-11-16)
 
 
