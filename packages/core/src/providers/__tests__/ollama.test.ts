@@ -367,3 +367,27 @@ describe('OllamaProvider tool conversations', () => {
     );
   });
 });
+
+describe('OllamaProvider providerMeta', () => {
+  it('ignores a tool call\'s providerMeta', async () => {
+    const fetchMock = vi.fn().mockResolvedValue(makeFetchResponse(okBody()));
+    const p = new OllamaProvider({ model: 'llama3.2', fetch: fetchMock });
+    await p.complete([
+        { role: 'user', content: 'hi' },
+        {
+          role: 'assistant',
+          content: '',
+          toolCalls: [
+            { id: 'c1', name: 'get_order', arguments: {}, providerMeta: { thoughtSignature: 'SIG123' } },
+          ],
+        },
+        { role: 'tool', results: [{ callId: 'c1', name: 'get_order', content: 'ok' }] },
+      ]);
+    const body = JSON.parse((fetchMock.mock.calls[0][1] as RequestInit).body as string);
+    expect(body.messages[1]).toStrictEqual({
+      role: 'assistant',
+      content: '',
+      tool_calls: [{ function: { name: 'get_order', arguments: {} } }],
+    });
+  });
+});

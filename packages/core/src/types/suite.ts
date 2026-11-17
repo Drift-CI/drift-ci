@@ -119,6 +119,11 @@ export interface ToolCall {
   id?: string;
   name: string;
   arguments: Record<string, unknown>;
+  /**
+   * Opaque provider data that must go back with the call in the next step, such as Gemini's
+   * `thoughtSignature`. Never rendered, hashed or compared.
+   */
+  providerMeta?: { thoughtSignature?: string };
 }
 
 /** One result in a `tool` turn, answering the call with id `callId`. */

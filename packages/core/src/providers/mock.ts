@@ -55,7 +55,12 @@ export class MockProvider implements ProviderAdapter {
       typeof input === 'string'
         ? input
         : JSON.stringify(isConversation(input) ? input : toMessages(input));
-    const text = this.responses[key] ?? this.defaultResponse;
+    // A lone user turn (step 1 of a multi-step case) matches by its content, like a string input.
+    const single = Array.isArray(input) && input.length === 1 && input[0]?.role === 'user' ? input[0] : undefined;
+    const text =
+      (single && 'content' in single ? this.responses[single.content] : undefined) ??
+      this.responses[key] ??
+      this.defaultResponse;
     return this.wrap(text, input);
   }
 

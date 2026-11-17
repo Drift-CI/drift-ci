@@ -461,3 +461,65 @@ describe('GoogleGeminiProvider tool conversations', () => {
     });
   });
 });
+
+describe('GoogleGeminiProvider thought signatures', () => {
+  const tools = [{ name: 'get_order', parameters: { type: 'object' } }];
+  const withParts = (parts: Array<Record<string, unknown>>) =>
+    okResponse({ text: undefined, candidates: [{ content: { role: 'model', parts } }] });
+
+  async function twoSteps(parts: Array<Record<string, unknown>>) {
+    const { client, generateContent } = makeClient(withParts(parts));
+    const p = new GoogleGeminiProvider({ model: 'gemini-3-pro', client });
+    const first = await p.complete('Refund ORD-1', undefined, { tools });
+    const calls = first.toolCalls ?? [];
+    await p.complete(
+      [
+        { role: 'user', content: 'Refund ORD-1' },
+        { role: 'assistant', content: first.text, toolCalls: calls },
+        {
+          role: 'tool',
+          results: calls.map((c) => ({ callId: c.id ?? '', name: c.name, content: '{}' })),
+        },
+      ],
+      undefined,
+      { tools },
+    );
+    return { calls, modelTurn: generateContent.mock.calls[1][0].contents[1] };
+  }
+
+  it('captures a functionCall part\'s thoughtSignature and sends it back on the same part', async () => {
+    const { calls, modelTurn } = await twoSteps([
+      { functionCall: { name: 'get_order', args: { id: 'ORD-1' } }, thoughtSignature: 'SIG123' },
+    ]);
+    expect(calls).toEqual([
+      {
+        id: 'call_1',
+        name: 'get_order',
+        arguments: { id: 'ORD-1' },
+        providerMeta: { thoughtSignature: 'SIG123' },
+      },
+    ]);
+    expect(modelTurn).toEqual({
+      role: 'model',
+      parts: [{ functionCall: { name: 'get_order', args: { id: 'ORD-1' } }, thoughtSignature: 'SIG123' }],
+    });
+  });
+
+  it('keeps parallel calls apart: only the first part carries the signature', async () => {
+    const { calls, modelTurn } = await twoSteps([
+      { functionCall: { name: 'get_order', args: { id: 'A' } }, thoughtSignature: 'SIG123' },
+      { functionCall: { name: 'get_order', args: { id: 'B' } } },
+    ]);
+    expect(calls[1]).not.toHaveProperty('providerMeta');
+    expect(modelTurn.parts).toEqual([
+      { functionCall: { name: 'get_order', args: { id: 'A' } }, thoughtSignature: 'SIG123' },
+      { functionCall: { name: 'get_order', args: { id: 'B' } } },
+    ]);
+  });
+
+  it('sends no signature when Gemini gave none', async () => {
+    const { calls, modelTurn } = await twoSteps([{ functionCall: { name: 'get_order', args: {} } }]);
+    expect(calls[0]).not.toHaveProperty('providerMeta');
+    expect(modelTurn.parts).toEqual([{ functionCall: { name: 'get_order', args: {} } }]);
+  });
+});

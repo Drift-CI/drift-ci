@@ -343,3 +343,25 @@ describe('AnthropicProvider tool conversations', () => {
     });
   });
 });
+
+describe('AnthropicProvider providerMeta', () => {
+  it('ignores a tool call\'s providerMeta', async () => {
+    const client = makeClient(baseResponse());
+    const p = new AnthropicProvider({ model: 'claude-sonnet-4-5', client });
+    await p.complete([
+        { role: 'user', content: 'hi' },
+        {
+          role: 'assistant',
+          content: '',
+          toolCalls: [
+            { id: 'c1', name: 'get_order', arguments: {}, providerMeta: { thoughtSignature: 'SIG123' } },
+          ],
+        },
+        { role: 'tool', results: [{ callId: 'c1', name: 'get_order', content: 'ok' }] },
+      ]);
+    expect(client.messages.create.mock.calls[0][0].messages[1]).toStrictEqual({
+      role: 'assistant',
+      content: [{ type: 'tool_use', id: 'c1', name: 'get_order', input: {} }],
+    });
+  });
+});

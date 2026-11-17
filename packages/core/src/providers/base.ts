@@ -77,7 +77,7 @@ export function countToolCalls(input: CompletionInput): number {
  */
 export function withCallIds(calls: ToolCall[], input: CompletionInput): ToolCall[] {
   const earlier = countToolCalls(input);
-  return calls.map((c, i) => (c.id !== undefined ? c : { id: `call_${earlier + i + 1}`, ...c }));
+  return calls.map((c, i) => (c.id !== undefined ? c : { ...c, id: `call_${earlier + i + 1}` }));
 }
 
 /** True for an id made by {@link withCallIds} rather than returned by a provider. */

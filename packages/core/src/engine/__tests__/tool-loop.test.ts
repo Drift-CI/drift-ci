@@ -175,6 +175,24 @@ describe('runToolLoop', () => {
     expect(resultLine).toBe(`← ${'x'.repeat(199)}…`);
   });
 
+  it('truncates a result by code points, never splitting a surrogate pair', async () => {
+    const tc = refundCase({ toolResults: [{ name: 'get_order', result: `${'x'.repeat(198)}😀yyy` }] });
+    const { provider } = scripted([{ text: '', toolCalls: [call('get_order', {})] }, 'done']);
+    const r = await runToolLoop(provider, tc, { timeoutMs: 1000 });
+    expect(r.output.split('\n')[1]).toBe(`← ${'x'.repeat(198)}😀…`);
+  });
+
+  it('carries a call\'s providerMeta into the next step\'s assistant turn unchanged', async () => {
+    const signed = { name: 'get_order', arguments: {}, providerMeta: { thoughtSignature: 'SIG123' } };
+    const { provider, inputs } = scripted([{ text: '', toolCalls: [signed] }, 'done']);
+    await runToolLoop(provider, refundCase(), { timeoutMs: 1000 });
+    expect((inputs[1] as ConversationTurn[])[1]).toEqual({
+      role: 'assistant',
+      content: '',
+      toolCalls: [{ id: 'call_1', ...signed }],
+    });
+  });
+
   it('stops at maxSteps and reports it', async () => {
     const provider = new MockProvider({
       responder: () => ({ text: 'again', toolCalls: [call('refund_order', {})] }),

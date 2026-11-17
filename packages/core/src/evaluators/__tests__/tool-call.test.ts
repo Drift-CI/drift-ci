@@ -112,6 +112,15 @@ describe('ToolCallEvaluator', () => {
     expect(res.reason).toContain(`"${'x'.repeat(38)}…`);
   });
 
+  it('leaves providerMeta out of the metadata and the comparison', async () => {
+    const res = await new ToolCallEvaluator([call('a', { x: 1 })]).evaluate({
+      ...base,
+      toolCalls: [{ id: 'call_1', name: 'a', arguments: { x: 1 }, providerMeta: { thoughtSignature: 'SIG' } }],
+    });
+    expect(res.score).toBe(1);
+    expect(res.metadata).toStrictEqual({ expected: 1, actual: [{ id: 'call_1', name: 'a', arguments: { x: 1 } }] });
+  });
+
   it('caps actual calls in metadata at 16', async () => {
     const many = Array.from({ length: 20 }, () => call('a'));
     const res = await run([], many);

@@ -392,3 +392,26 @@ describe('OpenAIProvider tool conversations', () => {
     });
   });
 });
+
+describe('OpenAIProvider providerMeta', () => {
+  it('ignores a tool call\'s providerMeta', async () => {
+    const { client, create } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    await p.complete([
+        { role: 'user', content: 'hi' },
+        {
+          role: 'assistant',
+          content: '',
+          toolCalls: [
+            { id: 'c1', name: 'get_order', arguments: {}, providerMeta: { thoughtSignature: 'SIG123' } },
+          ],
+        },
+        { role: 'tool', results: [{ callId: 'c1', name: 'get_order', content: 'ok' }] },
+      ]);
+    expect(create.mock.calls[0][0].messages[1]).toStrictEqual({
+      role: 'assistant',
+      content: null,
+      tool_calls: [{ id: 'c1', type: 'function', function: { name: 'get_order', arguments: '{}' } }],
+    });
+  });
+});

@@ -60,6 +60,12 @@ describe('call id helpers', () => {
     ]);
   });
 
+  it('generates an id for a call whose id is explicitly undefined', () => {
+    expect(withCallIds([{ id: undefined, name: 'c', arguments: {} }], 'hi')).toStrictEqual([
+      { id: 'call_1', name: 'c', arguments: {} },
+    ]);
+  });
+
   it('tells generated ids from provider ids', () => {
     expect(isGeneratedCallId('call_12')).toBe(true);
     expect(isGeneratedCallId('call_abc')).toBe(false);

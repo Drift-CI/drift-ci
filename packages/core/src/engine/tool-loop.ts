@@ -53,8 +53,11 @@ function addUsage(a: TokenUsage, b: TokenUsage): TokenUsage {
   };
 }
 
-const truncate = (s: string): string =>
-  s.length > RESULT_CHARS ? `${s.slice(0, RESULT_CHARS - 1)}…` : s;
+/** Truncates by code points, so a surrogate pair (an emoji, say) is never split. */
+const truncate = (s: string): string => {
+  const points = Array.from(s);
+  return points.length > RESULT_CHARS ? `${points.slice(0, RESULT_CHARS - 1).join('')}…` : s;
+};
 
 /**
  * Runs a multi-step tool case: calls the provider, answers each tool call from the case's

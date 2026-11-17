@@ -104,6 +104,12 @@ describe('MockProvider', () => {
     await expect(p.complete('x')).rejects.toThrow('rate limited');
   });
 
+  it('keys a conversation of a single user turn by its content, like single-step input', async () => {
+    const p = new MockProvider({ responses: { question: 'the answer' }, defaultResponse: 'default' });
+    const turns: ConversationTurn[] = [{ role: 'user', content: 'question' }];
+    expect((await p.complete(turns)).text).toBe('the answer');
+  });
+
   it('normalises messages array through toMessages via the factory', async () => {
     const p = new MockProvider({
       responses: {

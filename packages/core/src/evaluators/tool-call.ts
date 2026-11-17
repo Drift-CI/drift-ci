@@ -37,7 +37,8 @@ export class ToolCallEvaluator implements Evaluator {
     }
     const metadata = {
       expected: this.expected.length,
-      actual: toolCalls.slice(0, MAX_ACTUAL_META),
+      // providerMeta is opaque provider data (e.g. Gemini thought signatures), not part of the result.
+      actual: toolCalls.slice(0, MAX_ACTUAL_META).map(({ providerMeta: _meta, ...c }) => c),
       ...(toolLoop ? { toolLoop } : {}),
     };
     if (this.expected.length === 0) {

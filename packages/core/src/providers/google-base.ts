@@ -62,6 +62,8 @@ export interface GooglePart {
   text?: string;
   thought?: boolean;
   functionCall?: GoogleFunctionCall;
+  /** Gemini 3 puts this on (the first) functionCall part; it must be sent back on that part. */
+  thoughtSignature?: string;
 }
 
 export interface GoogleFunctionResponse {
@@ -73,7 +75,7 @@ export interface GoogleFunctionResponse {
 /** A request part: text, a function call the model made, or the result sent back for one. */
 export type ContentPart =
   | { text: string }
-  | { functionCall: GoogleFunctionCall }
+  | { functionCall: GoogleFunctionCall; thoughtSignature?: string }
   | { functionResponse: GoogleFunctionResponse };
 
 export interface ContentEntry {
@@ -183,16 +185,11 @@ export class BaseGoogleGenAIProvider implements ProviderAdapter {
 }
 
 /**
- * Reads text and function calls from the first candidate's parts directly:
- * the SDK's `text` getter warns about (and its result omits) non-text parts,
- * and is undefined when only function calls came back. Falls back to the
- * `functionCalls` / `text` getters when there are no candidate parts.
- */
-/**
  * Plain input becomes one text part per message, as always (`assistant` is Gemini's `model`;
  * the system prompt goes separately in systemInstruction). A tool conversation maps an assistant
  * turn's calls to `functionCall` parts and a tool turn to a user turn of `functionResponse` parts.
- * Ids are sent only when Gemini made them, not for the `call_<n>` ids drift-ci generated.
+ * Ids are sent only when Gemini made them, not for the `call_<n>` ids drift-ci generated, and a
+ * call's thought signature goes back on its own functionCall part.
  */
 function toGoogleContents(input: CompletionInput): ContentEntry[] {
   if (!isConversation(input)) {
@@ -217,6 +214,9 @@ function toGoogleContents(input: CompletionInput): ContentEntry[] {
           ...(turn.content ? [{ text: turn.content }] : []),
           ...turn.toolCalls.map((c) => ({
             functionCall: { name: c.name, args: c.arguments, ...providerId(callIdAt(c, ++ordinal)) },
+            ...(c.providerMeta?.thoughtSignature
+              ? { thoughtSignature: c.providerMeta.thoughtSignature }
+              : {}),
           })),
         ],
       };
@@ -247,6 +247,13 @@ function parsedOrWrapped(content: string): Record<string, unknown> {
   return { result: content };
 }
 
+/**
+ * Reads text and function calls from the first candidate's parts directly:
+ * the SDK's `text` getter warns about (and its result omits) non-text parts,
+ * and is undefined when only function calls came back. Falls back to the
+ * `functionCalls` / `text` getters when there are no candidate parts. A call keeps
+ * the thought signature of the part that carried it.
+ */
 function readWithTools(
   response: GenerateContentResponseLike,
   input: CompletionInput,
@@ -255,9 +262,11 @@ function readWithTools(
   toolCalls: ToolCall[];
 } {
   const parts = response.candidates?.[0]?.content?.parts;
-  const calls = parts
-    ? parts.flatMap((p) => (p.functionCall ? [p.functionCall] : []))
-    : (response.functionCalls ?? []);
+  const calls: Array<{ fc: GoogleFunctionCall; thoughtSignature?: string }> = parts
+    ? parts.flatMap((p) =>
+        p.functionCall ? [{ fc: p.functionCall, thoughtSignature: p.thoughtSignature }] : [],
+      )
+    : (response.functionCalls ?? []).map((fc) => ({ fc }));
   const text = parts
     ? parts
         .filter((p) => typeof p.text === 'string' && !p.thought)
@@ -267,10 +276,11 @@ function readWithTools(
   return {
     text,
     toolCalls: withCallIds(
-      calls.map((fc) => ({
+      calls.map(({ fc, thoughtSignature }) => ({
         ...(fc.id ? { id: fc.id } : {}),
         name: fc.name ?? '',
         arguments: fc.args ?? {},
+        ...(thoughtSignature ? { providerMeta: { thoughtSignature } } : {}),
       })),
       input,
     ),
