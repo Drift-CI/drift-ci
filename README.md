@@ -243,7 +243,7 @@ To check a flow that takes more than one call, script the tool results with `too
 - **Scoring:** `tool-call` scores the calls from every step together, with the same order-independent matching as above, and adds `toolLoop: { steps, stoppedAtStepLimit }` to its metadata. Other evaluators, such as `llm-judge`, see the whole transcript as the output.
 - **Usage and timeouts:** token usage, and so cost, is summed across steps. The case timeout applies to each model reply, and the whole case gets at most the timeout × `maxSteps`. An error from the provider at any step fails the case with the usual status.
 
-To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns production chat logs into test cases. See [Importing production traces](packages/cli/README.md#importing-production-traces).
+To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns production chat logs into test cases. See [Importing production traces](packages/cli/README.md#importing-production-traces). Traces with tool calls become multi-step cases.
 
 ### Evaluators
 
