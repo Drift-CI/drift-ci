@@ -25,7 +25,7 @@ spaces.
 ## Enforcement
 
 Instances of abusive, harassing, or otherwise unacceptable behaviour may be
-reported to the project maintainers at **conduct@drift-ci.dev**. All
+reported to the project maintainers at **conduct@drift-ci.com**. All
 complaints will be reviewed and investigated promptly and fairly.
 
 Maintainers are obligated to respect the privacy and security of the reporter

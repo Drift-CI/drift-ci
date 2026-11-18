@@ -43,7 +43,7 @@ Whatever proxy you pick, it must forward these to the dashboard:
 | --- | --- | --- |
 | `Host` | The original public host (`drift.example.com`) | Origin check, cookie domain, link generation. |
 | `X-Forwarded-Proto` | `https` (when TLS-terminated upstream) | So the dashboard knows it's behind HTTPS even though the upstream connection is HTTP. |
-| `X-Forwarded-For` | Original client IP, comma-appended | Audit log + rate-limit per-IP keys. |
+| `X-Forwarded-For` | Original client IP | Sign-in rate limit and audit log. The dashboard uses the **first** entry, so the edge proxy must set it, not append to a client-supplied value. |
 | `X-Real-IP` | Original client IP | Same as above, useful for proxies that prefer this name. |
 
 Never let untrusted clients spoof these — the proxy must **strip**
@@ -52,7 +52,8 @@ inbound `X-Forwarded-*` from the public side before adding its own.
 ## OAuth and redirect URIs
 
 Both `/login/github` and `/login/github/callback` derive the OAuth
-redirect URI like this:
+redirect URI like this (the Google routes do the same with
+`DRIFT_GOOGLE_OAUTH_REDIRECT_URI` and `/login/google/callback`):
 
 ```ts
 const explicit = process.env.DRIFT_OAUTH_REDIRECT_URI;
@@ -73,7 +74,9 @@ DRIFT_OAUTH_REDIRECT_URI=https://drift.example.com/login/github/callback
 
 The same URL goes into the GitHub OAuth App's "Authorization callback
 URL" field. They must match exactly — GitHub rejects callbacks that
-don't.
+don't. If you enabled Google sign-in, also set
+`DRIFT_GOOGLE_OAUTH_REDIRECT_URI=https://drift.example.com/login/google/callback`
+and register the same URL in the Google Cloud Console.
 
 ## Cookie security
 
@@ -111,11 +114,12 @@ server {
     ssl_certificate     /etc/letsencrypt/live/drift.example.com/fullchain.pem;
     ssl_certificate_key /etc/letsencrypt/live/drift.example.com/privkey.pem;
 
-    # Strip any inbound X-Forwarded-* the client tried to spoof,
-    # then add our own.
+    # Overwrite (don't append to) any X-Forwarded-* the client sent, so
+    # it can't spoof its IP. If another proxy sits in front of nginx, use
+    # the real_ip module to trust it instead.
     proxy_set_header Host              $host;
     proxy_set_header X-Real-IP         $remote_addr;
-    proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-For   $remote_addr;
     proxy_set_header X-Forwarded-Proto https;
     proxy_set_header X-Forwarded-Host  $host;
 
@@ -149,8 +153,8 @@ drift.example.com {
         # which is exactly what we want.
     }
 
-    # Webhooks can be larger than Caddy's default ~10MB; bump only if
-    # your payloads warrant it.
+    # Caddy doesn't limit request bodies by default; this caps them at
+    # 5 MB, the same as the nginx example.
     request_body {
         max_size 5MB
     }
@@ -189,18 +193,18 @@ flow correctly:
 
 1. **Cookie path** — sign in, then in DevTools verify the
    `drift_session` cookie has `Secure` set and a `Path=/`.
-2. **Origin check** — visit `/admin/tokens` and click "Mint token".
-   If the request is rejected with `403 cross-origin`, the proxy is
-   not forwarding `Host` correctly.
+2. **Origin check** — visit `/admin/tokens` and mint a token with
+   **Mint a token**. If it's rejected as cross-origin, the proxy is not
+   forwarding `Host` correctly.
 3. **OAuth round-trip** — sign out, sign back in via GitHub. If the
    browser ends up on `http://0.0.0.0:3000/...` after the GitHub
    redirect, `DRIFT_OAUTH_REDIRECT_URI` is unset or wrong.
 
 For the webhook receiver, GitHub's "Recent Deliveries" panel
 (Settings → Webhooks → your hook) shows the response body — drift-ci
-returns `200 ok` on a verified delivery and `401 bad signature` on a
-secret mismatch, so a misconfigured `GITHUB_WEBHOOK_SECRET` is
-visible there.
+returns `200` with `{"ok":true,…}` on a verified delivery and `401`
+with `{"ok":false,"error":"webhook: bad-signature"}` on a secret
+mismatch, so a misconfigured `GITHUB_WEBHOOK_SECRET` is visible there.
 
 ## What we don't currently do
 
@@ -214,5 +218,7 @@ visible there.
 - **No multi-replica session affinity needed.** Sessions are signed
   cookies (no server-side store) and the rate-limit bucket is
   best-effort — both replicas of the dashboard can serve the same
-  user. If you scale out, swap the in-memory rate-limit store for
-  Redis (the interface in `lib/rate-limit.ts` is pluggable).
+  user. The rate-limit store is in memory per replica, so limits
+  apply per replica when you scale out; a shared store (such as Redis)
+  would need changes inside `lib/rate-limit.ts`, though its callers
+  wouldn't change.

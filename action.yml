@@ -35,7 +35,7 @@ inputs:
     description: Post results as a PR comment. Requires pull-requests write permission.
     default: 'true'
   dashboard-url:
-    description: URL of a self-hosted dashboard to sync results to.
+    description: URL of the dashboard to sync results to — https://drift-ci.com or a self-hosted dashboard.
     required: false
   dashboard-token:
     description: >-

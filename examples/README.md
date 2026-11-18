@@ -1,7 +1,7 @@
 # drift-ci examples
 
 Copy-paste-ready suites and CI workflow templates. The suites under
-[`suites/`](suites/) exercise the three most common evaluation shapes;
+[`suites/`](suites/) cover the most common evaluation shapes;
 the workflows under [`workflows/`](workflows/) show how to wire the
 action into your CI.
 
@@ -10,9 +10,10 @@ action into your CI.
 | File | Shape | Notes |
 | --- | --- | --- |
 | [`suites/chatbot.yaml`](suites/chatbot.yaml) | Multi-turn messages + `llm-judge` | Uses the `messages` case format for conversation context and delegates scoring to a judge model. |
-| [`suites/rag.yaml`](suites/rag.yaml) | Single-turn + `cosine-similarity` | Embeddings-based semantic-similarity scoring for RAG answers that shouldn't match verbatim. |
+| [`suites/rag.yaml`](suites/rag.yaml) | Single-turn + `cosine-similarity`, `faithfulness` | Embeddings-based semantic-similarity scoring for RAG answers that shouldn't match verbatim, plus cases that pass retrieved passages in `context` and score how many of the answer's claims they support. |
 | [`suites/classification.yaml`](suites/classification.yaml) | Structured output + `json-schema` | Validates that the model emits valid JSON matching a schema. |
 | [`suites/extraction.yaml`](suites/extraction.yaml) | Structured output + `json-schema` | Field extraction from unstructured documents (invoice, support email, receipt), validated against per-case schemas. |
+| [`suites/tools.yaml`](suites/tools.yaml) | Tools + `tool-call` | Checks which tools the model calls and with which arguments, including a multi-step case answered from scripted `toolResults`. |
 
 Drop the YAML into `.drift/suite.yaml`, point `.drift/config.yaml` at your
 provider, and run `drift-ci run`.
