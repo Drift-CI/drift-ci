@@ -1,5 +1,5 @@
 {
-  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "$schema": "https://drift-ci.com/schema/baseline-v1.json",
   "caseId": "reply-mentions-refund-window",
   "suiteId": "support-triage",
   "suiteHash": "sha256:70fcc8a99eb4a1677f581e7bc3297780dad8c38c893b4e55ddfd2e504a943016",

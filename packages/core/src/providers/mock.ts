@@ -1,16 +1,21 @@
 import type {
+  CompletionInput,
   CompletionOptions,
   CompletionResponse,
-  MessageParam,
   ProviderAdapter,
+  ToolCall,
 } from './base.js';
-import { toMessages } from './base.js';
+import { isConversation, toMessages, withCallIds } from './base.js';
 
+/** Receives the input as-is, including a multi-step tool conversation. */
 export type MockResponder = (
-  input: string | MessageParam[],
+  input: CompletionInput,
   systemPrompt: string | undefined,
   options: CompletionOptions,
-) => string | Promise<string> | Error;
+) => MockResult | Promise<MockResult> | Error;
+
+/** A responder's reply: plain text, or text with the model's tool calls. */
+export type MockResult = string | { text: string; toolCalls?: ToolCall[] };
 
 export interface MockProviderOptions {
   name?: string;
@@ -36,26 +41,34 @@ export class MockProvider implements ProviderAdapter {
   }
 
   async complete(
-    input: string | MessageParam[],
+    input: CompletionInput,
     systemPrompt?: string,
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
     if (this.responder) {
       const result = await this.responder(input, systemPrompt, options);
       if (result instanceof Error) throw result;
-      return this.wrap(result);
+      return this.wrap(result, input);
     }
 
-    const messages = toMessages(input);
     const key =
-      typeof input === 'string' ? input : JSON.stringify(messages);
-    const text = this.responses[key] ?? this.defaultResponse;
-    return this.wrap(text);
+      typeof input === 'string'
+        ? input
+        : JSON.stringify(isConversation(input) ? input : toMessages(input));
+    // A lone user turn (step 1 of a multi-step case) matches by its content, like a string input.
+    const single = Array.isArray(input) && input.length === 1 && input[0]?.role === 'user' ? input[0] : undefined;
+    const text =
+      (single && 'content' in single ? this.responses[single.content] : undefined) ??
+      this.responses[key] ??
+      this.defaultResponse;
+    return this.wrap(text, input);
   }
 
-  private wrap(text: string): CompletionResponse {
+  private wrap(result: MockResult, input: CompletionInput): CompletionResponse {
+    const { text, toolCalls } = typeof result === 'string' ? { text: result, toolCalls: undefined } : result;
     return {
       text,
+      ...(toolCalls !== undefined ? { toolCalls: withCallIds(toolCalls, input) } : {}),
       usage: { inputTokens: 10, outputTokens: 10, totalTokens: 20 },
       model: this.name,
       latencyMs: this.latencyMs,

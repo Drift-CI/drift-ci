@@ -7,6 +7,7 @@ import { registerBaselineCommand } from './commands/baseline.js';
 import { registerInitCommand } from './commands/init.js';
 import { registerConfigCommand } from './commands/config.js';
 import { registerCompareCommand } from './commands/compare.js';
+import { registerImportCommand } from './commands/import.js';
 
 const { version } = JSON.parse(
   readFileSync(
@@ -27,6 +28,7 @@ async function main(argv: string[]): Promise<void> {
   registerBaselineCommand(program);
   registerConfigCommand(program);
   registerCompareCommand(program);
+  registerImportCommand(program);
 
   await program.parseAsync(argv);
 }

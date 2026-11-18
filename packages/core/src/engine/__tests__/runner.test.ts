@@ -4,12 +4,15 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { FileBaselineStore, computeDeltas } from '../baseline.js';
 import { sampleCount } from '../sampling.js';
-import { Runner, RUN_ABORTED_TRANSIENT } from '../runner.js';
+import { Runner, RUN_ABORTED_TRANSIENT, renderOutput } from '../runner.js';
 import { MockProvider } from '../../providers/mock.js';
 import { EvaluatorChain } from '../../evaluators/composite.js';
 import { ExactMatchEvaluator } from '../../evaluators/exact.js';
 import { MemoryStorage } from '../../storage/memory.js';
 import type { Suite } from '../../types/index.js';
+import type { EvalInput } from '../../evaluators/base.js';
+import { formatContext } from '../context.js';
+import { createEvaluatorChain } from '../../evaluators/factory.js';
 
 function makeSuite(overrides: Partial<Suite> = {}): Suite {
   return {
@@ -273,5 +276,168 @@ describe('Runner repeated sampling', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+
+  it('sends context to the provider and the evaluator', async () => {
+    const seen: unknown[] = [];
+    const provider = new MockProvider({
+      responder: (input) => {
+        seen.push(input);
+        return 'ok';
+      },
+    });
+    const inputs: EvalInput[] = [];
+    const spy = {
+      name: 'spy',
+      evaluate: async (i: EvalInput) => {
+        inputs.push(i);
+        return { score: 1 };
+      },
+    };
+    const runner = new Runner({
+      provider,
+      evaluator: new EvaluatorChain([{ evaluator: spy, weight: 1 }]),
+      storage: new MemoryStorage(),
+    });
+    await runner.run(
+      makeSuite({ cases: [{ id: 'c1', input: 'q', context: ['p1'] }] }),
+    );
+    expect(seen[0]).toBe(formatContext(['p1']) + 'q');
+    expect(inputs[0].context).toEqual(['p1']);
+    expect(inputs[0].input).toBe('q');
+  });
+
+  it('reports evaluator-error when suite-level faithfulness meets a case without context', async () => {
+    const judge = {
+      name: 'judge/y',
+      complete: async () => ({
+        text: '',
+        usage: { inputTokens: 0, outputTokens: 0, totalTokens: 0 },
+        model: 'm',
+        latencyMs: 0,
+      }),
+    };
+    const runner = new Runner({
+      provider: new MockProvider({ defaultResponse: 'ok' }),
+      evaluator: (tc) =>
+        createEvaluatorChain(['faithfulness'], {
+          testProvider: new MockProvider({ defaultResponse: 'ok' }),
+          judgeProvider: judge,
+          case: tc,
+        }),
+      storage: new MemoryStorage(),
+    });
+    const run = await runner.run(makeSuite({ cases: [{ id: 'c1', input: 'q' }] }));
+    expect(run.cases[0].status).toBe('evaluator-error');
+    expect(run.cases[0].error).toContain('requires a `context` field');
+  });
+
+  it('passes the case tools to the provider and the calls to the evaluator', async () => {
+    const opts: unknown[] = [];
+    const provider = new MockProvider({
+      responder: (_i, _s, o) => {
+        opts.push(o);
+        return { text: '', toolCalls: [{ name: 'get_order', arguments: { order_id: 'ORD-1' } }] };
+      },
+    });
+    const inputs: EvalInput[] = [];
+    const spy = {
+      name: 'spy',
+      evaluate: async (i: EvalInput) => {
+        inputs.push(i);
+        return { score: 1 };
+      },
+    };
+    const runner = new Runner({
+      provider,
+      evaluator: new EvaluatorChain([{ evaluator: spy, weight: 1 }]),
+      storage: new MemoryStorage(),
+    });
+    const tools = [{ name: 'get_order', parameters: { type: 'object', properties: {} } }];
+    const run = await runner.run(makeSuite({ cases: [{ id: 'c1', input: 'q', tools }] }));
+    expect((opts[0] as { tools?: unknown }).tools).toEqual(tools);
+    expect(inputs[0].toolCalls).toEqual([{ id: 'call_1', name: 'get_order', arguments: { order_id: 'ORD-1' } }]);
+    expect(inputs[0].output).toBe('→ get_order {"order_id":"ORD-1"}');
+    expect(run.cases[0].output).toBe('→ get_order {"order_id":"ORD-1"}');
+  });
+
+  it('scores a tool-call case end to end with the rendered output', async () => {
+    const tools = [{ name: 'get_order', parameters: { type: 'object', properties: {} } }];
+    const runner = new Runner({
+      provider: new MockProvider({
+        responder: () => ({ text: '', toolCalls: [{ name: 'get_order', arguments: { order_id: 'ORD-1' } }] }),
+      }),
+      evaluator: (tc) =>
+        createEvaluatorChain(['tool-call'], {
+          testProvider: new MockProvider({ defaultResponse: 'ok' }),
+          case: tc,
+        }),
+      storage: new MemoryStorage(),
+    });
+    const run = await runner.run(
+      makeSuite({
+        cases: [
+          {
+            id: 'c1',
+            input: 'q',
+            tools,
+            expectedCalls: [{ name: 'get_order', arguments: { order_id: 'ORD-1' } }],
+          },
+        ],
+      }),
+    );
+    expect(run.cases[0].score).toBe(1);
+    expect(run.cases[0].output).toBe('→ get_order {"order_id":"ORD-1"}');
+  });
+
+  it('leaves a case without tools unaffected', async () => {
+    const opts: Record<string, unknown>[] = [];
+    const provider = new MockProvider({
+      responder: (_i, _s, o) => {
+        opts.push(o as Record<string, unknown>);
+        return 'hi';
+      },
+    });
+    const inputs: EvalInput[] = [];
+    const spy = {
+      name: 'spy',
+      evaluate: async (i: EvalInput) => {
+        inputs.push(i);
+        return { score: 1 };
+      },
+    };
+    const runner = new Runner({
+      provider,
+      evaluator: new EvaluatorChain([{ evaluator: spy, weight: 1 }]),
+      storage: new MemoryStorage(),
+    });
+    const run = await runner.run(makeSuite({ cases: [{ id: 'c1', input: 'q', tools: [] }] }));
+    expect('tools' in opts[0]).toBe(false);
+    expect(inputs[0].toolCalls).toBeUndefined();
+    expect(inputs[0].output).toBe('hi');
+    expect(run.cases[0].output).toBe('hi');
+  });
+});
+
+describe('renderOutput', () => {
+  it('returns the text unchanged without calls or with an empty list', () => {
+    expect(renderOutput(' hi ')).toBe(' hi ');
+    expect(renderOutput(' hi ', [])).toBe(' hi ');
+  });
+
+  it('renders one line per call', () => {
+    expect(
+      renderOutput('', [
+        { name: 'a', arguments: { x: 1 } },
+        { name: 'b', arguments: {} },
+      ]),
+    ).toBe('→ a {"x":1}\n→ b {}');
+  });
+
+  it('puts trimmed text, a blank line, then the calls', () => {
+    expect(renderOutput('  Let me check.\n', [{ name: 'a', arguments: { y: 'z' } }])).toBe(
+      'Let me check.\n\n→ a {"y":"z"}',
+    );
+    expect(renderOutput('   ', [{ name: 'a', arguments: {} }])).toBe('→ a {}');
   });
 });

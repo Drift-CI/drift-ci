@@ -249,7 +249,7 @@ drift-ci/
 │   │   │   ├── comment.ts           # PR comment renderer
 │   │   │   └── gate.ts              # Pass/fail logic
 │   │   ├── dist/
-│   │   │   └── index.js             # ncc-bundled single file, committed for `using: node20`
+│   │   │   └── index.js             # ncc-bundled single file, committed for `using: node24`
 │   │   ├── action.yml
 │   │   └── package.json
 │   │
@@ -621,7 +621,7 @@ Directory structure mirrors the `/`-delimited `caseId`.
 
 ```json
 {
-  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "$schema": "https://drift-ci.com/schema/baseline-v1.json",
   "caseId": "classify/sentiment_edge",
   "suiteId": "my-app-suite",
   "capturedAt": "2026-04-19T12:00:00Z",
@@ -800,7 +800,7 @@ export function computeSuiteHash(tc: TestCase): string {
  */
 export function serialiseBaseline(entry: BaselineEntry): string {
   const ordered: Record<string, unknown> = {
-    $schema: 'https://drift-ci.dev/schema/baseline-v1.json',
+    $schema: 'https://drift-ci.com/schema/baseline-v1.json',
     caseId: entry.caseId,
     suiteId: entry.suiteId,
     suiteHash: entry.suiteHash,
@@ -1307,7 +1307,7 @@ outputs:
     description: "Absolute path to a JUnit-XML report of every case (written to $RUNNER_TEMP/drift-junit.xml). Upload via actions/upload-artifact to surface in downstream test-report UIs."
 
 runs:
-  using: 'node20'
+  using: 'node24'
   main: 'dist/index.js'
 ```
 
@@ -1458,7 +1458,7 @@ jobs:
           path: ~/.cache/huggingface
           key: drift-ci-embeddings-all-MiniLM-L6-v2-v1
 
-      - uses: drift-ci/drift-ci@v1
+      - uses: Drift-CI/drift-ci@v1
         with:
           provider: anthropic
           api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -1497,7 +1497,7 @@ jobs:
           ref: ${{ github.event.pull_request.head.sha }}
           repository: ${{ github.event.pull_request.head.repo.full_name }}
           fetch-depth: 0
-      - uses: drift-ci/drift-ci@v1
+      - uses: Drift-CI/drift-ci@v1
         with:
           provider: anthropic
           api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -1623,7 +1623,7 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: Run drift-ci
-        uses: drift-ci/drift-ci@v1
+        uses: Drift-CI/drift-ci@v1
         with:
           provider: anthropic
           api-key: ${{ secrets.ANTHROPIC_API_KEY }}
@@ -2242,6 +2242,8 @@ These are not Phase 1 deliverables but are reserved in the evaluator registry so
 | `tool-call-shape` | For function-calling apps: validate tool names + argument schemas against a fixture | Phase 2 |
 | `rubric-checklist` | LLM-judge variant that evaluates a natural-language checklist and returns per-item verdicts. **Defined** below — see ["Roadmap evaluator: rubric-checklist"](#roadmap-evaluator-rubric-checklist) for the full schema, strict-vs-lenient semantics, multi-judge quorum, minimum-items rule, scoring output shape, and test matrix. Implementation lands in Phase 4. | Phase 4 |
 | `safety-classifier` | Optional opt-in classifier (e.g., OpenAI moderation, Llama Guard) for safety regression | Phase 4 |
+| `faithfulness` | RAG grounding: the configured judge lists the answer's factual claims and marks each supported or not by the case's `context`; score is supported/total (no claims = 1.0). Requires `context` | Shipped |
+| `tool-call` | Tool use, single-step or multi-step: expected calls are assigned optimally (order-independent) to same-name actual calls; only listed arguments are compared; score is matched argument scores / max(expected, actual) (`expectedCalls: []` = no tool call expected). A case with `toolResults` runs a loop (up to `maxSteps`, default 5) where calls are answered from those scripted results; calls from every step are scored and the metadata carries `toolLoop: { steps, stoppedAtStepLimit }`. Pure, no judge. Requires `expectedCalls` and tools | Shipped |
 
 **Evaluator-error vs transient boundary.** An evaluator throwing for any reason other than a provider error maps to `evaluator-error` — a permanent case status that excludes the case from delta math but does NOT count toward the transient-abort threshold. Transient classification is reserved for provider-originated errors (rate-limit, network, timeout) surfaced by the provider adapter's `withRetry` wrapper. This boundary matters operationally: a systemic evaluator bug (e.g., embedding model OOM) must surface as a distinct signal from a provider outage, so teams debug the right system.
 
@@ -2852,7 +2854,7 @@ Four adapters implement the same interface, chosen per runtime:
 **Phased delivery.** The storage layer ships in three stages (see §20):
 
 - **Phase 1 — `SqliteStorage` (CLI)** and the in-memory test harness. The canonical run-history store for local developers.
-- **Phase 2 — `MemoryStorage` (Action)**. Adds the Action-side adapter. Retains its data only for the duration of a single `node20` invocation; the action relies on PR-comment output, not persistence.
+- **Phase 2 — `MemoryStorage` (Action)**. Adds the Action-side adapter. Retains its data only for the duration of a single `node24` invocation; the action relies on PR-comment output, not persistence.
 - **Phase 3 — `HttpStorage` (sync to dashboard)** alongside the dashboard receiver. Do not build a sync client without its server — the CLI and Action MUST NOT depend on `HttpStorage` until both endpoints ship in the same release.
 
 ### Interface
@@ -3106,7 +3108,7 @@ For every case in the suite, a corresponding `.drift/baseline/<case-id>.json` fi
 
 ```json
 {
-  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "$schema": "https://drift-ci.com/schema/baseline-v1.json",
   "caseId": "classify/sentiment_edge",
   "suiteId": "my-app-suite",
   "capturedAt": "2026-04-19T12:00:00Z",
@@ -3946,7 +3948,7 @@ OSS projects live or die by their first-run experience. These files ship in the 
 
 ### Threat Model & Security Disclosure
 
-A condensed threat-model summary lives in §16 ("Threat Model"); the full model (assets, adversaries, attack trees, mitigations) lives in `docs/threat-model.md` and is linked from `SECURITY.md`. Security reports go to `security@drift-ci.dev` (or GitHub Security Advisory); maintainers acknowledge within 72 hours and target a fix within 90 days.
+A condensed threat-model summary lives in §16 ("Threat Model"); a fuller standalone threat model was planned as `docs/threat-model.md` but hasn't been written. Security reports go through GitHub private vulnerability reporting or `security@drift-ci.com`; `SECURITY.md` sets the response times.
 
 ### Telemetry (Opt-In)
 
@@ -3998,7 +4000,7 @@ One file per case (not one per suite) because diff readability on multi-case reg
 
 ### Why a Node.js GitHub Action (not Docker)?
 
-The earlier draft used `using: 'docker'`. The production design uses `using: 'node20'` with a pre-bundled `dist/index.js`.
+The earlier draft used `using: 'docker'`. The production design uses a native Node.js action (originally `using: 'node20'`, now `node24`) with a pre-bundled `dist/index.js`.
 
 - **Speed:** Node actions start in ~2 s. Docker actions pull the image (40–60 s cold) before running anything.
 - **Aligned with the language rationale:** Section justifies Node.js partly because "GitHub Actions run natively in Node.js — no Docker overhead." A Docker action broke that promise.
@@ -4296,7 +4298,7 @@ These are required for Claude Code to bootstrap the monorepo correctly. Without 
 }
 ```
 
-> **Note for Claude Code:** The action is a **native Node.js action** (`using: 'node20'`), not a Docker action. `@vercel/ncc` bundles `src/index.ts` into a single `dist/index.js` that is committed to the repo so GitHub's runner can execute it directly. The `action.yml` `runs.main` points to `dist/index.js`. There is no Dockerfile for the action. See Section 8 for the full rationale.
+> **Note for Claude Code:** The action is a **native Node.js action** (`using: 'node24'`), not a Docker action. `@vercel/ncc` bundles `src/index.ts` into a single `dist/index.js` that is committed to the repo so GitHub's runner can execute it directly. The `action.yml` `runs.main` points to `dist/index.js`. There is no Dockerfile for the action. See Section 8 for the full rationale.
 
 ### `packages/dashboard/package.json`
 
@@ -5214,7 +5216,7 @@ Or use `esbuild` with `--banner:js='#!/usr/bin/env node'` for a cleaner build pi
 These decisions are easy to get wrong and are already decided. If a change appears to contradict one, it is almost certainly a bug, not a design evolution. This mirrors the list in [`CLAUDE.md`](../CLAUDE.md) so future Claude instances working from the architecture doc alone still see the guardrails.
 
 - **Baselines are git-committed JSON files at `.drift/baseline/<case-id>.json`, not database rows.** (§6, §16, §19)
-- **The GitHub Action is native Node.js (`using: node20`), not Docker.** Bundle at `packages/action/dist/index.js` via `@vercel/ncc`, committed to the repo. (§8, §27)
+- **The GitHub Action is native Node.js (`using: node24`), not Docker.** Bundle at `packages/action/dist/index.js` via `@vercel/ncc`, committed to the repo. (§8, §27)
 - **`HttpStorage` lands in Phase 3, not Phase 2.** Until then, the Action uses `MemoryStorage`. (§12)
 - **Transient provider errors are not regressions.** Exit code 2 (`RUN_ABORTED_TRANSIENT`) on > `max(3, 20%)` transient failures. Exit code 1 is reserved for behavior regressions. (§6)
 - **`computeDeltas` treats NaN current scores as `NO_SCORE`, never `REGRESSION`.** (§6, §26)

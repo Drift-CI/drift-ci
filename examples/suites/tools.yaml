@@ -1,0 +1,97 @@
+# Tool-calling suite.
+#
+# Offers the model tools and scores the calls it makes, with the
+# `tool-call` evaluator. Nothing is executed: drift-ci sends the
+# conversation with the tool definitions, takes the model's first reply and
+# compares its tool calls with `expectedCalls`. Multi-step cases answer the
+# calls with scripted results instead of running real tools.
+#
+# - `tools` at the top level are offered to every case.
+# - A case's own `tools` are added to them; a case tool with the same name
+#   replaces the suite one (see the last case).
+# - Only the arguments you list in `expectedCalls` are compared; others
+#   the model sends are ignored.
+# - `expectedCalls: []` means the model should answer without calling a tool.
+# - A case with `toolResults` is multi-step (see the last case): drift-ci
+#   answers each call with the first scripted result whose name and listed
+#   arguments match, and the model continues until it answers without a
+#   call or `maxSteps` (default 5) is reached. Calls from every step are
+#   scored.
+
+version: 1
+id: tools
+name: Support agent tool use
+description: |
+  Checks that the model picks the right tool and extracts the right
+  arguments from the user's message.
+
+evaluators:
+  - tool-call
+
+default_threshold: 0.20
+
+tools:
+  - name: get_order
+    description: Look up an order by its ID
+    parameters:
+      type: object
+      properties:
+        order_id: { type: string }
+      required: [order_id]
+  - name: cancel_order
+    description: Cancel an order that has not shipped yet
+    parameters:
+      type: object
+      properties:
+        order_id: { type: string }
+      required: [order_id]
+
+cases:
+  - id: order_lookup
+    input: "Where is order ORD-123?"
+    expectedCalls:
+      - name: get_order
+        arguments: { order_id: ORD-123 }
+
+  - id: id_inside_long_message
+    input: |
+      Hi, I ordered a kettle last week and it still hasn't arrived. The
+      confirmation email says ORD-48213, can you please cancel it? I'd
+      rather get a refund than wait any longer.
+    expectedCalls:
+      - name: cancel_order
+        arguments: { order_id: ORD-48213 }
+
+  - id: thanks_no_tool
+    input: "Thanks, that's all I needed!"
+    expectedCalls: []
+
+  - id: case_level_tool
+    input: "Please email me a receipt for order ORD-777."
+    tools:
+      - name: send_receipt
+        description: Email the receipt for an order to the customer
+        parameters:
+          type: object
+          properties:
+            order_id: { type: string }
+          required: [order_id]
+    expectedCalls:
+      - name: send_receipt
+        arguments: { order_id: ORD-777 }
+
+  - id: cancel_if_unshipped
+    input: "Can you cancel order ORD-555 if it hasn't shipped yet?"
+    toolResults:
+      - name: get_order
+        arguments: { order_id: ORD-555 }
+        result: { order_id: ORD-555, status: processing }
+      - name: cancel_order
+        arguments: { order_id: ORD-555 }
+        result: { ok: true }
+    maxSteps: 4
+    expectedCalls:
+      - name: get_order
+        arguments: { order_id: ORD-555 }
+      - name: cancel_order
+        arguments: { order_id: ORD-555 }

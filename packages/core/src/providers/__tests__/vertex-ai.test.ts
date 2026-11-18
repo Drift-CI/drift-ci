@@ -196,3 +196,32 @@ describe('VertexAIProvider', () => {
     await expect(p.complete('q')).rejects.toThrow(/forbidden/);
   });
 });
+
+describe('VertexAIProvider tools (shared Google base)', () => {
+  it('sends functionDeclarations and returns the calls', async () => {
+    const { client, generateContent } = makeClient(
+      okResponse({
+        text: undefined,
+        candidates: [
+          { content: { role: 'model', parts: [{ functionCall: { name: 'lookup', args: { id: 'a1' } } }] } },
+        ],
+      }),
+    );
+    const p = new VertexAIProvider({ model: 'gemini-2.5-pro', project: 'p', location: 'us-central1', client });
+    const res = await p.complete('hi', undefined, {
+      tools: [{ name: 'lookup', parameters: { type: 'object' } }],
+    });
+    expect(generateContent.mock.calls[0][0].config.tools).toEqual([
+      { functionDeclarations: [{ name: 'lookup', parametersJsonSchema: { type: 'object' } }] },
+    ]);
+    expect(res.toolCalls).toEqual([{ id: 'call_1', name: 'lookup', arguments: { id: 'a1' } }]);
+  });
+
+  it('sends no tools key without tools', async () => {
+    const { client, generateContent } = makeClient();
+    const p = new VertexAIProvider({ model: 'gemini-2.5-pro', project: 'p', location: 'us-central1', client });
+    const res = await p.complete('hi');
+    expect(generateContent.mock.calls[0][0].config).not.toHaveProperty('tools');
+    expect(res).not.toHaveProperty('toolCalls');
+  });
+});

@@ -1,14 +1,14 @@
 import Anthropic from '@anthropic-ai/sdk';
 
-import type { MessageParam } from '../types/index.js';
 import {
-  toMessages,
+  type CompletionInput,
   type CompletionOptions,
   type CompletionResponse,
   type ProviderAdapter,
 } from './base.js';
 import { withRetry, type RetryOptions } from './utils.js';
 import { claudeModelRejectsSamplingParams } from './claude-models.js';
+import { readAnthropicToolCalls, toAnthropicMessages, toAnthropicTools } from './anthropic-tools.js';
 
 export interface AnthropicProviderConfig {
   model: string;
@@ -47,11 +47,12 @@ export class AnthropicProvider implements ProviderAdapter {
   }
 
   async complete(
-    input: string | MessageParam[],
+    input: CompletionInput,
     systemPrompt?: string,
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
     const start = Date.now();
+    const tools = options.tools?.length ? options.tools : undefined;
 
     const system = systemPrompt
       ? [
@@ -76,6 +77,7 @@ export class AnthropicProvider implements ProviderAdapter {
             : { temperature: options.temperature ?? 0 }),
           system,
           messages: toAnthropicMessages(input),
+          ...(tools ? { tools: toAnthropicTools(tools) } : {}),
         }),
       this.config.retry,
     );
@@ -98,15 +100,7 @@ export class AnthropicProvider implements ProviderAdapter {
       },
       model: response.model,
       latencyMs: Date.now() - start,
+      ...(tools ? { toolCalls: readAnthropicToolCalls(response.content) } : {}),
     };
   }
-}
-
-function toAnthropicMessages(
-  input: string | MessageParam[],
-): Anthropic.MessageParam[] {
-  return toMessages(input).map((m) => ({
-    role: m.role,
-    content: m.content,
-  }));
 }

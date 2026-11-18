@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { OpenAIProvider } from '../openai.js';
+import type { ConversationTurn } from '../base.js';
 
 function okResponse(overrides: Record<string, unknown> = {}) {
   return {
@@ -171,5 +172,246 @@ describe('OpenAIProvider', () => {
     const sent = create.mock.calls[0][0].messages;
     expect(typeof sent[0].content).toBe('string');
     expect(sent[0].content).toMatch(/"text":"hi"/);
+  });
+});
+
+describe('OpenAIProvider tools', () => {
+  const tools = [
+    {
+      name: 'get_weather',
+      description: 'Weather',
+      parameters: { type: 'object', properties: { city: { type: 'string' } } },
+    },
+  ];
+  const fnCall = (id: string, name: string, args: string) => ({
+    id,
+    type: 'function',
+    function: { name, arguments: args },
+  });
+  const withMessage = (message: Record<string, unknown>) =>
+    okResponse({
+      choices: [
+        {
+          index: 0,
+          message: { role: 'assistant', ...message },
+          finish_reason: 'tool_calls',
+          logprobs: null,
+        },
+      ],
+    });
+
+  it('sends the tools as function tools, without tool_choice', async () => {
+    const { client, create } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    await p.complete('hi', undefined, { tools });
+    const args = create.mock.calls[0][0];
+    expect(args.tools).toEqual([
+      {
+        type: 'function',
+        function: {
+          name: 'get_weather',
+          description: 'Weather',
+          parameters: { type: 'object', properties: { city: { type: 'string' } } },
+        },
+      },
+    ]);
+    expect(args).not.toHaveProperty('tool_choice');
+  });
+
+  it('parses one call', async () => {
+    const { client } = makeClient(
+      withMessage({ content: null, tool_calls: [fnCall('c1', 'get_weather', '{"city":"Paris"}')] }),
+    );
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('');
+    expect(res.toolCalls).toEqual([{ id: 'c1', name: 'get_weather', arguments: { city: 'Paris' } }]);
+  });
+
+  it('returns text and two calls, skipping custom tool calls', async () => {
+    const { client } = makeClient(
+      withMessage({
+        content: 'Checking.',
+        tool_calls: [
+          fnCall('c1', 'get_weather', '{"city":"Paris"}'),
+          { id: 'c9', type: 'custom', custom: { name: 'x', input: 'y' } },
+          fnCall('c2', 'get_weather', '{"city":"Rome"}'),
+        ],
+      }),
+    );
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('Checking.');
+    expect(res.toolCalls).toEqual([
+      { id: 'c1', name: 'get_weather', arguments: { city: 'Paris' } },
+      { id: 'c2', name: 'get_weather', arguments: { city: 'Rome' } },
+    ]);
+  });
+
+  it('returns toolCalls: [] when none called', async () => {
+    const { client } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([]);
+    expect(res.text).toBe('hi');
+  });
+
+  it('keeps bad JSON or non-object arguments as __unparsed', async () => {
+    const { client } = makeClient(
+      withMessage({
+        content: null,
+        tool_calls: [fnCall('c1', 'get_weather', '{"city":'), fnCall('c2', 'get_weather', '[1,2]')],
+      }),
+    );
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([
+      { id: 'c1', name: 'get_weather', arguments: { __unparsed: '{"city":' } },
+      { id: 'c2', name: 'get_weather', arguments: { __unparsed: '[1,2]' } },
+    ]);
+  });
+
+  it('sends no tools key and leaves toolCalls undefined without tools', async () => {
+    const { client, create } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete('hi', undefined, { tools: [] });
+    expect(create.mock.calls[0][0]).not.toHaveProperty('tools');
+    expect(res).not.toHaveProperty('toolCalls');
+  });
+});
+
+describe('OpenAIProvider tool conversations', () => {
+  const tools = [{ name: 'get_order', parameters: { type: 'object' } }];
+  const conversation: ConversationTurn[] = [
+    { role: 'user', content: 'Refund ORD-1' },
+    {
+      role: 'assistant',
+      content: '',
+      toolCalls: [
+        { id: 'c1', name: 'get_order', arguments: { id: 'ORD-1' } },
+        { id: 'c2', name: 'refund', arguments: { id: 'ORD-1' } },
+      ],
+    },
+    {
+      role: 'tool',
+      results: [
+        { callId: 'c1', name: 'get_order', content: '{"status":"delivered"}' },
+        { callId: 'c2', name: 'refund', content: 'no result scripted', isError: true },
+      ],
+    },
+  ];
+
+  it('sends assistant tool_calls and one tool message per result', async () => {
+    const { client, create } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    await p.complete(conversation, 'sys', { tools });
+    expect(create.mock.calls[0][0].messages).toEqual([
+      { role: 'system', content: 'sys' },
+      { role: 'user', content: 'Refund ORD-1' },
+      {
+        role: 'assistant',
+        content: null,
+        tool_calls: [
+          { id: 'c1', type: 'function', function: { name: 'get_order', arguments: '{"id":"ORD-1"}' } },
+          { id: 'c2', type: 'function', function: { name: 'refund', arguments: '{"id":"ORD-1"}' } },
+        ],
+      },
+      { role: 'tool', tool_call_id: 'c1', content: '{"status":"delivered"}' },
+      { role: 'tool', tool_call_id: 'c2', content: 'no result scripted' },
+    ]);
+  });
+
+  it('keeps the assistant text when there is some', async () => {
+    const { client, create } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const [user, , tool] = conversation;
+    const assistant: ConversationTurn = {
+      role: 'assistant',
+      content: 'Looking.',
+      toolCalls: [{ id: 'c1', name: 'get_order', arguments: {} }],
+    };
+    await p.complete([user, assistant, tool], undefined, { tools });
+    expect(create.mock.calls[0][0].messages[1].content).toBe('Looking.');
+  });
+
+  it('returns the provider ids, which round-trip into the next request', async () => {
+    const { client, create } = makeClient(
+      okResponse({
+        choices: [
+          {
+            index: 0,
+            message: {
+              role: 'assistant',
+              content: null,
+              tool_calls: [{ id: 'call_abc', type: 'function', function: { name: 'get_order', arguments: '{}' } }],
+            },
+            finish_reason: 'tool_calls',
+            logprobs: null,
+          },
+        ],
+      }),
+    );
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    const res = await p.complete(conversation, undefined, { tools });
+    expect(res.toolCalls).toEqual([{ id: 'call_abc', name: 'get_order', arguments: {} }]);
+    await p.complete(
+      [
+        ...conversation,
+        { role: 'assistant', content: '', toolCalls: res.toolCalls },
+        { role: 'tool', results: [{ callId: 'call_abc', name: 'get_order', content: 'ok' }] },
+      ],
+      undefined,
+      { tools },
+    );
+    const messages = create.mock.calls[1][0].messages;
+    expect(messages[4].tool_calls[0].id).toBe('call_abc');
+    expect(messages[5]).toEqual({ role: 'tool', tool_call_id: 'call_abc', content: 'ok' });
+  });
+
+  it('sends a text-only conversation exactly as before', async () => {
+    const { client, create } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    await p.complete(
+      [
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: 'hey' },
+        { role: 'user', content: 'again' },
+      ],
+      'sys',
+    );
+    expect(create.mock.calls[0][0]).toStrictEqual({
+      model: 'gpt-4o-mini',
+      max_tokens: 1024,
+      temperature: 0,
+      messages: [
+        { role: 'system', content: 'sys' },
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: 'hey' },
+        { role: 'user', content: 'again' },
+      ],
+    });
+  });
+});
+
+describe('OpenAIProvider providerMeta', () => {
+  it('ignores a tool call\'s providerMeta', async () => {
+    const { client, create } = makeClient();
+    const p = new OpenAIProvider({ model: 'gpt-4o-mini', client });
+    await p.complete([
+        { role: 'user', content: 'hi' },
+        {
+          role: 'assistant',
+          content: '',
+          toolCalls: [
+            { id: 'c1', name: 'get_order', arguments: {}, providerMeta: { thoughtSignature: 'SIG123' } },
+          ],
+        },
+        { role: 'tool', results: [{ callId: 'c1', name: 'get_order', content: 'ok' }] },
+      ]);
+    expect(create.mock.calls[0][0].messages[1]).toStrictEqual({
+      role: 'assistant',
+      content: null,
+      tool_calls: [{ id: 'c1', type: 'function', function: { name: 'get_order', arguments: '{}' } }],
+    });
   });
 });

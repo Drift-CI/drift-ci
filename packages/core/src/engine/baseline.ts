@@ -18,7 +18,7 @@ import type {
 import { redactSecrets, type RedactionCount } from './redaction.js';
 
 export const OUTPUT_MAX_BYTES = 8 * 1024;
-const BASELINE_SCHEMA_URL = 'https://drift-ci.dev/schema/baseline-v1.json';
+const BASELINE_SCHEMA_URL = 'https://drift-ci.com/schema/baseline-v1.json';
 
 export interface CapturedBy {
   commit?: string;
@@ -73,6 +73,12 @@ export function computeSuiteHash(tc: TestCase): string {
     // Keep hashes for existing suites stable when the new field is absent,
     // while still invalidating a baseline whenever its requirements change.
     ...(tc.contains !== undefined ? { contains: tc.contains } : {}),
+    ...(tc.context !== undefined ? { context: tc.context } : {}),
+    // Resolved (suite + case) tools, so editing a shared tool marks its cases stale.
+    ...(tc.tools !== undefined ? { tools: tc.tools } : {}),
+    ...(tc.expectedCalls !== undefined ? { expectedCalls: tc.expectedCalls } : {}),
+    ...(tc.toolResults !== undefined ? { toolResults: tc.toolResults } : {}),
+    ...(tc.maxSteps !== undefined ? { maxSteps: tc.maxSteps } : {}),
     schema: tc.schema ?? null,
     systemPrompt: tc.systemPrompt ?? null,
     // Rubric edits / reorders / mode swaps / quorum changes invalidate

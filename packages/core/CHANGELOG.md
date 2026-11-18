@@ -1,5 +1,59 @@
 # Changelog
 
+## [1.10.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.10.0...core-v1.10.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* **core:** baseline $schema points at drift-ci.com ([#213](https://github.com/Drift-CI/drift-ci/issues/213)) ([c83818d](https://github.com/Drift-CI/drift-ci/commit/c83818da11bd8125771c899ed48ccdc05608bf2e))
+
+## [1.10.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.9.1...core-v1.10.0) (2026-11-17)
+
+
+### Features
+
+* **core:** appendCasesToSuite shared by drift-ci import and drift-ci.com ([#206](https://github.com/Drift-CI/drift-ci/issues/206)) ([dd054cb](https://github.com/Drift-CI/drift-ci/commit/dd054cb2de793a825441a2a03053fb8cadf9b9fa))
+* **core:** multi-step tool cases with scripted tool results ([#211](https://github.com/Drift-CI/drift-ci/issues/211)) ([b0d8429](https://github.com/Drift-CI/drift-ci/commit/b0d8429a4d39ae40e17b57771993555a7da3a948))
+
+
+### Bug Fixes
+
+* **core:** scan private-key blocks in one pass ([#205](https://github.com/Drift-CI/drift-ci/issues/205)) ([f86fc1c](https://github.com/Drift-CI/drift-ci/commit/f86fc1ccaf9b688bed349965f418d45560dcf548))
+
+## [1.9.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.9.0...core-v1.9.1) (2026-11-17)
+
+
+### Bug Fixes
+
+* **core:** make secret redaction linear-time on crafted input ([#202](https://github.com/Drift-CI/drift-ci/issues/202)) ([1c42e25](https://github.com/Drift-CI/drift-ci/commit/1c42e2512e0b0bff86906f5d2623b52552eb41c7))
+
+## [1.9.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.8.0...core-v1.9.0) (2026-11-17)
+
+
+### Features
+
+* **core:** light @drift-ci/core/import entry for trace conversion ([#198](https://github.com/Drift-CI/drift-ci/issues/198)) ([365f93e](https://github.com/Drift-CI/drift-ci/commit/365f93e2fff35f25fecbd44025dbc58cfdf5662a))
+
+## [1.8.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.7.0...core-v1.8.0) (2026-11-16)
+
+
+### Features
+
+* **core:** faithfulness evaluator and case context for RAG ([#194](https://github.com/Drift-CI/drift-ci/issues/194)) ([d07b1d9](https://github.com/Drift-CI/drift-ci/commit/d07b1d9a67e35d98b5847014173dba2069314020))
+* **core:** tool definitions, provider tool calls and the tool-call evaluator ([#197](https://github.com/Drift-CI/drift-ci/issues/197)) ([1b1404e](https://github.com/Drift-CI/drift-ci/commit/1b1404eae4f2805e86708902818a00f52649c8f1))
+
+
+### Bug Fixes
+
+* **core:** redact current OpenAI keys and GitHub and Slack tokens ([#193](https://github.com/Drift-CI/drift-ci/issues/193)) ([38514c0](https://github.com/Drift-CI/drift-ci/commit/38514c08827bd24fdfe8518b3b307de87058eb52))
+
+## [1.7.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.6.1...core-v1.7.0) (2026-11-16)
+
+
+### Features
+
+* drift-ci import turns production chat traces into test cases ([#189](https://github.com/Drift-CI/drift-ci/issues/189)) ([6fe5d18](https://github.com/Drift-CI/drift-ci/commit/6fe5d189b6fb1fa3836c416312a1afb5e9e97cf3))
+
 ## [1.6.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.6.0...core-v1.6.1) (2026-11-12)
 
 

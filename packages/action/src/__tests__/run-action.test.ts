@@ -176,7 +176,7 @@ describe('runAction', () => {
     // the baselines manually — fastest way to set up the regression case.
     const baselinePath = join(ws.baselineDir, 'math.json');
     const baselineData = {
-      $schema: 'https://drift-ci.dev/schema/baseline-v1.json',
+      $schema: 'https://drift-ci.com/schema/baseline-v1.json',
       caseId: 'math',
       suiteId: 'act-suite',
       suiteHash: computeExpectedSuiteHash('math', 'What is 2+2?', '4'),
@@ -280,6 +280,8 @@ describe('runAction', () => {
             return altBaselineDir;
           },
           diffBaselineFiles: () => [],
+          readBaseFile: () => null,
+          readHeadFile: () => null,
         },
       },
     );
@@ -300,6 +302,8 @@ describe('runAction', () => {
             throw new Error('git fetch failed');
           },
           diffBaselineFiles: () => [],
+          readBaseFile: () => null,
+          readHeadFile: () => null,
         },
       },
     );
@@ -589,10 +593,96 @@ cases:
           throw new Error('not called');
         },
         diffBaselineFiles: () => ['.drift/baseline/math.json'],
+        readBaseFile: () => null,
+        readHeadFile: () => null,
       },
     });
     expect(out.baselineChanged).toBe(true);
     expect(writers.outputs['baseline-changed']).toBe('true');
+  });
+
+  describe('baseline changes in the PR comment', () => {
+    const P = '.drift/baseline/math.json';
+    const json = (score: number, output: string) => JSON.stringify({ caseId: 'math', score, output });
+    async function go(
+      git: { base?: (ref: string, p: string) => string | null; head?: (p: string) => string | null; files?: string[] },
+    ) {
+      const created: string[] = [];
+      const writers = makeWriters();
+      const out = await runAction(
+        makeInputs(ws, {
+          baseRef: 'main',
+          postComment: true,
+          prContext: { owner: 'o', repo: 'r', prNumber: 1 },
+        }),
+        writers,
+        {
+          commentApi: {
+            list: async () => [],
+            update: async () => {
+              throw new Error('should not update');
+            },
+            create: async ({ body }: { body: string }) => {
+              created.push(body);
+              return { id: 1 };
+            },
+          },
+          gitOps: {
+            materialiseMainBaseline: () => {
+              throw new Error('not called');
+            },
+            diffBaselineFiles: () => git.files ?? [P],
+            readBaseFile: git.base ?? (() => null),
+            readHeadFile: git.head ?? (() => null),
+          },
+        },
+      );
+      return { created, writers, out };
+    }
+
+    it('renders the section from base and head baseline files', async () => {
+      const { created } = await go({
+        base: (ref, p) => {
+          expect(ref).toBe('main');
+          expect(p).toBe(P);
+          return json(0.9, 'old');
+        },
+        head: () => json(0.5, 'new'),
+      });
+      expect(created[0]).toContain('Baselines changed in this PR (1)');
+      expect(created[0]).toContain('| `math` | 0.900 → 0.500 |');
+      expect(created[0]).toContain('- old');
+    });
+
+    it('treats a missing head file as removed', async () => {
+      const { created } = await go({ base: () => json(0.9, 'old'), head: () => null });
+      expect(created[0]).toContain('| `math` | 0.900 → | removed |');
+    });
+
+    it('renders only the re-captured line when nothing really changed', async () => {
+      const { created } = await go({ base: () => json(1, 'same'), head: () => json(1, 'same') });
+      expect(created[0]).not.toContain('Baselines changed in this PR');
+      expect(created[0]).toContain('📝 1 baseline file(s) re-captured');
+    });
+
+    it('forwards summarise warnings and mentions skipped files', async () => {
+      const { created, writers } = await go({ base: () => '{bad', head: () => json(1, 'x') });
+      expect(writers.warnings.some((w) => /skipping .*math.json/.test(w))).toBe(true);
+      expect(created[0]).toContain('1 baseline file(s) could not be read and are not shown.');
+    });
+
+    it('warns and omits the section when readBaseFile throws', async () => {
+      const { created, writers, out } = await go({
+        base: () => {
+          throw new Error('no merge base');
+        },
+        head: () => json(0.5, 'new'),
+      });
+      expect(writers.warnings.some((w) => /could not read baseline changes — no merge base/.test(w))).toBe(true);
+      expect(created[0]).not.toContain('Baselines changed in this PR');
+      expect(out.run).not.toBeNull();
+      expect(out.baselineChanged).toBe(true);
+    });
   });
 
   it('skips the run on a fork PR without an api-key and returns skipped=true', async () => {

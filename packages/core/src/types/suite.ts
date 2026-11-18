@@ -61,6 +61,85 @@ export type RubricItem = z.infer<typeof RubricItemSchema>;
 export type RubricSpec = z.infer<typeof RubricSpecSchema>;
 export type RubricQuorum = z.infer<typeof RubricQuorumSchema>;
 
+// ─── tools ──────────────────────────────────────────────────────────────
+
+/** A tool offered to the model. `parameters` is a JSON Schema object. */
+export const ToolDefinitionSchema = z
+  .object({
+    name: z.string().regex(/^[a-zA-Z0-9_-]{1,64}$/, 'Tool names must be 1-64 letters, digits, _ or -.'),
+    description: z.string().max(1024).optional(),
+    parameters: z.record(z.string(), z.unknown()).default({ type: 'object', properties: {} }),
+  })
+  .strict()
+  .refine((t) => t.parameters.type === 'object', {
+    error: (issue) =>
+      `Tool "${(issue.input as { name?: string }).name}": parameters must be a JSON Schema object (type: object).`,
+    path: ['parameters'],
+  });
+
+const ToolListSchema = z
+  .array(ToolDefinitionSchema)
+  .max(64)
+  .refine((t) => new Set(t.map((x) => x.name)).size === t.length, {
+    message: 'Tool names must be unique.',
+  });
+
+/** A tool call the `tool-call` evaluator expects; listed arguments only are compared. */
+export const ExpectedCallSchema = z.object({
+  name: z.string().min(1),
+  arguments: z.record(z.string(), z.unknown()).default({}),
+});
+
+export type ToolDefinition = z.infer<typeof ToolDefinitionSchema>;
+export type ExpectedCall = z.infer<typeof ExpectedCallSchema>;
+
+/**
+ * A scripted result for a multi-step case: answers the model's call to `name` (and, when
+ * `arguments` is listed, only calls whose listed arguments match). `result` is any JSON value.
+ */
+export const ToolResultSchema = z
+  .object({
+    name: z.string().min(1),
+    arguments: z.record(z.string(), z.unknown()).optional(),
+    result: z.unknown(),
+  })
+  .refine((r) => r.result !== undefined, {
+    message: 'Each `toolResults` entry must define a `result`.',
+    path: ['result'],
+  });
+
+export type ToolResult = z.infer<typeof ToolResultSchema>;
+
+/** Steps a multi-step case may take when it doesn't set `maxSteps`. */
+export const DEFAULT_MAX_STEPS = 5;
+
+/** A tool call made by the model, as returned by a provider. */
+export interface ToolCall {
+  /** The provider's call id, or a generated `call_<n>`; echoed back with the call's result. */
+  id?: string;
+  name: string;
+  arguments: Record<string, unknown>;
+  /**
+   * Opaque provider data that must go back with the call in the next step, such as Gemini's
+   * `thoughtSignature`. Never rendered, hashed or compared.
+   */
+  providerMeta?: { thoughtSignature?: string };
+}
+
+/** One result in a `tool` turn, answering the call with id `callId`. */
+export interface ToolResultContent {
+  callId: string;
+  name: string;
+  content: string;
+  isError?: boolean;
+}
+
+/** A turn of a multi-step tool conversation (internal to the engine and providers). */
+export type ConversationTurn =
+  | { role: 'user'; content: string }
+  | { role: 'assistant'; content: string; toolCalls?: ToolCall[] }
+  | { role: 'tool'; results: ToolResultContent[] };
+
 // ─── case ───────────────────────────────────────────────────────────────
 
 export const TestCaseSchema = z
@@ -84,9 +163,18 @@ export const TestCaseSchema = z
     systemPrompt: z.string().optional(),
     messages: z.array(MessageParamSchema).optional(),
     contains: z.array(z.string().min(1)).min(1).optional(),
+    context: z
+      .union([z.string().min(1), z.array(z.string().min(1)).min(1).max(20)])
+      .optional(),
     schema: z.record(z.string(), z.unknown()).optional(),
     rubric: RubricSpecSchema.optional(),
     rubricQuorum: RubricQuorumSchema.optional(),
+    tools: ToolListSchema.optional(),
+    expectedCalls: z.array(ExpectedCallSchema).max(16).optional(),
+    /** Scripted tool results; makes the case multi-step. Names must be effective tools. */
+    toolResults: z.array(ToolResultSchema).min(1).max(32).optional(),
+    /** Provider calls a multi-step case may take (default 5); only with `toolResults`. */
+    maxSteps: z.number().int().min(1).max(10).optional(),
   })
   .refine((tc) => (tc.input !== undefined) !== (tc.messages !== undefined), {
     message:
@@ -121,6 +209,16 @@ export const TestCaseSchema = z
       message:
         'A case using the `rubric-checklist` evaluator must define a `rubric` field.',
     },
+  )
+  .refine(
+    (tc) =>
+      !tc.evaluators?.some(
+        (e) => (typeof e === 'string' ? e : e.name) === 'faithfulness',
+      ) || tc.context !== undefined,
+    {
+      message:
+        'A case using the `faithfulness` evaluator must define a `context` field.',
+    },
   );
 
 export const SuiteSchema = z.object({
@@ -132,6 +230,8 @@ export const SuiteSchema = z.object({
   default_threshold: z.number().min(0).max(1).optional(),
   /** Samples per case when a case has no `runs` of its own (1–5). The median score is used. */
   default_runs: z.number().int().min(1).max(5).optional(),
+  /** Tools offered to every case; merged into each case's `tools` by `parseSuite`. */
+  tools: ToolListSchema.optional(),
   cases: z
     .array(TestCaseSchema)
     .min(1)

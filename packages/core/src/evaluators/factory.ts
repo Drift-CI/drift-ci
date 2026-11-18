@@ -7,7 +7,9 @@ import { ExactMatchEvaluator } from './exact.js';
 import { SchemaEvaluator } from './schema.js';
 import { EmbeddingEvaluator } from './embedding.js';
 import { LLMJudgeEvaluator } from './llm-judge.js';
+import { FaithfulnessEvaluator } from './faithfulness.js';
 import { RefusalDetectionEvaluator } from './refusal.js';
+import { ToolCallEvaluator } from './tool-call.js';
 import {
   RubricChecklistEvaluator,
   type NamedJudge,
@@ -20,7 +22,7 @@ import {
 export interface EvaluatorFactoryContext {
   testProvider: ProviderAdapter;
   judgeProvider?: ProviderAdapter;
-  case?: Pick<TestCase, 'contains' | 'schema' | 'rubric' | 'rubricQuorum'>;
+  case?: Pick<TestCase, 'contains' | 'schema' | 'rubric' | 'rubricQuorum' | 'context' | 'expectedCalls' | 'tools'>;
   allowSelfBias?: boolean;
   /**
    * Resolved named judges from the top-level `judges:` config map.
@@ -81,6 +83,25 @@ function build(name: string, ctx: EvaluatorFactoryContext): Evaluator {
         testProviderName: ctx.testProvider.name,
         allowSelfBias: ctx.allowSelfBias,
       });
+    case 'faithfulness':
+      if (!ctx.case?.context) {
+        throw new Error(
+          'faithfulness evaluator requires a `context` field on the test case.',
+        );
+      }
+      return new FaithfulnessEvaluator({
+        judgeProvider: ctx.judgeProvider ?? ctx.testProvider,
+        testProviderName: ctx.testProvider.name,
+        allowSelfBias: ctx.allowSelfBias,
+      });
+    case 'tool-call': {
+      if (!ctx.case?.expectedCalls || !ctx.case.tools?.length) {
+        throw new Error(
+          'tool-call evaluator requires `expectedCalls` and at least one tool on the test case.',
+        );
+      }
+      return new ToolCallEvaluator(ctx.case.expectedCalls);
+    }
     case 'refusal-detection':
       return new RefusalDetectionEvaluator();
     case 'rubric-checklist': {

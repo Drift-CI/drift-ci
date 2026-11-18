@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -112,6 +112,53 @@ describe('computeSuiteHash', () => {
     expect(computeSuiteHash(makeTestCase())).toBe(
       'sha256:ebf23e1873674af6881761e45790c8a161d6c95c4d4c57a1bf6b6707dfea4286',
     );
+  });
+
+  it('changes when context changes', () => {
+    const a = makeTestCase({ context: ['p1'] });
+    const b = makeTestCase({ context: ['p2'] });
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
+  });
+
+  it('keeps the hash unchanged when tools and expectedCalls are absent', () => {
+    expect(computeSuiteHash(makeTestCase({ tools: undefined, expectedCalls: undefined }))).toBe(
+      computeSuiteHash(makeTestCase()),
+    );
+  });
+
+  it('changes when a (resolved) tool definition changes', () => {
+    const tool = (description: string) => ({
+      name: 'get_order',
+      description,
+      parameters: { type: 'object', properties: {} },
+    });
+    const a = makeTestCase({ tools: [tool('v1')] });
+    const b = makeTestCase({ tools: [tool('v2')] });
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
+  });
+
+  it('changes when expectedCalls change', () => {
+    const a = makeTestCase({ expectedCalls: [] });
+    const b = makeTestCase({ expectedCalls: [{ name: 'x', arguments: {} }] });
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
+  });
+
+  it('keeps the hash unchanged when toolResults and maxSteps are absent', () => {
+    expect(computeSuiteHash(makeTestCase({ toolResults: undefined, maxSteps: undefined }))).toBe(
+      'sha256:ebf23e1873674af6881761e45790c8a161d6c95c4d4c57a1bf6b6707dfea4286',
+    );
+  });
+
+  it('changes when toolResults or maxSteps change', () => {
+    const a = makeTestCase({ toolResults: [{ name: 'x', result: { ok: true } }] });
+    const b = makeTestCase({ toolResults: [{ name: 'x', result: { ok: false } }] });
+    const c = makeTestCase({ toolResults: [{ name: 'x', result: { ok: true } }], maxSteps: 2 });
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(b));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(c));
+    expect(computeSuiteHash(a)).not.toBe(computeSuiteHash(makeTestCase()));
   });
 
   it('ignores unrelated fields (id, tags, description)', () => {
@@ -247,6 +294,7 @@ describe('serialiseBaseline', () => {
     const json = serialiseBaseline(entry);
     const parsed = JSON.parse(json);
     expect(Object.keys(parsed)[0]).toBe('$schema');
+    expect(parsed.$schema).toBe('https://drift-ci.com/schema/baseline-v1.json');
     expect(parsed.caseId).toBe('c1');
     expect(parsed.judgeHash).toBeUndefined();
     expect(parsed.redactions).toBeUndefined();
@@ -434,6 +482,23 @@ describe('FileBaselineStore', () => {
 
   it('deleteCase returns false when the file is missing', async () => {
     expect(await store.deleteCase('nope')).toBe(false);
+  });
+
+  it('loads a baseline written with the legacy drift-ci.dev $schema and does not rewrite it for that alone', async () => {
+    const entry = FileBaselineStore.fromCaseResult(makeTestCase(), makeCaseResult(), makeRun());
+    await store.save(entry);
+    const p = store.pathFor(entry.caseId);
+    const legacy = readFileSync(p, 'utf8').replace(
+      'https://drift-ci.com/schema/baseline-v1.json',
+      'https://drift-ci.dev/schema/baseline-v1.json',
+    );
+    expect(legacy).toContain('drift-ci.dev');
+    writeFileSync(p, legacy);
+
+    const loaded = await store.load(entry.caseId);
+    expect(loaded!.score).toBe(entry.score);
+    expect(await store.saveMerged(entry)).toBe('unchanged');
+    expect(readFileSync(p, 'utf8')).toBe(legacy);
   });
 });
 

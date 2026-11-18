@@ -1,5 +1,11 @@
 import { describe, it, expect } from 'vitest';
+import { readdirSync, readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { load as yamlLoad } from 'js-yaml';
+import { z } from 'zod';
 import { parseSuite } from '../suite.js';
+import { SuiteSchema } from '../../types/index.js';
 
 describe('parseSuite', () => {
   it('parses a minimal valid suite', () => {
@@ -258,5 +264,255 @@ cases:
       if (!r) throw new Error('rubric expected');
       expect(typeof r[0]).toBe('object');
     });
+  });
+});
+
+describe('parseSuite tools', () => {
+  const suite = (body: string) => `
+version: 1
+id: s
+name: S
+${body}`;
+
+  it('merges suite tools into each case: replacement in place, then case-only tools', () => {
+    const s = parseSuite(
+      suite(`tools:
+  - name: a
+    description: suite a
+  - name: b
+cases:
+  - id: c1
+    input: q
+    tools:
+      - name: c
+      - name: a
+        description: case a
+  - id: c2
+    input: q
+`),
+    );
+    expect(s.cases[0].tools?.map((t) => [t.name, t.description])).toEqual([
+      ['a', 'case a'],
+      ['b', undefined],
+      ['c', undefined],
+    ]);
+    expect(s.cases[1].tools?.map((t) => t.name)).toEqual(['a', 'b']);
+    expect(s.tools?.map((t) => t.name)).toEqual(['a', 'b']);
+  });
+
+  it('leaves tools undefined on a case with no effective tools', () => {
+    const s = parseSuite(suite(`cases:\n  - id: c1\n    input: q\n`));
+    expect(s.cases[0].tools).toBeUndefined();
+    expect('tools' in s.cases[0]).toBe(false);
+  });
+
+  it('accepts a per-case tool-call case with expectedCalls and a suite tool', () => {
+    const s = parseSuite(
+      suite(`tools:
+  - name: get_order
+cases:
+  - id: c1
+    input: q
+    expectedCalls:
+      - name: get_order
+        arguments: { order_id: ORD-1 }
+    evaluators: [tool-call]
+  - id: c2
+    input: thanks
+    expectedCalls: []
+    evaluators: [tool-call]
+`),
+    );
+    expect(s.cases[0].expectedCalls?.[0].arguments).toEqual({ order_id: 'ORD-1' });
+  });
+
+  it('rejects per-case tool-call without expectedCalls', () => {
+    const run = () =>
+      parseSuite(
+        suite(`tools:
+  - name: a
+cases:
+  - id: c1
+    input: q
+    evaluators: [tool-call]
+`),
+      );
+    expect(run).toThrow(z.ZodError);
+    expect(run).toThrow(/tool-call/);
+  });
+
+  it('rejects per-case tool-call without tools', () => {
+    const run = () =>
+      parseSuite(
+        suite(`cases:
+  - id: c1
+    input: q
+    expectedCalls: []
+    evaluators: [{ name: tool-call }]
+`),
+      );
+    expect(run).toThrow(z.ZodError);
+  });
+
+  it('rejects an expectedCalls name that is not an effective tool', () => {
+    let err: unknown;
+    try {
+      parseSuite(
+        suite(`tools:
+  - name: a
+cases:
+  - id: c1
+    input: q
+    expectedCalls:
+      - name: nope
+`),
+      );
+    } catch (e) {
+      err = e;
+    }
+    expect(err).toBeInstanceOf(z.ZodError);
+    const issue = (err as z.ZodError).issues[0];
+    expect(issue.message).toBe('case c1: expectedCalls names unknown tool "nope"');
+    expect(issue.path).toEqual(['cases', 0, 'expectedCalls', 0, 'name']);
+  });
+
+  const issueOf = (yaml: string): z.core.$ZodIssue => {
+    try {
+      parseSuite(yaml);
+    } catch (e) {
+      expect(e).toBeInstanceOf(z.ZodError);
+      return (e as z.ZodError).issues[0];
+    }
+    throw new Error('expected parseSuite to throw');
+  };
+
+  it('accepts toolResults naming effective tools (suite and case tools)', () => {
+    const s = parseSuite(
+      suite(`tools:
+  - name: get_order
+cases:
+  - id: c1
+    input: q
+    tools:
+      - name: refund_order
+    toolResults:
+      - name: get_order
+        arguments: { order_id: ORD-1 }
+        result: { status: delivered }
+      - name: refund_order
+        result: { ok: true }
+    maxSteps: 4
+    expectedCalls:
+      - name: get_order
+    evaluators: [tool-call]
+`),
+    );
+    expect(s.cases[0].toolResults?.map((r) => r.name)).toEqual(['get_order', 'refund_order']);
+    expect(s.cases[0].maxSteps).toBe(4);
+  });
+
+  it('rejects a toolResults name that is not an effective tool', () => {
+    const issue = issueOf(
+      suite(`tools:
+  - name: a
+cases:
+  - id: c1
+    input: q
+    toolResults:
+      - name: a
+        result: 1
+      - name: nope
+        result: 1
+`),
+    );
+    expect(issue.message).toBe('case c1: toolResults names unknown tool "nope"');
+    expect(issue.path).toEqual(['cases', 0, 'toolResults', 1, 'name']);
+  });
+
+  it('rejects toolResults on a case without any tools', () => {
+    const issue = issueOf(
+      suite(`cases:
+  - id: c1
+    input: q
+    toolResults:
+      - name: a
+        result: 1
+`),
+    );
+    expect(issue.message).toBe('case c1: toolResults needs at least one tool');
+    expect(issue.path).toEqual(['cases', 0, 'toolResults']);
+  });
+
+  it('rejects maxSteps without toolResults', () => {
+    const issue = issueOf(
+      suite(`tools:
+  - name: a
+cases:
+  - id: c1
+    input: q
+    maxSteps: 3
+`),
+    );
+    expect(issue.message).toBe('case c1: `maxSteps` is only allowed together with `toolResults`');
+    expect(issue.path).toEqual(['cases', 0, 'maxSteps']);
+  });
+
+  it('parses every example suite exactly as the schema does (except tools.yaml, which merges tools)', () => {
+    const dir = fileURLToPath(new URL('../../../../../examples/suites', import.meta.url));
+    const files = readdirSync(dir).filter((f) => f.endsWith('.yaml') && f !== 'tools.yaml');
+    expect(files.length).toBeGreaterThan(0);
+    for (const f of files) {
+      const text = readFileSync(join(dir, f), 'utf8');
+      expect(parseSuite(text)).toStrictEqual(SuiteSchema.parse(yamlLoad(text)));
+    }
+  });
+
+  it('parses examples/suites/tools.yaml and merges the suite tools into each case', () => {
+    const dir = fileURLToPath(new URL('../../../../../examples/suites', import.meta.url));
+    const suite = parseSuite(readFileSync(join(dir, 'tools.yaml'), 'utf8'));
+    const byId = Object.fromEntries(suite.cases.map((c) => [c.id, c]));
+    expect(suite.cases).toHaveLength(5);
+    expect(byId.order_lookup.tools?.map((t) => t.name)).toEqual(['get_order', 'cancel_order']);
+    expect(byId.thanks_no_tool.expectedCalls).toEqual([]);
+    expect(byId.case_level_tool.tools?.map((t) => t.name)).toEqual([
+      'get_order',
+      'cancel_order',
+      'send_receipt',
+    ]);
+    expect(byId.cancel_if_unshipped.toolResults?.map((r) => r.name)).toEqual(['get_order', 'cancel_order']);
+    expect(byId.cancel_if_unshipped.maxSteps).toBe(4);
+  });
+
+  it('rejects a tool whose parameters are not an object schema', () => {
+    expect(() =>
+      parseSuite(suite(`cases:
+  - id: c1
+    input: q
+    tools:
+      - name: t
+        parameters: { type: string }
+`)),
+    ).toThrow(/parameters must be a JSON Schema object/);
+  });
+
+  it('rejects misspelled tool keys', () => {
+    expect(() =>
+      parseSuite(suite(`tools:
+  - name: t
+    paramaters: { type: object }
+cases:
+  - id: c1
+    input: q
+`)),
+    ).toThrow(/Unrecognized key/);
+    expect(() =>
+      parseSuite(suite(`tools:
+  - name: t
+    input_schema: { type: object }
+cases:
+  - id: c1
+    input: q
+`)),
+    ).toThrow(/Unrecognized key/);
   });
 });

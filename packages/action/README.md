@@ -92,7 +92,7 @@ The OIDC token's audience is the origin of `dashboard-url`. If `dashboard-token`
 | `baseline-source`  | `branch`             | `branch` (PR head) or `main` (origin/main). |
 | `fail-on-regression` | `true`             | Exit non-zero if any case regressed. |
 | `post-comment`     | `true`               | Post / update a PR comment via `GITHUB_TOKEN`. |
-| `dashboard-url` / `dashboard-token` | — | Sync results to a dashboard. `dashboard-token` is optional on drift-ci.com with the GitHub App (keyless, see below). |
+| `dashboard-url` / `dashboard-token` | — | Sync results to a dashboard. `dashboard-token` is optional on drift-ci.com with the GitHub App (keyless, see above). |
 
 ## Outputs
 
@@ -135,6 +135,22 @@ vs. `main`, even when a PR is also committing baseline updates.
 
 `fetch-depth: 0` on `actions/checkout` is required so `git fetch origin
 main --depth=1` can resolve from a shallow clone.
+
+### Baselines changed in this PR
+
+When a PR changes files under `.drift/baseline/`, the PR comment gains a
+**Baselines changed in this PR** section so reviewers can see what they are
+approving: for each case, the old and new baseline score, and a line diff of
+the old and new stored output. Lowered baselines are flagged with a warning,
+since lowering a baseline accepts worse behaviour as the new normal. Baselines
+that were only re-captured (same score and output) are counted, not listed.
+Long diffs are truncated to keep the comment within GitHub's size limit.
+
+The section is display only and works with either `baseline-source`. It reads
+the base branch version with `git show` against the merge base, so it needs
+`fetch-depth: 0` (already required above). If git cannot read the base branch,
+the section is omitted and a warning is logged; the check is never failed
+because of it.
 
 ## Fork pull requests
 

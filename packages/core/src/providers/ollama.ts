@@ -1,11 +1,15 @@
-import type { MessageParam } from '../types/index.js';
 import {
+  isConversation,
   toMessages,
+  withCallIds,
+  type CompletionInput,
   type CompletionOptions,
   type CompletionResponse,
   type ProviderAdapter,
+  type ToolCall,
+  type ToolDefinition,
 } from './base.js';
-import { withRetry, type RetryOptions } from './utils.js';
+import { parseArgs, withRetry, type RetryOptions } from './utils.js';
 import { stripTrailingSlashes } from '../util/url.js';
 
 export interface OllamaProviderConfig {
@@ -17,17 +21,26 @@ export interface OllamaProviderConfig {
   fetch?: typeof fetch;
 }
 
-interface OllamaChatMessage {
-  role: 'system' | 'user' | 'assistant';
-  content: string;
-}
+type OllamaChatMessage =
+  | { role: 'system' | 'user'; content: string }
+  | {
+      role: 'assistant';
+      content: string;
+      tool_calls?: Array<{ function: { name: string; arguments: Record<string, unknown> } }>;
+    }
+  | { role: 'tool'; content: string; tool_name: string };
 
 interface OllamaChatResponse {
   model: string;
-  message: { role: string; content: string };
+  message: { role: string; content: string; tool_calls?: OllamaToolCall[] };
   done: boolean;
   prompt_eval_count?: number;
   eval_count?: number;
+}
+
+/** Ollama sends arguments as an object; tolerate a JSON string too. */
+interface OllamaToolCall {
+  function?: { name?: string; arguments?: Record<string, unknown> | string };
 }
 
 const DEFAULT_BASE_URL = 'http://localhost:11434';
@@ -51,20 +64,16 @@ export class OllamaProvider implements ProviderAdapter {
   }
 
   async complete(
-    input: string | MessageParam[],
+    input: CompletionInput,
     systemPrompt?: string,
     options: CompletionOptions = {},
   ): Promise<CompletionResponse> {
     const start = Date.now();
+    const tools = options.tools?.length ? options.tools : undefined;
 
     const messages: OllamaChatMessage[] = [];
     if (systemPrompt) messages.push({ role: 'system', content: systemPrompt });
-    for (const m of toMessages(input)) {
-      messages.push({
-        role: m.role,
-        content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
-      });
-    }
+    messages.push(...toOllamaMessages(input));
 
     const body = {
       model: this.config.model,
@@ -75,6 +84,7 @@ export class OllamaProvider implements ProviderAdapter {
         num_predict:
           options.maxTokens ?? this.config.defaultMaxTokens ?? 1024,
       },
+      ...(tools ? { tools: toOllamaTools(tools) } : {}),
     };
 
     const headers: Record<string, string> = {
@@ -115,8 +125,67 @@ export class OllamaProvider implements ProviderAdapter {
       },
       model: response.model ?? this.config.model,
       latencyMs: Date.now() - start,
+      ...(tools ? { toolCalls: withCallIds(readOllamaToolCalls(response.message?.tool_calls), input) } : {}),
     };
   }
+}
+
+/**
+ * Plain input becomes `{ role, content }` messages, as always. A tool conversation maps an
+ * assistant turn's calls to `tool_calls` and a tool turn to one `role: 'tool'` message per result,
+ * named by `tool_name` (Ollama has no call ids).
+ */
+function toOllamaMessages(input: CompletionInput): OllamaChatMessage[] {
+  if (!isConversation(input)) {
+    return toMessages(input).map((m) => ({
+      role: m.role,
+      content: typeof m.content === 'string' ? m.content : JSON.stringify(m.content),
+    }));
+  }
+  return input.flatMap((turn): OllamaChatMessage[] => {
+    if (turn.role === 'user') return [{ role: 'user', content: turn.content }];
+    if (turn.role === 'assistant') {
+      if (!turn.toolCalls?.length) return [{ role: 'assistant', content: turn.content }];
+      return [
+        {
+          role: 'assistant',
+          content: turn.content,
+          tool_calls: turn.toolCalls.map((c) => ({
+            function: { name: c.name, arguments: c.arguments },
+          })),
+        },
+      ];
+    }
+    return turn.results.map((r) => ({ role: 'tool' as const, content: r.content, tool_name: r.name }));
+  });
+}
+
+function toOllamaTools(tools: ToolDefinition[]) {
+  return tools.map((t) => ({
+    type: 'function' as const,
+    function: {
+      name: t.name,
+      ...(t.description !== undefined ? { description: t.description } : {}),
+      parameters: t.parameters,
+    },
+  }));
+}
+
+function readOllamaToolCalls(calls: OllamaToolCall[] | undefined): ToolCall[] {
+  return (calls ?? []).map((c) => {
+    const args = c.function?.arguments;
+    return {
+      name: c.function?.name ?? '',
+      arguments:
+        args === undefined || args === null
+          ? {}
+          : typeof args === 'string'
+            ? parseArgs(args)
+            : typeof args === 'object' && !Array.isArray(args)
+              ? args
+              : { __unparsed: JSON.stringify(args) },
+    };
+  });
 }
 
 async function safeReadText(res: Response): Promise<string> {

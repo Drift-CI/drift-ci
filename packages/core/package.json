@@ -1,6 +1,6 @@
 {
   "name": "@drift-ci/core",
-  "version": "1.6.1",
+  "version": "1.10.1",
   "description": "drift-ci core engine: types, providers, evaluators, storage, runner",
   "keywords": [
     "llm",
@@ -57,6 +57,10 @@
     "./types": {
       "import": "./dist/types/index.js",
       "types": "./dist/types/index.d.ts"
+    },
+    "./import": {
+      "import": "./dist/import/index.js",
+      "types": "./dist/import/index.d.ts"
     }
   },
   "files": [
@@ -80,6 +84,7 @@
     "js-yaml": "^5.5.0",
     "openai": "^7.45.1",
     "p-limit": "^7.3.3",
+    "yaml": "^2.9.1",
     "zod": "^4.6.6"
   },
   "devDependencies": {
@@ -89,7 +94,7 @@
     "fast-xml-parser": "^5.12.0",
     "rimraf": "^6.1.4",
     "typescript": "^6.0.3",
-    "vite": "^8.3.5",
+    "vite": "^8.3.8",
     "vitest": "^5.0.5"
   },
   "engines": {

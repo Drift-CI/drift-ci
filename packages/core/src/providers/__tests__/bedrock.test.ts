@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from 'vitest';
 import { BedrockAnthropicProvider } from '../bedrock.js';
+import type { ConversationTurn } from '../base.js';
 
 function okResponse(model: string, overrides: Record<string, unknown> = {}) {
   return {
@@ -140,5 +141,162 @@ describe('BedrockAnthropicProvider', () => {
     const out = await p.complete('q');
     expect(out.text).toBe('hi from bedrock');
     expect(create).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('BedrockAnthropicProvider tools', () => {
+  const MODEL_ID = 'anthropic.claude-sonnet-4-5-20260101-v1:0';
+  const tools = [
+    {
+      name: 'lookup',
+      description: 'Look up a record',
+      parameters: { type: 'object', properties: { id: { type: 'string' } } },
+    },
+  ];
+
+  it('sends the tools mapped to input_schema', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(okResponse(MODEL_ID));
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    await p.complete('hi', undefined, { tools });
+    const args = create.mock.calls[0][0];
+    expect(args.tools).toEqual([
+      {
+        name: 'lookup',
+        description: 'Look up a record',
+        input_schema: { type: 'object', properties: { id: { type: 'string' } } },
+      },
+    ]);
+    expect(args).not.toHaveProperty('tool_choice');
+  });
+
+  it('parses one tool_use block', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(
+      okResponse(MODEL_ID, {
+        content: [{ type: 'tool_use', id: 't1', name: 'lookup', input: { id: 'a1' } }],
+      }),
+    );
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([{ id: 't1', name: 'lookup', arguments: { id: 'a1' } }]);
+    expect(res.text).toBe('');
+  });
+
+  it('returns text and two calls', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(
+      okResponse(MODEL_ID, {
+        content: [
+          { type: 'text', text: 'ok' },
+          { type: 'tool_use', id: 't1', name: 'lookup', input: { id: 'a1' } },
+          { type: 'tool_use', id: 't2', name: 'lookup', input: { id: 'b2' } },
+        ],
+      }),
+    );
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.text).toBe('ok');
+    expect(res.toolCalls).toEqual([
+      { id: 't1', name: 'lookup', arguments: { id: 'a1' } },
+      { id: 't2', name: 'lookup', arguments: { id: 'b2' } },
+    ]);
+  });
+
+  it('returns toolCalls: [] when none called', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(okResponse(MODEL_ID));
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    const res = await p.complete('hi', undefined, { tools });
+    expect(res.toolCalls).toEqual([]);
+  });
+
+  it('sends no tools key and leaves toolCalls undefined without tools', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(okResponse(MODEL_ID));
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    const res = await p.complete('hi');
+    expect(create.mock.calls[0][0]).not.toHaveProperty('tools');
+    expect(res).not.toHaveProperty('toolCalls');
+  });
+});
+
+describe('BedrockAnthropicProvider tool conversations', () => {
+  const MODEL_ID = 'anthropic.claude-sonnet-4-5-20260101-v1:0';
+  const tools = [{ name: 'lookup', parameters: { type: 'object' } }];
+  const conversation: ConversationTurn[] = [
+    { role: 'user', content: 'Find a1' },
+    {
+      role: 'assistant',
+      content: 'Looking.',
+      toolCalls: [
+        { id: 't1', name: 'lookup', arguments: { id: 'a1' } },
+        { id: 't2', name: 'lookup', arguments: { id: 'zz' } },
+      ],
+    },
+    {
+      role: 'tool',
+      results: [
+        { callId: 't1', name: 'lookup', content: '{"found":true}' },
+        { callId: 't2', name: 'lookup', content: 'no result scripted', isError: true },
+      ],
+    },
+  ];
+
+  it('sends tool_use blocks and a user message of tool_result blocks', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(okResponse(MODEL_ID));
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    await p.complete(conversation, undefined, { tools });
+    expect(create.mock.calls[0][0].messages).toEqual([
+      { role: 'user', content: 'Find a1' },
+      {
+        role: 'assistant',
+        content: [
+          { type: 'text', text: 'Looking.' },
+          { type: 'tool_use', id: 't1', name: 'lookup', input: { id: 'a1' } },
+          { type: 'tool_use', id: 't2', name: 'lookup', input: { id: 'zz' } },
+        ],
+      },
+      {
+        role: 'user',
+        content: [
+          { type: 'tool_result', tool_use_id: 't1', content: '{"found":true}' },
+          { type: 'tool_result', tool_use_id: 't2', content: 'no result scripted', is_error: true },
+        ],
+      },
+    ]);
+  });
+
+  it('returns the provider ids', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(
+      okResponse(MODEL_ID, { content: [{ type: 'tool_use', id: 't3', name: 'lookup', input: {} }] }),
+    );
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    const res = await p.complete(conversation, undefined, { tools });
+    expect(res.toolCalls).toEqual([{ id: 't3', name: 'lookup', arguments: {} }]);
+  });
+
+  it('sends a text-only conversation exactly as before', async () => {
+    const { client, create } = fakeClient();
+    create.mockResolvedValue(okResponse(MODEL_ID));
+    const p = new BedrockAnthropicProvider({ modelId: MODEL_ID, client });
+    await p.complete([
+      { role: 'user', content: 'hi' },
+      { role: 'assistant', content: 'hey' },
+      { role: 'user', content: 'again' },
+    ]);
+    expect(create.mock.calls[0][0]).toStrictEqual({
+      model: MODEL_ID,
+      max_tokens: 1024,
+      temperature: 0,
+      system: undefined,
+      messages: [
+        { role: 'user', content: 'hi' },
+        { role: 'assistant', content: 'hey' },
+        { role: 'user', content: 'again' },
+      ],
+    });
   });
 });

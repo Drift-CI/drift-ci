@@ -1,5 +1,5 @@
 {
-  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "$schema": "https://drift-ci.com/schema/baseline-v1.json",
   "caseId": "triage-json",
   "suiteId": "support-triage",
   "suiteHash": "sha256:79b4eb5d2e323f25af92052a1a57f8e4b70417aed6dbea647860eea68ca9c421",

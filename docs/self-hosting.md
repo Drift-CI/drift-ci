@@ -27,7 +27,7 @@ be." It owns history and visibility. (See arch §6 / §16 / §19.)
 - A reachable hostname if you want GitHub OAuth or webhooks. For local
   evaluation, `localhost:3000` is fine.
 - ~1 GB of disk for Postgres. Run-row footprint scales with case count
-  × runs retained (default 90 days).
+  × runs retained (default 30 days, set per project).
 
 ## 1. Clone the repo
 
@@ -49,7 +49,7 @@ Create a `.env` file next to `docker-compose.yml`:
 DRIFT_SESSION_SECRET=$(openssl rand -hex 32)
 DRIFT_ADMIN_EMAIL=you@example.com
 
-# Required for ingest-only bootstrap (refused once a real admin exists)
+# Optional — lets CI ingest before any user exists (refused once one does)
 DRIFT_INGEST_TOKEN=$(openssl rand -hex 32)
 
 # Optional — GitHub OAuth (recommended over the password fallback)
@@ -67,8 +67,7 @@ GITHUB_WEBHOOK_SECRET=$(openssl rand -hex 32)
 DRIFT_RETENTION_BATCH_LIMIT=10000
 ```
 
-Compose loads `.env` automatically. **Do not commit it.** A
-`.env.example` would be a fine pattern to crib from later.
+Compose loads `.env` automatically. **Do not commit it.**
 
 ### What each variable does
 
@@ -101,8 +100,11 @@ The dashboard container does three things on start, in order:
    `DRIFT_ADMIN_EMAIL` is set, and prints **one** plaintext bootstrap
    token like:
    ```
-   drift-ci: bootstrap admin token (save this — shown only once):
-     drift_a1b2c3d4_<32 chars>
+    drift-ci: bootstrap admin created
+     email: you@example.com
+     token: drift_<8 chars>_<32 chars>
+
+     This is the only time the token is shown. Save it now.
    ```
 3. Boots Next.js on port 3000.
 
@@ -131,16 +133,16 @@ the verified GitHub email.
 Mint an API token at `/admin/tokens` (or use the bootstrap token from
 step 3, but that token is admin-scoped and worth rotating soon).
 
-In your `.drift/config.yaml`:
+For CLI runs (`drift-ci run`), set HTTP storage in your `.drift/config.yaml`:
 
 ```yaml
 storage:
   type: http
   url: https://drift.example.com  # or http://localhost:3000 for local
-  # token can also come from DRIFT_INGEST_TOKEN env var at run time
+  # the token can also come from the DRIFT_INGEST_TOKEN env var at run time
 ```
 
-In your CI workflow:
+The GitHub Action ignores `storage` and syncs through its own inputs instead:
 
 ```yaml
 - uses: Drift-CI/drift-ci@v1
@@ -271,13 +273,16 @@ docker compose up -d
 ```
 
 The migration script applies any new SQL files in `drizzle/` under a
-`schema_migrations` ledger before the server starts. A failed
-migration exits non-zero and the container fails fast — the old
-container keeps serving in the meantime.
+`schema_migrations` ledger before the server starts. Each file runs in
+a transaction, so a failed migration leaves the database unchanged; the
+script exits non-zero and the new container doesn't start. `docker
+compose up -d` stops the old container before starting the new one, so
+expect a short outage during an upgrade.
 
-For zero-downtime upgrades behind a reverse proxy, run two dashboard
-replicas; the migration script is safe under concurrent runs (each
-file's apply is gated by an advisory lock).
+The migration script takes no lock, so don't start several dashboard
+replicas against an unmigrated database at once: run the migration once
+(for example `docker compose run --rm dashboard node
+packages/dashboard/scripts/migrate.mjs`), then start the replicas.
 
 ## What's next
 

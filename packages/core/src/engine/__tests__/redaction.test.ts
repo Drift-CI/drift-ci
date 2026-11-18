@@ -31,6 +31,49 @@ describe('redactSecrets', () => {
     expect(redactions).toEqual([{ kind: 'openai-key', count: 1 }]);
   });
 
+  it.each([
+    ['project', `sk-proj-${'Ab1_-'.repeat(30)}`],
+    ['service account', `sk-svcacct-${'Zz9'.repeat(30)}`],
+    ['admin', `sk-admin-${'q'.repeat(60)}`],
+  ])('redacts current OpenAI %s keys', (_label, key) => {
+    const { text, redactions } = redactSecrets(`OPENAI_API_KEY=${key} end`);
+    expect(text).toBe('OPENAI_API_KEY=[REDACTED:openai-key] end');
+    expect(redactions).toEqual([{ kind: 'openai-key', count: 1 }]);
+  });
+
+  it.each([
+    ['personal', `ghp_${'a1B2'.repeat(9)}`],
+    ['OAuth', `gho_${'a1B2'.repeat(9)}`],
+    ['server', `ghs_${'a1B2'.repeat(9)}`],
+    ['fine-grained', `github_pat_${'A1b2_'.repeat(16)}`],
+  ])('redacts GitHub %s tokens', (_label, token) => {
+    const { text, redactions } = redactSecrets(`token ${token} here`);
+    expect(text).toBe('token [REDACTED:github-token] here');
+    expect(redactions).toEqual([{ kind: 'github-token', count: 1 }]);
+  });
+
+  it.each([
+    // Built at runtime so no token-shaped literal sits in the source (push protection).
+    ['bot', ['xoxb', '1'.repeat(10), '2'.repeat(13), 'Ab'.repeat(12)].join('-')],
+    ['user', ['xoxp', '1'.repeat(10), '2'.repeat(10), '3'.repeat(13), 'f0'.repeat(16)].join('-')],
+  ])('redacts Slack %s tokens', (_label, token) => {
+    const { text, redactions } = redactSecrets(`slack ${token}`);
+    expect(text).toBe('slack [REDACTED:slack-token]');
+    expect(redactions).toEqual([{ kind: 'slack-token', count: 1 }]);
+  });
+
+  it('redacts an OpenAI key glued to an underscore-joined name', () => {
+    const { text } = redactSecrets(`OPENAI_KEY_sk-proj-${'x'.repeat(40)}`);
+    expect(text).toBe('OPENAI_KEY_[REDACTED:openai-key]');
+  });
+
+  it('leaves ordinary words that start like key prefixes alone', () => {
+    const input = 'the sk-proj- prefix, ghp_ short, xoxb- alone, task-admin-panel';
+    const { text, redactions } = redactSecrets(input);
+    expect(text).toBe(input);
+    expect(redactions).toEqual([]);
+  });
+
   it('redacts JWTs', () => {
     const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.abcXYZ-_123';
     const { text, redactions } = redactSecrets(`Authorization: Bearer ${jwt}`);
@@ -58,5 +101,48 @@ describe('redactSecrets', () => {
     expect(byKind['aws-key']).toBe(1);
     expect(byKind['anthropic-key']).toBe(1);
     expect(byKind['jwt']).toBe(1);
+  });
+
+  it('still redacts a JWT that follows punctuation or a space', () => {
+    const jwt = 'eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiIxMjM0In0.abcXYZ-_123';
+    expect(redactSecrets(`token=${jwt}`).text).toBe('token=[REDACTED:jwt]');
+    expect(redactSecrets(`"${jwt}"`).text).toBe('"[REDACTED:jwt]"');
+  });
+
+  it('redacts several private keys and leaves text after the last END alone', () => {
+    const key = ['-----BEGIN PRIVATE KEY-----', 'abc', '-----END PRIVATE KEY-----'].join(String.fromCharCode(10));
+    const { text, redactions } = redactSecrets(`${key} mid ${key} tail -----BEGIN PRIVATE KEY----- no end`);
+    expect(text).toBe('[REDACTED:rsa-private-key] mid [REDACTED:rsa-private-key] tail -----BEGIN PRIVATE KEY----- no end');
+    expect(redactions).toEqual([{ kind: 'rsa-private-key', count: 2 }]);
+  });
+
+  it.each([
+    ['repeated JWT prefixes', 'eyJ'.repeat(300_000)],
+    ['repeated PEM headers with no END', '-----BEGIN PRIVATE KEY-----'.repeat(40_000)],
+    ['PEM headers then one END at the start', '-----END PRIVATE KEY-----' + '-----BEGIN PRIVATE KEY-----'.repeat(40_000)],
+    ['PEM headers then a fake END line', '-----BEGIN PRIVATE KEY-----'.repeat(40_000) + '-----END XX PRIVATE KEY-----'],
+    ['repeated key prefixes', 'sk-ant-sk-proj-ghp_xoxb-'.repeat(40_000)],
+  ])('runs in linear time on %s (about 1 MB)', (_label, input) => {
+    const start = Date.now();
+    redactSecrets(input);
+    expect(Date.now() - start).toBeLessThan(1500);
+  });
+
+  it('matches the old lazy-regex behaviour for private keys', () => {
+    const LAZY = /-----BEGIN (?:RSA |OPENSSH |DSA |EC |ENCRYPTED |)PRIVATE KEY-----[\s\S]*?-----END (?:RSA |OPENSSH |DSA |EC |ENCRYPTED |)PRIVATE KEY-----/g;
+    const B = '-----BEGIN PRIVATE KEY-----';
+    const RB = '-----BEGIN RSA PRIVATE KEY-----';
+    const E = '-----END PRIVATE KEY-----';
+    const RE = '-----END RSA PRIVATE KEY-----';
+    const parts = [B, RB, E, RE, 'x', ' ', '-----END XX PRIVATE KEY-----'];
+    let seed = 7;
+    const rand = (n: number) => {
+      seed = (seed * 1103515245 + 12345) % 2147483648;
+      return seed % n;
+    };
+    for (let i = 0; i < 500; i++) {
+      const text = Array.from({ length: rand(8) + 1 }, () => parts[rand(parts.length)]).join('');
+      expect(redactSecrets(text).text).toBe(text.replace(LAZY, '[REDACTED:rsa-private-key]'));
+    }
   });
 });

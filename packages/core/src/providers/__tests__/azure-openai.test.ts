@@ -110,3 +110,39 @@ describe('AzureOpenAIProvider', () => {
     expect(p.name).toBe('azure/d');
   });
 });
+
+describe('AzureOpenAIProvider tools (inherited from OpenAIProvider)', () => {
+  it('sends tools and returns tool calls', async () => {
+    const { client, create } = fakeClient();
+    const base = okResponse('gpt-4o');
+    create.mockResolvedValue({
+      ...base,
+      choices: [
+        {
+          ...base.choices[0],
+          message: {
+            role: 'assistant',
+            content: null,
+            tool_calls: [
+              { id: 'c1', type: 'function', function: { name: 'lookup', arguments: '{"id":"a1"}' } },
+            ],
+          },
+        },
+      ],
+    });
+    const p = new AzureOpenAIProvider({
+      resourceName: 'drift',
+      deployment: 'gpt4o-prod',
+      apiVersion: '2024-10-21',
+      apiKey: 'ak',
+      client,
+    });
+    const res = await p.complete('hi', undefined, {
+      tools: [{ name: 'lookup', parameters: { type: 'object' } }],
+    });
+    expect(create.mock.calls[0][0].tools).toEqual([
+      { type: 'function', function: { name: 'lookup', parameters: { type: 'object' } } },
+    ]);
+    expect(res.toolCalls).toEqual([{ id: 'c1', name: 'lookup', arguments: { id: 'a1' } }]);
+  });
+});

@@ -1,10 +1,12 @@
 import { describe, it, expect, vi } from 'vitest';
 import type { CaseResult, DeltaReport, RunResult, Suite } from '@drift-ci/core';
 
+import type { BaselineChange } from '../baseline-changes.js';
 import {
   COMMENT_MARKER,
   findExistingCommentId,
   postOrUpdateComment,
+  renderBaselineChanges,
   renderComment,
   type CommentApi,
   type RenderCommentInput,
@@ -415,5 +417,237 @@ describe('postOrUpdateComment', () => {
     expect(c.action).toBe('updated');
     expect(b.id).toBe(a.id);
     expect(c.id).toBe(a.id);
+  });
+});
+
+describe('renderBaselineChanges', () => {
+  const ch = (o: Partial<BaselineChange> & { caseId: string }): BaselineChange => ({
+    path: `.drift/baseline/${o.caseId}.json`,
+    kind: 'lowered',
+    ...o,
+  });
+  const mixed: BaselineChange[] = [
+    ch({ caseId: 'refund-policy', kind: 'lowered', oldScore: 0.91, newScore: 0.64, oldOutput: 'a\nb', newOutput: 'a\nc' }),
+    ch({ caseId: 'greeting', kind: 'raised', oldScore: 0.7, newScore: 0.88, oldOutput: 'x', newOutput: 'x' }),
+    ch({ caseId: 'tone', kind: 'output-changed', oldScore: 1, newScore: 1, oldOutput: 'p', newOutput: 'q' }),
+    ch({ caseId: 'new-case', kind: 'added', newScore: 0.95, newOutput: 'n' }),
+    ch({ caseId: 'old-case', kind: 'removed', oldScore: 0.8, oldOutput: 'o' }),
+    ch({ caseId: 'meta', kind: 'unchanged', oldScore: 1, newScore: 1 }),
+    ch({ caseId: 'meta2', kind: 'unchanged', oldScore: 1, newScore: 1 }),
+  ];
+
+  it('renders heading, summary, warning, table and unchanged count', () => {
+    const md = renderBaselineChanges(mixed);
+    expect(md).toContain('### 📝 Baselines changed in this PR (5)');
+    expect(md).toContain('1 lowered · 1 raised · 1 output changed · 1 added · 1 removed');
+    expect(md).toContain('Lowering a baseline accepts worse behaviour');
+    expect(md).toContain('| `refund-policy` | 0.910 → 0.640 | **-0.270** ⬇️ |');
+    expect(md).toContain('| `greeting` | 0.700 → 0.880 | +0.180 |');
+    expect(md).toContain('| `tone` | 1.000 → 1.000 | output changed |');
+    expect(md).toContain('| `new-case` | → 0.950 | added |');
+    expect(md).toContain('| `old-case` | 0.800 → | removed |');
+    expect(md).toContain('Plus 2 re-captured with no score or output change.');
+    expect(md).toContain('<summary>Output diff: <code>refund-policy</code></summary>');
+    expect(md).toContain('```diff\n  a\n- b\n+ c\n```');
+  });
+
+  it('omits the warning when nothing was lowered', () => {
+    const md = renderBaselineChanges([mixed[1]!]);
+    expect(md).not.toContain('Lowering a baseline');
+  });
+
+  it('returns empty string for an empty list and renderComment omits the section', () => {
+    expect(renderBaselineChanges([])).toBe('');
+    expect(renderComment(baseInput({ baselineChanges: [] }))).not.toContain('Baselines changed');
+    expect(renderComment(baseInput())).not.toContain('Baselines changed');
+    expect(renderComment(baseInput({ baselineChanges: mixed }))).toContain('Baselines changed in this PR');
+  });
+
+  it('caps a diff at 60 lines', () => {
+    const big = Array.from({ length: 100 }, (_, i) => `line${i}`).join('\n');
+    const md = renderBaselineChanges([ch({ caseId: 'c', oldScore: 1, newScore: 0, oldOutput: big, newOutput: '' })]);
+    expect(md).toContain('… 40 more lines');
+    expect(md).not.toContain('line99');
+  });
+
+  it('shows at most 10 diffs', () => {
+    const many = Array.from({ length: 12 }, (_, i) =>
+      ch({ caseId: `c${i}`, oldScore: 1, newScore: 0.5, oldOutput: 'a', newOutput: 'b' }),
+    );
+    const md = renderBaselineChanges(many);
+    expect(md.match(/<details>/g)).toHaveLength(10);
+    expect(md).toContain('2 more output diff(s) omitted');
+  });
+
+  it('stops adding diffs once the size budget is hit', () => {
+    const out = 'x'.repeat(200) + '\n';
+    const many = Array.from({ length: 10 }, (_, i) =>
+      ch({
+        caseId: `c${i}`,
+        oldScore: 1,
+        newScore: 0.5,
+        oldOutput: Array.from({ length: 60 }, (_, j) => `${out}${i}-${j}`).join('\n'),
+        newOutput: '',
+      }),
+    );
+    const md = renderBaselineChanges(many);
+    expect(md.match(/<details>/g)!.length).toBeLessThan(10);
+    expect(md).toContain('more output diff(s) omitted');
+    expect(md.length).toBeLessThan(31_000);
+  });
+
+  it('uses a fence longer than any backtick run in the output', () => {
+    const md = renderBaselineChanges([
+      ch({ caseId: 'c', oldScore: 1, newScore: 0, oldOutput: 'a ````` b', newOutput: 'ok' }),
+    ]);
+    expect(md).toContain('``````diff');
+    expect(md).toMatch(/\n``````\n<\/details>/);
+  });
+
+  it('escapes case IDs in the table and summary', () => {
+    const md = renderBaselineChanges([
+      ch({ caseId: 'a|b`<x>&', oldScore: 1, newScore: 0, oldOutput: 'a', newOutput: 'b' }),
+    ]);
+    expect(md).toContain('| `a\\|bˋ<x>&` | 1.000');
+    expect(md).toContain('<code>a|b`&lt;x&gt;&amp;</code>');
+  });
+});
+
+describe('renderBaselineChanges hardening', () => {
+  const ch = (o: Partial<BaselineChange> & { caseId: string }): BaselineChange => ({
+    path: `.drift/baseline/${o.caseId}.json`,
+    kind: 'lowered',
+    oldScore: 1,
+    newScore: 0.5,
+    oldOutput: 'a',
+    newOutput: 'b',
+    ...o,
+  });
+
+  it('neutralises newlines and markdown in case IDs (table and summary)', () => {
+    const md = renderBaselineChanges([ch({ caseId: 'x\n\n@octocat [a](https://e)\r\n<!--' })]);
+    for (const line of md.split('\n')) {
+      expect(line.startsWith('@octocat')).toBe(false);
+      expect(line.startsWith('<!--')).toBe(false);
+    }
+    const row = md.split('\n').find((l) => l.startsWith('| `x'))!;
+    expect(row).toContain('`x  @octocat [a](https://e)  <!--`');
+    const summary = md.split('\n').find((l) => l.startsWith('<details>'))!;
+    expect(summary).not.toContain('[a](');
+    expect(summary).not.toContain('<!--');
+    expect(summary).not.toContain('@octocat');
+  });
+
+  it('caps long IDs and names empty IDs', () => {
+    const md = renderBaselineChanges([ch({ caseId: 'z'.repeat(500) }), ch({ caseId: '\n\n' })]);
+    expect(md).toContain('`' + 'z'.repeat(120) + '…`');
+    expect(md).toContain('`unnamed`');
+  });
+
+  it('strips control characters in the results table too', () => {
+    const run = makeRun([makeCase('evil\n@octocat')]);
+    const md = renderComment(baseInput({ run, suite: makeSuite(['evil']) }));
+    expect(md.split('\n').some((l) => l.startsWith('@octocat'))).toBe(false);
+  });
+
+  it('survives an output with hundreds of thousands of backtick runs', () => {
+    const out = '` '.repeat(300_000);
+    const t = Date.now();
+    const md = renderBaselineChanges([ch({ oldOutput: out, newOutput: 'x' })]);
+    expect(md).toContain('```');
+    expect(Date.now() - t).toBeLessThan(3000);
+  });
+
+  it('survives huge line-count outputs', () => {
+    const a = Array.from({ length: 200_000 }, (_, i) => `a${i}`).join('\n');
+    const b = Array.from({ length: 200_000 }, (_, i) => `b${i}`).join('\n');
+    const t = Date.now();
+    const md = renderBaselineChanges([ch({ oldOutput: a, newOutput: b })]);
+    expect(md).toContain('more lines');
+    expect(Date.now() - t).toBeLessThan(3000);
+  });
+
+  it('caps the table at 50 rows, keeping lowered first', () => {
+    const many = Array.from({ length: 80 }, (_, i) => ch({ caseId: `c${i}` }));
+    const md = renderBaselineChanges(many);
+    expect(md.match(/^\| `c\d+`/gm)).toHaveLength(50);
+    expect(md).toContain('… 30 more — see *Files changed*');
+  });
+
+  it('keeps the whole comment under 65,000 chars with thousands of changes', () => {
+    const many = Array.from({ length: 3000 }, (_, i) =>
+      ch({ caseId: `case-${i}`, oldOutput: 'o'.repeat(500), newOutput: 'n'.repeat(500) }),
+    );
+    const body = renderComment(baseInput({ baselineChanges: many }));
+    expect(body.length).toBeLessThanOrEqual(65_000);
+    expect(body).toContain('Baselines changed in this PR');
+  });
+
+  it('falls back to a compact section when the body is too large', () => {
+    const run = makeRun(
+      Array.from({ length: 700 }, (_, i) => makeCase(`long-case-id-number-${i}-` + 'x'.repeat(40))),
+    );
+    const many = Array.from({ length: 100 }, (_, i) => ch({ caseId: `c${i}` }));
+    const body = renderComment(
+      baseInput({ run, suite: makeSuite([]), baselineChanges: many }),
+    );
+    expect(body).toContain('Details omitted to keep this comment within GitHub');
+    expect(body).toContain('100 lowered');
+  });
+
+  it('renders only a re-captured line when every file is unchanged', () => {
+    const md = renderBaselineChanges([
+      ch({ caseId: 'a', kind: 'unchanged' }),
+      ch({ caseId: 'b', kind: 'unchanged' }),
+    ]);
+    expect(md).toBe('<sub>📝 2 baseline file(s) re-captured with no score or output change.</sub>');
+  });
+
+  it('mentions skipped files', () => {
+    const md = renderBaselineChanges([ch({ caseId: 'a' })], { skipped: 2 });
+    expect(md).toContain('2 baseline file(s) could not be read and are not shown.');
+    expect(renderBaselineChanges([], { skipped: 1 })).toContain('1 baseline file(s) could not be read');
+  });
+
+  it('renderComment omits the section instead of throwing when rendering fails', () => {
+    const bad = { get caseId(): string { throw new Error('boom'); } } as unknown as BaselineChange;
+    expect(() => renderComment(baseInput({ baselineChanges: [bad] }))).not.toThrow();
+  });
+});
+
+describe('renderBaselineChanges follow-ups', () => {
+  const ch = (o: Partial<BaselineChange>): BaselineChange => ({
+    caseId: 'c',
+    path: 'p',
+    kind: 'lowered',
+    oldScore: 1,
+    newScore: 0.5,
+    oldOutput: 'a',
+    newOutput: 'b',
+    ...o,
+  });
+
+  it('keeps the lowered warning in compact mode', () => {
+    expect(renderBaselineChanges([ch({})], { compact: true })).toContain('Lowering a baseline accepts worse behaviour');
+    expect(renderBaselineChanges([ch({ kind: 'raised' })], { compact: true })).not.toContain('Lowering a baseline');
+  });
+
+  it('does not render an empty diff block when outputs differ only beyond 8 KB', () => {
+    const head = 'x'.repeat(9000);
+    const md = renderBaselineChanges([ch({ oldOutput: head + 'A', newOutput: head + 'B' })]);
+    expect(md).toContain('Outputs differ only beyond the first 8 KB or in trailing whitespace.');
+    expect(md).not.toContain('```diff');
+  });
+
+  it('does not render an empty diff block for a trailing-newline-only difference', () => {
+    const md = renderBaselineChanges([ch({ kind: 'output-changed', newScore: 1, oldOutput: 'a\n', newOutput: 'a' })]);
+    expect(md).toContain('Outputs differ only beyond');
+    expect(md).not.toContain('```diff');
+  });
+
+  it('appends a truncation marker when an output was cut by the bound', () => {
+    const md = renderBaselineChanges([ch({ oldOutput: 'x'.repeat(9000), newOutput: 'short' })]);
+    expect(md).toContain('… (truncated)');
+    expect(renderBaselineChanges([ch({})])).not.toContain('(truncated)');
   });
 });
