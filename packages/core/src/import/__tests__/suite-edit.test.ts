@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import type { TestCase } from '../../types/index.js';
 import { parseDocument } from 'yaml';
+import type { TestCase, ToolDefinition } from '../../types/index.js';
 import { parseSuite } from '../../loader/parse-suite.js';
 import { appendCasesToSuite, SuiteEditError } from '../suite-edit.js';
 
@@ -19,7 +19,7 @@ cases:
 const mk = (id: string, extra: Partial<TestCase> = {}): TestCase =>
   ({ id, input: 'q', expected: 'a', tags: ['imported'], ...extra }) as TestCase;
 
-function parseDocumentCase(text: string, id: string): Record<string, unknown> {
+function rawCase(text: string, id: string): Record<string, unknown> {
   const raw = parseDocument(text).toJS() as { cases: Record<string, unknown>[] };
   return raw.cases.find((c) => c.id === id)!;
 }
@@ -135,8 +135,9 @@ describe('appendCasesToSuite', () => {
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatch(/^case t: the/);
   });
+
   describe('tool cases', () => {
-    const GET_ORDER = {
+    const GET_ORDER: ToolDefinition = {
       name: 'get_order',
       description: 'Look up an order',
       parameters: { type: 'object', properties: { id: { type: 'string' } } },
@@ -160,26 +161,26 @@ describe('appendCasesToSuite', () => {
       });
 
     it('drops a case tool identical to the suite tool, and the tools key with it', () => {
-      const reordered = {
+      const reordered: ToolDefinition = {
         parameters: { properties: { id: { type: 'string' } }, type: 'object' },
         name: 'get_order',
         description: 'Look up an order',
       };
-      const r = appendCasesToSuite(TOOL_SUITE, [toolCase('t1', { tools: [reordered] as TestCase['tools'] })]);
+      const r = appendCasesToSuite(TOOL_SUITE, [toolCase('t1', { tools: [reordered] })]);
       expect(r.added).toEqual(['t1']);
       expect(r.skipped).toEqual([]);
       expect(r.addedCases[0]).not.toHaveProperty('tools');
       const c = parseSuite(r.text).cases.find((x) => x.id === 't1')!;
       expect(c.tools?.map((t) => t.name)).toEqual(['get_order']);
-      expect(parseDocumentCase(r.text, 't1')).not.toHaveProperty('tools');
+      expect(rawCase(r.text, 't1')).not.toHaveProperty('tools');
     });
 
     it('keeps only the case tools that differ from the suite', () => {
-      const other = { name: 'refund_order', parameters: { type: 'object', properties: {} } };
+      const other: ToolDefinition = { name: 'refund_order', parameters: { type: 'object', properties: {} } };
       const changed = { ...GET_ORDER, description: 'Find an order' };
       const r = appendCasesToSuite(TOOL_SUITE, [
-        toolCase('t1', { tools: [GET_ORDER, other] as TestCase['tools'] }),
-        toolCase('t2', { tools: [changed] as TestCase['tools'] }),
+        toolCase('t1', { tools: [GET_ORDER, other] }),
+        toolCase('t2', { tools: [changed] }),
       ]);
       expect(r.addedCases[0].tools).toEqual([other]);
       expect(r.addedCases[1].tools).toEqual([changed]);
@@ -197,7 +198,7 @@ describe('appendCasesToSuite', () => {
           ],
           expectedCalls: [{ name: 'b', arguments: {} }],
         }),
-        toolCase('t2', { tools: [GET_ORDER] as TestCase['tools'] }),
+        toolCase('t2', { tools: [GET_ORDER] }),
       ]);
       expect(r.skipped).toEqual([{ id: 't1', reason: 'tools not defined', tools: ['a', 'b'] }]);
       expect(r.added).toEqual(['plain', 't2']);
@@ -229,6 +230,24 @@ describe('appendCasesToSuite', () => {
         addedCases: [],
         skipped: [{ id: 't1', reason: 'tools not defined', tools: ['get_order'] }],
       });
+    });
+
+    it('treats an absent `parameters` as the default when deduping', () => {
+      const bare = `${SUITE}tools:\n  - name: get_order\n`;
+      const explicit: ToolDefinition = { name: 'get_order', parameters: { type: 'object', properties: {} } };
+      const r1 = appendCasesToSuite(bare, [toolCase('t1', { tools: [explicit] })]);
+      expect(r1.addedCases[0]).not.toHaveProperty('tools');
+      const explicitSuite = `${SUITE}tools:\n  - name: get_order\n    parameters:\n      type: object\n      properties: {}\n`;
+      const r2 = appendCasesToSuite(explicitSuite, [
+        toolCase('t1', { tools: [{ name: 'get_order' } as ToolDefinition] }),
+      ]);
+      expect(r2.addedCases[0]).not.toHaveProperty('tools');
+    });
+
+    it('throws parse when the suite loader rejects text the editor accepts', () => {
+      // `yaml` keeps unknown tags; js-yaml (the loader parseSuite uses) rejects them.
+      const e = fail(() => appendCasesToSuite(`${SUITE}x: !foo 1\n`, [mk('a')]));
+      expect(e.code).toBe('parse');
     });
 
     it('does not warn about evaluators for cases that carry their own', () => {

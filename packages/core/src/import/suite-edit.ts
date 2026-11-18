@@ -1,3 +1,4 @@
+import { load as yamlLoad } from 'js-yaml';
 import { Document, isMap, isScalar, isSeq, parseDocument } from 'yaml';
 import { parseSuite } from '../loader/parse-suite.js';
 import type { TestCase, ToolDefinition } from '../types/index.js';
@@ -74,7 +75,7 @@ function deepEqual(a: unknown, b: unknown): boolean {
   const bo = b as Record<string, unknown>;
   const keys = (o: Record<string, unknown>) => Object.keys(o).filter((k) => o[k] !== undefined);
   const ak = keys(ao);
-  return ak.length === keys(bo).length && ak.every((k) => k in bo && deepEqual(ao[k], bo[k]));
+  return ak.length === keys(bo).length && ak.every((k) => Object.hasOwn(bo, k) && deepEqual(ao[k], bo[k]));
 }
 
 /** Compares tools the way `parseSuite` would see them (absent `parameters` takes the default). */
@@ -93,9 +94,9 @@ function dedupeTools(c: TestCase, suiteTools: ToolDefinition[]): TestCase {
     return !shared || !sameTool(shared, t);
   });
   if (own.length === c.tools.length) return c;
-  const { tools: _dropped, ...rest } = c;
-  void _dropped;
-  return own.length > 0 ? ({ ...c, tools: own } as TestCase) : (rest as TestCase);
+  if (own.length > 0) return { ...c, tools: own };
+  const { tools: _t, ...rest } = c;
+  return rest as TestCase;
 }
 
 /** Tool names a case calls that are not among its effective tools (case tools plus suite tools). */
@@ -151,7 +152,18 @@ export function appendCasesToSuite(
     if (typeof id === 'string') seen.add(id);
   }
 
-  const suiteJs = (doc.toJS() ?? {}) as { evaluators?: unknown; tools?: unknown };
+  // Read suite values the way parseSuite does (js-yaml), so tools resolve as the runner sees them.
+  let loaded: unknown;
+  if (created) {
+    loaded = doc.toJS();
+  } else {
+    try {
+      loaded = yamlLoad(suiteText as string);
+    } catch (e) {
+      throw new SuiteEditError('parse', (e as Error).message.split('\n')[0]);
+    }
+  }
+  const suiteJs = (loaded ?? {}) as { evaluators?: unknown; tools?: unknown };
   const suiteTools = (Array.isArray(suiteJs.tools) ? suiteJs.tools : []).filter(
     (t): t is ToolDefinition => typeof t === 'object' && t !== null && typeof t.name === 'string',
   );
