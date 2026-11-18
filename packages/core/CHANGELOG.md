@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.10.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.10.0...core-v1.10.1) (2026-11-18)
+
+
+### Bug Fixes
+
+* **core:** baseline $schema points at drift-ci.com ([#213](https://github.com/Drift-CI/drift-ci/issues/213)) ([c83818d](https://github.com/Drift-CI/drift-ci/commit/c83818da11bd8125771c899ed48ccdc05608bf2e))
+
 ## [1.10.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.9.1...core-v1.10.0) (2026-11-17)
 
 
