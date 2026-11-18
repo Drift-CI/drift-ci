@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { TestCase } from '../../types/index.js';
+import { parseDocument } from 'yaml';
 import { parseSuite } from '../../loader/parse-suite.js';
 import { appendCasesToSuite, SuiteEditError } from '../suite-edit.js';
 
@@ -17,6 +18,11 @@ cases:
 
 const mk = (id: string, extra: Partial<TestCase> = {}): TestCase =>
   ({ id, input: 'q', expected: 'a', tags: ['imported'], ...extra }) as TestCase;
+
+function parseDocumentCase(text: string, id: string): Record<string, unknown> {
+  const raw = parseDocument(text).toJS() as { cases: Record<string, unknown>[] };
+  return raw.cases.find((c) => c.id === id)!;
+}
 
 function fail(fn: () => unknown): SuiteEditError {
   try {
@@ -55,6 +61,7 @@ describe('appendCasesToSuite', () => {
     expect(r.text).toBe(SUITE);
     expect(r.added).toEqual([]);
     expect(r.evaluatorWarning).toBe(false);
+    expect(r.skipped).toEqual([]);
   });
 
   it.each([[null], [''], ['  \n'], ['# nothing here\n'], ['---\n'], ['null\n'], ['---\nnull\n'], ['~\n']])(
@@ -127,5 +134,107 @@ describe('appendCasesToSuite', () => {
     const lines = e.issues!.filter((l) => l.includes('the `tool-call` evaluator requires'));
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatch(/^case t: the/);
+  });
+  describe('tool cases', () => {
+    const GET_ORDER = {
+      name: 'get_order',
+      description: 'Look up an order',
+      parameters: { type: 'object', properties: { id: { type: 'string' } } },
+    };
+    const TOOL_SUITE = `${SUITE}tools:
+  - name: get_order
+    description: Look up an order
+    parameters:
+      type: object
+      properties:
+        id:
+          type: string
+`;
+    const toolCase = (id: string, extra: Partial<TestCase> = {}): TestCase =>
+      mk(id, {
+        toolResults: [{ name: 'get_order', result: { status: 'shipped' } }],
+        expectedCalls: [{ name: 'get_order', arguments: {} }],
+        evaluators: ['tool-call', 'llm-judge'],
+        tags: ['imported', 'tools'],
+        ...extra,
+      });
+
+    it('drops a case tool identical to the suite tool, and the tools key with it', () => {
+      const reordered = {
+        parameters: { properties: { id: { type: 'string' } }, type: 'object' },
+        name: 'get_order',
+        description: 'Look up an order',
+      };
+      const r = appendCasesToSuite(TOOL_SUITE, [toolCase('t1', { tools: [reordered] as TestCase['tools'] })]);
+      expect(r.added).toEqual(['t1']);
+      expect(r.skipped).toEqual([]);
+      expect(r.addedCases[0]).not.toHaveProperty('tools');
+      const c = parseSuite(r.text).cases.find((x) => x.id === 't1')!;
+      expect(c.tools?.map((t) => t.name)).toEqual(['get_order']);
+      expect(parseDocumentCase(r.text, 't1')).not.toHaveProperty('tools');
+    });
+
+    it('keeps only the case tools that differ from the suite', () => {
+      const other = { name: 'refund_order', parameters: { type: 'object', properties: {} } };
+      const changed = { ...GET_ORDER, description: 'Find an order' };
+      const r = appendCasesToSuite(TOOL_SUITE, [
+        toolCase('t1', { tools: [GET_ORDER, other] as TestCase['tools'] }),
+        toolCase('t2', { tools: [changed] as TestCase['tools'] }),
+      ]);
+      expect(r.addedCases[0].tools).toEqual([other]);
+      expect(r.addedCases[1].tools).toEqual([changed]);
+      const t2 = parseSuite(r.text).cases.find((x) => x.id === 't2')!;
+      expect(t2.tools?.[0].description).toBe('Find an order');
+    });
+
+    it('skips cases calling tools defined nowhere and appends the rest', () => {
+      const r = appendCasesToSuite(SUITE, [
+        mk('plain'),
+        toolCase('t1', {
+          toolResults: [
+            { name: 'b', result: 1 },
+            { name: 'a', result: 2 },
+          ],
+          expectedCalls: [{ name: 'b', arguments: {} }],
+        }),
+        toolCase('t2', { tools: [GET_ORDER] as TestCase['tools'] }),
+      ]);
+      expect(r.skipped).toEqual([{ id: 't1', reason: 'tools not defined', tools: ['a', 'b'] }]);
+      expect(r.added).toEqual(['plain', 't2']);
+      expect(r.present).toEqual([]);
+      expect(parseSuite(r.text).cases.map((c) => c.id)).toEqual(['greeting', 'plain', 't2']);
+    });
+
+    it('skips when the suite defines only other tools', () => {
+      const r = appendCasesToSuite(TOOL_SUITE, [
+        toolCase('t1', { expectedCalls: [{ name: 'refund_order', arguments: {} }] }),
+      ]);
+      expect(r.skipped).toEqual([{ id: 't1', reason: 'tools not defined', tools: ['refund_order'] }]);
+    });
+
+    it('resolves names against the suite tools', () => {
+      const r = appendCasesToSuite(TOOL_SUITE, [toolCase('t1')]);
+      expect(r.added).toEqual(['t1']);
+      expect(r.skipped).toEqual([]);
+    });
+
+    it('returns the input unchanged when every case is skipped', () => {
+      const r = appendCasesToSuite(SUITE, [toolCase('t1')]);
+      expect(r).toEqual({
+        text: SUITE,
+        added: [],
+        present: [],
+        created: false,
+        evaluatorWarning: false,
+        addedCases: [],
+        skipped: [{ id: 't1', reason: 'tools not defined', tools: ['get_order'] }],
+      });
+    });
+
+    it('does not warn about evaluators for cases that carry their own', () => {
+      const json = TOOL_SUITE.replace('  - llm-judge # judge against expected', '  - json-schema');
+      expect(appendCasesToSuite(json, [toolCase('t1')]).evaluatorWarning).toBe(false);
+      expect(appendCasesToSuite(json, [toolCase('t1'), mk('plain')]).evaluatorWarning).toBe(true);
+    });
   });
 });
