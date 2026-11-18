@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.10.1...core-v1.11.0) (2026-11-18)
+
+
+### Features
+
+* tool-call traces become multi-step cases ([#218](https://github.com/Drift-CI/drift-ci/issues/218)) ([1ffeaa8](https://github.com/Drift-CI/drift-ci/commit/1ffeaa82a4cb7f874103b72b6c3a037c8ce1404d))
+
 ## [1.10.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.10.0...core-v1.10.1) (2026-11-18)
 
 
