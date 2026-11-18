@@ -216449,11 +216449,28 @@ function isFreeText(v) {
         return Object.values(v).some(isFreeText);
     return false;
 }
-/** Drop every top-level argument whose value is, or contains, free text. */
+const REDACTION_MARKER = '[REDACTED:';
+/**
+ * True when a string anywhere inside `v` holds a redaction marker.
+ * Recursive: only call it on values already checked with `exceedsDepth`.
+ */
+function hasRedaction(v) {
+    if (typeof v === 'string')
+        return v.includes(REDACTION_MARKER);
+    if (Array.isArray(v))
+        return v.some(hasRedaction);
+    if (trace_tools_isObject(v))
+        return Object.values(v).some(hasRedaction);
+    return false;
+}
+/**
+ * Drop every top-level argument whose value is, or contains, free text or a redacted
+ * secret (which can never match at run time). Run it on redacted arguments.
+ */
 function trace_tools_filterArgs(args) {
     const out = {};
     for (const [k, v] of Object.entries(args))
-        if (!isFreeText(v))
+        if (!isFreeText(v) && !hasRedaction(v))
             setOwn(out, k, v);
     return out;
 }
@@ -216755,13 +216772,14 @@ function trace_build(trace, prefix) {
     const seen = new Set();
     for (const st of steps) {
         st.calls.forEach((c, i) => {
-            // The free-text filter runs on the redacted arguments.
+            // The filter runs on the redacted arguments, so redacted values are dropped too.
             const args = filterArgs(c.arguments);
             const call = Object.keys(args).length > 0 ? { name: c.name, arguments: args } : { name: c.name };
             expectedCalls.push(call);
             // Identical entries collapse. If one call recorded different results, both are kept and
             // the loop's first-match rule serves the first at run time; the spec accepts that.
-            const entry = { ...call, result: st.results[i] };
+            // Its own copy of the arguments: a shared object would make YAML write anchors and aliases.
+            const entry = { ...structuredClone(call), result: st.results[i] };
             const key = JSON.stringify(entry);
             if (!seen.has(key)) {
                 seen.add(key);
@@ -216965,7 +216983,7 @@ function appendCasesToSuite(suiteText, cases, opts = {}) {
     const evaluatorWarning = addedCases.some((c) => !c.evaluators?.length) &&
         !evaluatorNames(suiteJs.evaluators).some((n) => REFERENCE_EVALUATORS.has(n));
     for (const tc of addedCases)
-        seq.add(doc.createNode(tc));
+        seq.add(doc.createNode(tc, { aliasDuplicateObjects: false }));
     const text = doc.toString(YAML_OPTS);
     try {
         parseSuite(text);
