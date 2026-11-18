@@ -409,6 +409,16 @@ describe('executeImport with tool traces', () => {
     );
   });
 
+  it('exits 1 when one case is already present and the rest call undefined tools', () => {
+    writeSuite();
+    const file = writeTraces([trace('q', 'a'), toolTrace()]);
+    expect(executeImport(file, opts(), io)).toBe(0);
+    out.length = 0;
+    expect(executeImport(file, opts(), io)).toBe(1);
+    expect(out.join('\n')).toContain('(1 already present)');
+    expect(out.join('\n')).toContain(LINE);
+  });
+
   it('treats --dry-run with only tool-skipped cases like a real run', () => {
     const suite = writeSuite();
     const file = writeTraces([toolTrace()]);
