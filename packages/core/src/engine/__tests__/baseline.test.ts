@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { mkdtempSync, rmSync, readFileSync, existsSync } from 'node:fs';
+import { mkdtempSync, rmSync, readFileSync, existsSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 
@@ -294,6 +294,7 @@ describe('serialiseBaseline', () => {
     const json = serialiseBaseline(entry);
     const parsed = JSON.parse(json);
     expect(Object.keys(parsed)[0]).toBe('$schema');
+    expect(parsed.$schema).toBe('https://drift-ci.com/schema/baseline-v1.json');
     expect(parsed.caseId).toBe('c1');
     expect(parsed.judgeHash).toBeUndefined();
     expect(parsed.redactions).toBeUndefined();
@@ -481,6 +482,23 @@ describe('FileBaselineStore', () => {
 
   it('deleteCase returns false when the file is missing', async () => {
     expect(await store.deleteCase('nope')).toBe(false);
+  });
+
+  it('loads a baseline written with the legacy drift-ci.dev $schema and does not rewrite it for that alone', async () => {
+    const entry = FileBaselineStore.fromCaseResult(makeTestCase(), makeCaseResult(), makeRun());
+    await store.save(entry);
+    const p = store.pathFor(entry.caseId);
+    const legacy = readFileSync(p, 'utf8').replace(
+      'https://drift-ci.com/schema/baseline-v1.json',
+      'https://drift-ci.dev/schema/baseline-v1.json',
+    );
+    expect(legacy).toContain('drift-ci.dev');
+    writeFileSync(p, legacy);
+
+    const loaded = await store.load(entry.caseId);
+    expect(loaded!.score).toBe(entry.score);
+    expect(await store.saveMerged(entry)).toBe('unchanged');
+    expect(readFileSync(p, 'utf8')).toBe(legacy);
   });
 });
 

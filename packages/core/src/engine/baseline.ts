@@ -18,7 +18,7 @@ import type {
 import { redactSecrets, type RedactionCount } from './redaction.js';
 
 export const OUTPUT_MAX_BYTES = 8 * 1024;
-const BASELINE_SCHEMA_URL = 'https://drift-ci.dev/schema/baseline-v1.json';
+const BASELINE_SCHEMA_URL = 'https://drift-ci.com/schema/baseline-v1.json';
 
 export interface CapturedBy {
   commit?: string;
