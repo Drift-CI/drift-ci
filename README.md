@@ -104,7 +104,7 @@ A gate that fails at random gets switched off. drift-ci is built so that a red c
 
 ### It can grade fuzzy output
 
-Exact matches only get you so far with LLMs. drift-ci ships eight evaluators, from exact strings to semantic similarity to an LLM judge. The judge is hardened for CI:
+Exact matches only get you so far with LLMs. drift-ci ships ten evaluators, from exact strings to semantic similarity to an LLM judge. The judge is hardened for CI:
 
 - The text under test is wrapped in a random per-call delimiter, which guards against prompt injection.
 - drift-ci refuses to let a model grade itself unless you opt in.
@@ -255,7 +255,7 @@ To build a suite from real conversations, `drift-ci import <traces.jsonl>` turns
 | `cosine-similarity` | Answers that should mean the same thing in different words (embeddings) |
 | `llm-judge` | Open-ended quality against written criteria |
 | `faithfulness` | Answers grounded in the retrieved context (RAG), claim by claim |
-| `tool-call` | Choosing the right tool with the right arguments, single step |
+| `tool-call` | Choosing the right tool with the right arguments, in one step or a scripted multi-step flow |
 | `rubric-checklist` | Scoring against a list of required points, optionally with a judge quorum |
 | `refusal-detection` | Checking that the model refuses, or doesn't refuse, when it should |
 | `safety-classifier` | Flagging unsafe output |
@@ -286,9 +286,10 @@ The CLI and action are MIT-licensed and work on their own. When your team wants 
 - run history, drift timelines, and cost and token analytics across projects;
 - regression issues that open, reopen and close themselves as cases break and recover;
 - Slack and email alerts on regressions;
-- flaky-case detection, which flags cases that keep flipping between pass and fail and keeps them out of your alerts.
+- flaky-case detection, which flags cases that keep flipping between pass and fail and keeps them out of your alerts;
+- production trace capture: post real conversations from your app, pick the useful ones and open a pull request that adds them to your suite.
 
-It's free for one developer. Point the action at it with `dashboard-url` and `dashboard-token`. You can also [self-host the open-source dashboard](docs/self-hosting.md).
+It's free for one developer. Point the action at it with `dashboard-url: https://drift-ci.com`; with the drift-ci GitHub App installed and `id-token: write` granted, no token is needed (see [keyless dashboard sync](packages/action/README.md#keyless-dashboard-sync-drift-cicom)). You can also [self-host the open-source dashboard](docs/self-hosting.md).
 
 ## Where it fits
 
@@ -301,7 +302,7 @@ drift-ci is a **CI gate**: tests before merge, with baselines kept as code. It i
 | **Providers** | Anthropic, OpenAI, Azure OpenAI, AWS Bedrock, Google Gemini, Vertex AI, Ollama (local and cloud) |
 | **Evaluators** | exact-match, contains, json-schema, cosine-similarity, llm-judge, faithfulness, tool-call, rubric-checklist, refusal-detection, safety-classifier |
 | **Reporters** | Live terminal, plain text, JSON, JUnit XML |
-| **Run history** | In-memory, SQLite, Postgres, or HTTP sync to a dashboard |
+| **Run history** | JSON files (default), in-memory, SQLite, Postgres, or HTTP sync to a dashboard |
 | **CLI commands** | `init`, `run`, `baseline`, `compare`, `config`, `import` |
 | **Packages** | [`@drift-ci/cli`](packages/cli), [`@drift-ci/core`](packages/core), [action](packages/action), [dashboard](packages/dashboard) |
 

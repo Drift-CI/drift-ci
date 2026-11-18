@@ -13,8 +13,8 @@ By participating in this project you agree to abide by the
 
 drift-ci is a pnpm + Turborepo monorepo. You will need:
 
-- **Node.js 20 or newer** (see `engines` in the root `package.json`)
-- **pnpm 10 or newer**
+- **Node.js 22.13 or newer** (see `engines` in the root `package.json`)
+- **pnpm 11** (the version is pinned in `packageManager`; `corepack enable` picks it up)
 
 Install and build:
 
@@ -41,7 +41,7 @@ pnpm vitest run src/path/to/file.test.ts
 ## Where things live
 
 - `packages/core/` — the provider-agnostic engine (`@drift-ci/core`).
-- `packages/cli/` — the `drift-ci` binary.
+- `packages/cli/` — the `drift-ci` binary (`@drift-ci/cli`).
 - `packages/action/` — the GitHub Action.
 - `packages/dashboard/` — the Next.js dashboard.
 - `docs/drift-ci-architecture.md` — the canonical design document. Do not
@@ -122,7 +122,7 @@ git push --force-with-lease
 - **No scope creep.** Resist bundling unrelated cleanups.
 - **Respect the invariants.** See `CLAUDE.md` for the load-bearing design
   decisions (baselines-are-files, transient-is-not-a-regression,
-  action-is-Node20, redaction-before-disk, etc.). Challenge edits that weaken
+  action-is-native-Node, redaction-before-disk, etc.). Challenge edits that weaken
   them.
 - **Doc hygiene.** Architecture section numbers are referenced by the code —
   never renumber. Add new sections at the end or edit in place.

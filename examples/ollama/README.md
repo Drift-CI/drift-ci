@@ -50,7 +50,7 @@ steps:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
-drift-ci posts a results table on the pull request and fails the check when a case's score drops below its baseline.
+drift-ci posts a results table on the pull request and fails the check when a case's score drops below its baseline by more than the regression threshold.
 
 ## See it catch a regression
 

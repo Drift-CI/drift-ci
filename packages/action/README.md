@@ -92,7 +92,7 @@ The OIDC token's audience is the origin of `dashboard-url`. If `dashboard-token`
 | `baseline-source`  | `branch`             | `branch` (PR head) or `main` (origin/main). |
 | `fail-on-regression` | `true`             | Exit non-zero if any case regressed. |
 | `post-comment`     | `true`               | Post / update a PR comment via `GITHUB_TOKEN`. |
-| `dashboard-url` / `dashboard-token` | — | Sync results to a dashboard. `dashboard-token` is optional on drift-ci.com with the GitHub App (keyless, see below). |
+| `dashboard-url` / `dashboard-token` | — | Sync results to a dashboard. `dashboard-token` is optional on drift-ci.com with the GitHub App (keyless, see above). |
 
 ## Outputs
 

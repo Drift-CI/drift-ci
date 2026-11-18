@@ -2,8 +2,8 @@
 
 ## Supported versions
 
-drift-ci is pre-1.0. Security fixes are applied to `main` and shipped in the
-next release; previous minor versions are not patched.
+Security fixes are applied to `main` and shipped in the next release;
+previous minor versions are not patched.
 
 | Version       | Supported          |
 | ------------- | ------------------ |
@@ -36,9 +36,9 @@ Alternatively, use GitHub's private vulnerability reporting on this repository.
 
 In scope:
 
-- The `drift-ci` CLI and `@drift-ci/core` package.
+- The `@drift-ci/cli` and `@drift-ci/core` packages.
 - The GitHub Action bundle in `packages/action/`.
-- The dashboard code in `packages/dashboard/` once it lands.
+- The self-hostable dashboard in `packages/dashboard/`.
 - Supply-chain issues: published npm packages, the bundled action artifact,
   and Docker images we distribute.
 
