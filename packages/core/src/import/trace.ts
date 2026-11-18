@@ -2,10 +2,18 @@ import { createHash } from 'node:crypto';
 import { redactSecrets } from '../engine/redaction.js';
 import { DEFAULT_MAX_STEPS, TestCaseSchema, type TestCase } from '../types/index.js';
 import { Skip } from './skip.js';
-import { filterArgs, normaliseTools, redactDeep, type NormalisedTool } from './trace-tools.js';
-
-export type { TraceSkipReason } from './skip.js';
 import type { TraceSkipReason } from './skip.js';
+import {
+  exceedsDepth,
+  filterArgs,
+  isObject,
+  normaliseTools,
+  redactDeep,
+  TOOL_NAME_RE,
+  type NormalisedTool,
+} from './trace-tools.js';
+
+export type { TraceSkipReason };
 
 export type TraceToCaseResult =
   | { ok: true; case: TestCase; redactions: number }
@@ -37,10 +45,6 @@ type Item =
 type PairedStep = { calls: RecordedCall[]; results: string[] };
 /** A redacted tool step as hashed into the case id. Keep the shape stable: it changes ids. */
 type HashedStep = { calls: { name: string; arguments: Record<string, unknown> }[]; results: string[] };
-
-function isObject(v: unknown): v is Record<string, unknown> {
-  return typeof v === 'object' && v !== null && !Array.isArray(v);
-}
 
 /** A message's text: a string, or the `text` parts of a content array joined with \n. */
 function textOf(content: unknown): string {
@@ -83,20 +87,26 @@ function caseId(
   return `${prefix}-${hash}`;
 }
 
+/** A recorded call, after checking its name and that its arguments are a shallow-enough object. */
+function recordedCall(id: unknown, name: unknown, args: unknown): RecordedCall {
+  if (typeof name !== 'string') throw new Skip('not-a-chat-trace');
+  if (!TOOL_NAME_RE.test(name)) throw new Skip('invalid tool arguments');
+  // Bound the depth before anything recursive (redaction, the free-text filter, hashing) runs.
+  if (!isObject(args) || exceedsDepth(args)) throw new Skip('invalid tool arguments');
+  return { id, name, arguments: args };
+}
+
 /** OpenAI `tool_calls` entries as recorded calls; `arguments` must be JSON for an object. */
 function openAiCalls(raw: unknown[]): RecordedCall[] {
   return raw.map((c) => {
-    if (!isObject(c) || !isObject(c.function) || typeof c.function.name !== 'string' || c.function.name === '') {
-      throw new Skip('not-a-chat-trace');
-    }
+    if (!isObject(c) || !isObject(c.function)) throw new Skip('not-a-chat-trace');
     let args: unknown;
     try {
       args = typeof c.function.arguments === 'string' ? JSON.parse(c.function.arguments) : undefined;
     } catch {
       throw new Skip('invalid tool arguments');
     }
-    if (!isObject(args)) throw new Skip('invalid tool arguments');
-    return { id: c.id, name: c.function.name, arguments: args };
+    return recordedCall(c.id, c.function.name, args);
   });
 }
 
@@ -107,13 +117,8 @@ function assistantParts(m: Record<string, unknown>): { text: string; calls: Reco
   if (Array.isArray(content)) {
     const rest: unknown[] = [];
     for (const part of content) {
-      if (isObject(part) && part.type === 'tool_use') {
-        if (typeof part.name !== 'string' || part.name === '') throw new Skip('not-a-chat-trace');
-        if (!isObject(part.input)) throw new Skip('invalid tool arguments');
-        calls.push({ id: part.id, name: part.name, arguments: part.input });
-      } else {
-        rest.push(part);
-      }
+      if (isObject(part) && part.type === 'tool_use') calls.push(recordedCall(part.id, part.name, part.input));
+      else rest.push(part);
     }
     content = rest;
   }
@@ -185,12 +190,11 @@ function readItems(messages: unknown[], systemParts: string[]): Item[] {
 }
 
 /**
- * Check the shape of a trace with tool items: all of them after the last user message, then
- * a text-only final reply. Returns the paired steps and the replies after the last user message,
- * or undefined steps when a text reply sits among the tool steps (caught as non-alternating turns).
+ * Check the shape of a trace with tool items, which has at least one user turn: every tool
+ * item after the last user message, then a text-only final reply. Returns the paired steps
+ * and the number of assistant replies after the last user message.
  */
-function toolSteps(items: Item[], turns: Turn[]): { steps?: PairedStep[]; replies: number } {
-  if (!turns.some((t) => t.role === 'user')) throw new Skip('no user turn');
+function toolSteps(items: Item[]): { steps: PairedStep[]; replies: number } {
   let lastUser = -1;
   items.forEach((it, i) => {
     if (it.kind === 'turn' && it.turn.role === 'user') lastUser = i;
@@ -203,8 +207,30 @@ function toolSteps(items: Item[], turns: Turn[]): { steps?: PairedStep[]; replie
   const replies = tail.filter((it) => it.kind !== 'results').length + 1;
   const calls = tail.reduce((n, it) => n + (it.kind === 'calls' ? it.calls.length : 0), 0);
   if (replies > MAX_REPLIES || calls > MAX_CALLS) throw new Skip('too many tool steps');
-  if (tail.some((it) => it.kind === 'turn')) return { replies };
+  if (tail.some((it) => it.kind === 'turn')) throw new Skip('roles do not alternate');
   return { steps: pairSteps(tail), replies };
+}
+
+/**
+ * Assemble a case in display order: id, systemPrompt, input|messages, then `middle`,
+ * expected, then `end`. The order lives here so the YAML reads well.
+ */
+function assembleCase(
+  id: string,
+  systemPrompt: string | undefined,
+  turns: Turn[],
+  middle: Record<string, unknown>,
+  end: Record<string, unknown>,
+): Record<string, unknown> {
+  const prompt = turns.slice(0, -1);
+  const tc: Record<string, unknown> = { id };
+  if (systemPrompt) tc.systemPrompt = systemPrompt;
+  if (prompt.length === 1) tc.input = prompt[0].content;
+  else tc.messages = prompt;
+  Object.assign(tc, middle);
+  tc.expected = turns[turns.length - 1].content;
+  Object.assign(tc, end);
+  return tc;
 }
 
 function build(trace: unknown, prefix: string): { case: TestCase; redactions: number } {
@@ -215,16 +241,14 @@ function build(trace: unknown, prefix: string): { case: TestCase; redactions: nu
 
   const items = readItems(trace.messages, systemParts);
   const turns: Turn[] = items.flatMap((it) => (it.kind === 'turn' ? [it.turn] : []));
-  const tool = items.some((it) => it.kind !== 'turn') ? toolSteps(items, turns) : undefined;
 
   if (!turns.some((t) => t.role === 'user')) throw new Skip('no user turn');
+  const tool = items.some((it) => it.kind !== 'turn') ? toolSteps(items) : undefined;
   if (turns[turns.length - 1].role !== 'assistant') throw new Skip('no final assistant reply');
   if (turns.some((t, i) => t.role !== (i % 2 === 0 ? 'user' : 'assistant'))) {
     throw new Skip('roles do not alternate');
   }
   if (turns.some((t) => t.content.trim() === '')) throw new Skip('empty content');
-  // A text reply among the tool steps always breaks alternation above; this is a safeguard.
-  if (tool && !tool.steps) throw new Skip('roles do not alternate');
 
   let redactions = 0;
   const redact = (s: string): string => {
@@ -240,17 +264,9 @@ function build(trace: unknown, prefix: string): { case: TestCase; redactions: nu
   const system = systemParts.filter((s) => s.trim() !== '').join('\n\n');
   const systemPrompt = system ? redact(system) : undefined;
   const red: Turn[] = turns.map((t) => ({ role: t.role, content: redact(t.content) }));
-  const prompt = red.slice(0, -1);
 
-  if (!tool?.steps) {
-    // Built in display order (id, systemPrompt, input|messages, expected, tags), so the YAML reads well.
-    const tc: Record<string, unknown> = { id: caseId(rawId, prefix, systemPrompt ?? '', red) };
-    if (systemPrompt) tc.systemPrompt = systemPrompt;
-    if (prompt.length === 1) tc.input = prompt[0].content;
-    else tc.messages = prompt;
-    tc.expected = red[red.length - 1].content;
-    tc.tags = ['imported'];
-
+  if (!tool) {
+    const tc = assembleCase(caseId(rawId, prefix, systemPrompt ?? '', red), systemPrompt, red, {}, { tags: ['imported'] });
     TestCaseSchema.parse(tc); // a failure here is a bug in this function
     return { case: tc as TestCase, redactions };
   }
@@ -264,6 +280,12 @@ function build(trace: unknown, prefix: string): { case: TestCase; redactions: nu
       return out;
     });
     if (tools.some((t) => (t.description?.length ?? 0) > DESCRIPTION_MAX)) {
+      throw new Skip('invalid tool definitions');
+    }
+    // Without `tools`, undeclared calls are allowed: the suite's tools may define them,
+    // and appendCasesToSuite checks that.
+    const declared = new Set(tools.map((t) => t.name));
+    if (declared.size > 0 && tool.steps.some((st) => st.calls.some((c) => !declared.has(c.name)))) {
       throw new Skip('invalid tool definitions');
     }
   }
@@ -285,6 +307,8 @@ function build(trace: unknown, prefix: string): { case: TestCase; redactions: nu
       const args = filterArgs(c.arguments);
       const call: Record<string, unknown> = Object.keys(args).length > 0 ? { name: c.name, arguments: args } : { name: c.name };
       expectedCalls.push(call);
+      // Identical entries collapse. If one call recorded different results, both are kept and
+      // the loop's first-match rule serves the first at run time; the spec accepts that.
       const entry = { ...call, result: st.results[i] };
       const key = JSON.stringify(entry);
       if (!seen.has(key)) {
@@ -294,19 +318,15 @@ function build(trace: unknown, prefix: string): { case: TestCase; redactions: nu
     });
   }
 
-  // Display order: id, systemPrompt, input|messages, tools, toolResults, maxSteps, expectedCalls,
-  // expected, evaluators, tags.
-  const tc: Record<string, unknown> = { id: caseId(rawId, prefix, systemPrompt ?? '', red, steps) };
-  if (systemPrompt) tc.systemPrompt = systemPrompt;
-  if (prompt.length === 1) tc.input = prompt[0].content;
-  else tc.messages = prompt;
-  if (tools?.length) tc.tools = tools;
-  tc.toolResults = toolResults;
-  if (tool.replies > DEFAULT_MAX_STEPS) tc.maxSteps = tool.replies;
-  tc.expectedCalls = expectedCalls;
-  tc.expected = red[red.length - 1].content;
-  tc.evaluators = ['tool-call', 'llm-judge'];
-  tc.tags = ['imported', 'tools'];
+  const middle: Record<string, unknown> = {};
+  if (tools?.length) middle.tools = tools;
+  middle.toolResults = toolResults;
+  if (tool.replies > DEFAULT_MAX_STEPS) middle.maxSteps = tool.replies;
+  middle.expectedCalls = expectedCalls;
+  const tc = assembleCase(caseId(rawId, prefix, systemPrompt ?? '', red, steps), systemPrompt, red, middle, {
+    evaluators: ['tool-call', 'llm-judge'],
+    tags: ['imported', 'tools'],
+  });
 
   TestCaseSchema.parse(tc); // a failure here is a bug in this function
   return { case: tc as TestCase, redactions };

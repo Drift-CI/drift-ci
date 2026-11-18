@@ -711,3 +711,89 @@ describe('traceToCase: tool trace skips', () => {
     expect(skip(trace)).toBe(reason);
   });
 });
+
+describe('traceToCase: untrusted nesting and call names', () => {
+  const deepArray = (n: number) => '['.repeat(n) + ']'.repeat(n);
+  const deepObject = (n: number): unknown => {
+    let v: unknown = 'leaf';
+    for (let i = 0; i < n; i++) v = { x: v };
+    return v;
+  };
+
+  it('skips a 10k-deep OpenAI argument instead of throwing', () => {
+    const r = traceToCase(
+      { messages: [user, oaCall([{ ...getOrder, args: `{"x":${deepArray(10_000)}}` }]), oaResult('call_1', shipped), final] },
+      opts,
+    );
+    expect(r).toEqual({ ok: false, reason: 'invalid tool arguments' });
+  });
+
+  it('skips a 10k-deep Anthropic input instead of throwing', () => {
+    const r = traceToCase(
+      {
+        messages: [user, anCall([{ ...getOrder, args: deepObject(10_000) }]), anResults([{ id: 'call_1', content: 'r' }]), final],
+      },
+      opts,
+    );
+    expect(r).toEqual({ ok: false, reason: 'invalid tool arguments' });
+  });
+
+  it('skips a 10k-deep tool schema instead of throwing', () => {
+    const r = traceToCase(
+      {
+        tools: [{ name: 'get_order', input_schema: { type: 'object', properties: deepObject(10_000) } }],
+        messages: [user, oaCall([getOrder]), oaResult('call_1', shipped), final],
+      },
+      opts,
+    );
+    expect(r).toEqual({ ok: false, reason: 'invalid tool definitions' });
+  });
+
+  it('accepts arguments at depth 64 and rejects 65 (the arguments object itself is depth 1)', () => {
+    const args = (n: number) => `{"x":${deepArray(n - 1)}}`;
+    const mk = (n: number) =>
+      traceToCase({ messages: [user, oaCall([{ ...getOrder, args: args(n) }]), oaResult('call_1', shipped), final] }, opts);
+    expect(mk(64).ok).toBe(true);
+    expect(mk(65)).toEqual({ ok: false, reason: 'invalid tool arguments' });
+  });
+
+  it('accepts a tool schema at depth 64 and rejects 65', () => {
+    const schema = (n: number) => ({ type: 'object', properties: deepObject(n - 1) });
+    const mk = (n: number) =>
+      traceToCase(
+        { tools: [{ name: 'get_order', input_schema: schema(n) }], messages: [user, oaCall([getOrder]), oaResult('call_1', shipped), final] },
+        opts,
+      );
+    expect(mk(64).ok).toBe(true);
+    expect(mk(65)).toEqual({ ok: false, reason: 'invalid tool definitions' });
+  });
+
+  it('skips a call whose name is not a valid tool name', () => {
+    expect(skip({ messages: [user, oaCall([{ ...getOrder, name: 'get order' }]), oaResult('call_1', shipped), final] })).toBe(
+      'invalid tool arguments',
+    );
+    expect(
+      skip({ messages: [user, anCall([{ ...getOrder, name: 'x'.repeat(65) }]), anResults([{ id: 'call_1', content: 'r' }]), final] }),
+    ).toBe('invalid tool arguments');
+  });
+
+  it('skips a call to a tool the trace did not declare', () => {
+    expect(
+      skip({ tools: [{ name: 'ping' }], messages: [user, oaCall([getOrder]), oaResult('call_1', shipped), final] }),
+    ).toBe('invalid tool definitions');
+  });
+
+  it('allows undeclared calls when the trace sends no tools', () => {
+    expect(ok({ messages: [user, oaCall([getOrder]), oaResult('call_1', shipped), final] }).case.tools).toBeUndefined();
+    expect(ok({ tools: [], messages: [user, oaCall([getOrder]), oaResult('call_1', shipped), final] }).ok).toBe(true);
+  });
+
+  it('keeps a __proto__ argument as data', () => {
+    const r = ok({
+      messages: [user, oaCall([{ ...getOrder, args: '{"__proto__":{"a":1},"order_id":"ORD-1"}' }]), oaResult('call_1', shipped), final],
+    });
+    expect(Object.keys(r.case.expectedCalls![0].arguments)).toEqual(['__proto__', 'order_id']);
+    expect(JSON.stringify(r.case.toolResults)).toContain('"__proto__":{"a":1}');
+    expect(() => TestCaseSchema.parse(r.case)).not.toThrow();
+  });
+});
