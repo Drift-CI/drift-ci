@@ -176,7 +176,7 @@ describe('runAction', () => {
     // the baselines manually — fastest way to set up the regression case.
     const baselinePath = join(ws.baselineDir, 'math.json');
     const baselineData = {
-      $schema: 'https://drift-ci.dev/schema/baseline-v1.json',
+      $schema: 'https://drift-ci.com/schema/baseline-v1.json',
       caseId: 'math',
       suiteId: 'act-suite',
       suiteHash: computeExpectedSuiteHash('math', 'What is 2+2?', '4'),

@@ -210684,7 +210684,7 @@ function redaction_redactSecrets(text) {
 
 
 const OUTPUT_MAX_BYTES = 8 * 1024;
-const BASELINE_SCHEMA_URL = 'https://drift-ci.dev/schema/baseline-v1.json';
+const BASELINE_SCHEMA_URL = 'https://drift-ci.com/schema/baseline-v1.json';
 function stableStringify(value) {
     if (value === null || value === undefined)
         return JSON.stringify(value ?? null);

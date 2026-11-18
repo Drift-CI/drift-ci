@@ -621,7 +621,7 @@ Directory structure mirrors the `/`-delimited `caseId`.
 
 ```json
 {
-  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "$schema": "https://drift-ci.com/schema/baseline-v1.json",
   "caseId": "classify/sentiment_edge",
   "suiteId": "my-app-suite",
   "capturedAt": "2026-04-19T12:00:00Z",
@@ -800,7 +800,7 @@ export function computeSuiteHash(tc: TestCase): string {
  */
 export function serialiseBaseline(entry: BaselineEntry): string {
   const ordered: Record<string, unknown> = {
-    $schema: 'https://drift-ci.dev/schema/baseline-v1.json',
+    $schema: 'https://drift-ci.com/schema/baseline-v1.json',
     caseId: entry.caseId,
     suiteId: entry.suiteId,
     suiteHash: entry.suiteHash,
@@ -3108,7 +3108,7 @@ For every case in the suite, a corresponding `.drift/baseline/<case-id>.json` fi
 
 ```json
 {
-  "$schema": "https://drift-ci.dev/schema/baseline-v1.json",
+  "$schema": "https://drift-ci.com/schema/baseline-v1.json",
   "caseId": "classify/sentiment_edge",
   "suiteId": "my-app-suite",
   "capturedAt": "2026-04-19T12:00:00Z",
