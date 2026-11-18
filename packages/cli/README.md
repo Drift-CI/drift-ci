@@ -31,7 +31,9 @@ drift-ci import traces.jsonl --dry-run  # print the YAML instead
 
 Each line of the file is one chat trace, in OpenAI shape (`{"messages": [...]}` with `system`, `developer`, `user` and `assistant` roles) or Anthropic shape (`{"system": "...", "messages": [...]}`). The last assistant reply becomes the case's `expected` answer, the system and developer messages become `systemPrompt`, and the rest becomes `input` (one user turn) or `messages`. An optional `id` field names the case; otherwise the ID is a hash of the conversation, so importing the same file twice adds nothing new.
 
-Thinking blocks are dropped. Traces that can't become a case (tool calls, images or other non-text content, invalid JSON, no final assistant reply, turns that don't alternate) are skipped and listed with their line numbers (the first 20, then a count).
+Thinking blocks are dropped. Traces that can't become a case (images or other non-text content, tool calls the importer can't replay (see below), invalid JSON, no final assistant reply, turns that don't alternate) are skipped and listed with their line numbers (the first 20, then a count).
+
+Traces with tool calls become multi-step `tool-call` cases. The recorded calls become `expectedCalls`, the recorded results become `toolResults`, the final reply becomes `expected`, and the evaluators are `tool-call` and `llm-judge`. Send a top-level `tools` array (OpenAI or Anthropic shape) with the trace, or define the tools in the suite. A case that calls a tool defined in neither place is skipped, and the import lists the missing names. If nothing else was added, the command exits 1. This applies to traces that send no `tools`; if a trace sends `tools`, every call must name one of them, or the trace is skipped as `invalid tool definitions` and appears in the line-numbered list instead. Arguments that are free text (over 40 characters or containing a line break) are left out of the expectations. Only tool calls after the last user message are supported; traces with earlier tool calls are skipped.
 
 | Option | Default | |
 |---|---|---|

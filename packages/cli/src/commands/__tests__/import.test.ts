@@ -329,3 +329,128 @@ describe('executeImport', () => {
     expect(executeImport(file, opts(), io)).toBe(0);
   });
 });
+
+describe('executeImport with tool traces', () => {
+  const toolTrace = (name = 'get_order', extra: Record<string, unknown> = {}, id = 'call_1') =>
+    JSON.stringify({
+      ...extra,
+      messages: [
+        { role: 'user', content: 'Where is order 42?' },
+        {
+          role: 'assistant',
+          content: null,
+          tool_calls: [{ id, type: 'function', function: { name, arguments: '{"order":42}' } }],
+        },
+        { role: 'tool', tool_call_id: id, content: '{"status":"shipped"}' },
+        { role: 'assistant', content: 'It shipped.' },
+      ],
+    });
+  const tools = [{ type: 'function', function: { name: 'get_order', parameters: { type: 'object' } } }];
+  const LINE =
+    "Skipped 1 case(s): they call tools the suite doesn't define (get_order). Add them under tools: in the suite, or send tools with each trace.";
+
+  it('imports a tool trace that sends tools', () => {
+    const suite = writeSuite();
+    const file = writeTraces([toolTrace('get_order', { tools })]);
+    expect(executeImport(file, opts(), io)).toBe(0);
+    expect(readFileSync(suite, 'utf8')).toContain('toolResults');
+    expect(out.join('\n')).toContain('Imported 1 case(s)');
+  });
+
+  it('exits 1 when the only case calls undefined tools', () => {
+    const suite = writeSuite();
+    const file = writeTraces([toolTrace()]);
+    expect(executeImport(file, opts(), io)).toBe(1);
+    expect(out.join('\n')).toContain(LINE);
+    expect(readFileSync(suite, 'utf8')).toBe(SUITE);
+  });
+
+  it('exits 0 and still prints the line when other cases were added', () => {
+    writeSuite();
+    const file = writeTraces([trace('q', 'a'), toolTrace()]);
+    expect(executeImport(file, opts(), io)).toBe(0);
+    expect(out.join('\n')).toContain(LINE);
+  });
+
+  it('lists a tool call before a later user turn as a skipped line', () => {
+    writeSuite();
+    const call = {
+      role: 'assistant',
+      content: null,
+      tool_calls: [{ id: 'c', type: 'function', function: { name: 'get_order', arguments: '{}' } }],
+    };
+    const file = writeTraces([
+      trace('q', 'a'),
+      JSON.stringify({
+        messages: [
+          { role: 'user', content: 'one' },
+          call,
+          { role: 'tool', tool_call_id: 'c', content: 'x' },
+          { role: 'assistant', content: 'two' },
+          { role: 'user', content: 'three' },
+          { role: 'assistant', content: 'four' },
+        ],
+      }),
+    ]);
+    expect(executeImport(file, opts(), io)).toBe(0);
+    expect(out.join('\n')).toContain('line 2: tool calls before the last user message');
+  });
+
+  it('combines names across skipped cases, sorted and unique', () => {
+    writeSuite();
+    const file = writeTraces([
+      toolTrace('zeta', {}, 'a'),
+      toolTrace('alpha', { id: 'x' }, 'b'),
+      toolTrace('zeta', { id: 'y' }, 'c'),
+    ]);
+    expect(executeImport(file, opts(), io)).toBe(1);
+    expect(out.join('\n')).toContain(
+      "Skipped 3 case(s): they call tools the suite doesn't define (alpha, zeta).",
+    );
+  });
+
+  it('exits 1 when one case is already present and the rest call undefined tools', () => {
+    writeSuite();
+    const file = writeTraces([trace('q', 'a'), toolTrace()]);
+    expect(executeImport(file, opts(), io)).toBe(0);
+    out.length = 0;
+    expect(executeImport(file, opts(), io)).toBe(1);
+    expect(out.join('\n')).toContain('(1 already present)');
+    expect(out.join('\n')).toContain(LINE);
+  });
+
+  it('treats --dry-run with only tool-skipped cases like a real run', () => {
+    const suite = writeSuite();
+    const file = writeTraces([toolTrace()]);
+    expect(executeImport(file, opts({ dryRun: true }), io)).toBe(1);
+    expect(out.join('\n')).toContain(LINE);
+    expect(readFileSync(suite, 'utf8')).toBe(SUITE);
+  });
+});
+
+describe('executeImport --dry-run with tool traces', () => {
+  it('prints tool cases without YAML anchors or aliases', () => {
+    writeSuite();
+    const file = writeTraces([
+      JSON.stringify({
+        tools: [{ type: 'function', function: { name: 'get_order', parameters: { type: 'object' } } }],
+        messages: [
+          { role: 'user', content: 'Where is order 42?' },
+          {
+            role: 'assistant',
+            content: null,
+            tool_calls: [
+              { id: 'c', type: 'function', function: { name: 'get_order', arguments: '{"order":42,"items":["a"]}' } },
+            ],
+          },
+          { role: 'tool', tool_call_id: 'c', content: '{"status":"shipped"}' },
+          { role: 'assistant', content: 'It shipped.' },
+        ],
+      }),
+    ]);
+    expect(executeImport(file, opts({ dryRun: true }), io)).toBe(0);
+    const printed = out.join('\n');
+    expect(printed).toContain('toolResults');
+    expect(printed).not.toMatch(/[&*]a\d/);
+  });
+});

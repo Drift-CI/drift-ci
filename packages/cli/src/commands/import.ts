@@ -215,12 +215,21 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
       : Infinity;
   const reportSkips = skips.filter((s) => s.line <= cutoff);
   const present = result.present.filter((id) => (lineOf.get(id) ?? 0) <= cutoff).length;
+  const toolSkips = result.skipped.filter((k) => (lineOf.get(k.id) ?? 0) <= cutoff);
   const redactions = addedIds.reduce((n, id) => n + (redactionsOf.get(id) ?? 0), 0);
 
   if (addedIds.length === 0) {
-    report(io, { suitePath, added: 0, present, skips: reportSkips, redactions, dryRun: !!opts.dryRun });
+    report(io, {
+      suitePath,
+      added: 0,
+      present,
+      skips: reportSkips,
+      toolSkips,
+      redactions,
+      dryRun: !!opts.dryRun,
+    });
     // Re-importing the same file is a no-op, not a failure.
-    return present > 0 ? 0 : 1;
+    return present > 0 && toolSkips.length === 0 ? 0 : 1;
   }
 
   if (result.evaluatorWarning) {
@@ -231,9 +240,9 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
   }
 
   if (opts.dryRun) {
-    report(io, { suitePath, added: addedIds.length, present, skips: reportSkips, redactions, dryRun: true });
+    report(io, { suitePath, added: addedIds.length, present, skips: reportSkips, toolSkips, redactions, dryRun: true });
     io.out('');
-    io.out(stringify(result.addedCases, { lineWidth: 0 }).trimEnd());
+    io.out(stringify(result.addedCases, { lineWidth: 0, aliasDuplicateObjects: false }).trimEnd());
     return 0;
   }
 
@@ -244,7 +253,7 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
     return 2;
   }
 
-  report(io, { suitePath, added: addedIds.length, present, skips: reportSkips, redactions, dryRun: false });
+  report(io, { suitePath, added: addedIds.length, present, skips: reportSkips, toolSkips, redactions, dryRun: false });
   io.out('');
   io.out(
     `Next: run \`drift-ci run\`, then \`drift-ci baseline accept ${suitePath} --all\` to record ` +
@@ -260,6 +269,7 @@ function report(
     added: number;
     present: number;
     skips: { line: number; reason: TraceSkipReason }[];
+    toolSkips: AppendCasesResult['skipped'];
     redactions: number;
     dryRun: boolean;
   },
@@ -271,6 +281,13 @@ function report(
     io.out(`Skipped ${r.skips.length} line(s):`);
     for (const s of r.skips.slice(0, MAX_SKIP_LINES)) io.out(`  line ${s.line}: ${s.reason}`);
     if (r.skips.length > MAX_SKIP_LINES) io.out(`  … and ${r.skips.length - MAX_SKIP_LINES} more`);
+  }
+  if (r.toolSkips.length > 0) {
+    const names = [...new Set(r.toolSkips.flatMap((k) => k.tools))].sort();
+    io.out(
+      `Skipped ${r.toolSkips.length} case(s): they call tools the suite doesn't define ` +
+        `(${names.join(', ')}). Add them under tools: in the suite, or send tools with each trace.`,
+    );
   }
   if (r.redactions > 0) io.out(`Redacted ${r.redactions} secret(s) from imported text.`);
 }

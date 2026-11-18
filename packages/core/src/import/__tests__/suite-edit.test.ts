@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import type { TestCase } from '../../types/index.js';
+import { parseDocument } from 'yaml';
+import type { TestCase, ToolDefinition } from '../../types/index.js';
 import { parseSuite } from '../../loader/parse-suite.js';
 import { appendCasesToSuite, SuiteEditError } from '../suite-edit.js';
+import { traceToCase } from '../trace.js';
 
 const SUITE = `# Hand-written suite — keep this comment
 version: 1
@@ -17,6 +19,11 @@ cases:
 
 const mk = (id: string, extra: Partial<TestCase> = {}): TestCase =>
   ({ id, input: 'q', expected: 'a', tags: ['imported'], ...extra }) as TestCase;
+
+function rawCase(text: string, id: string): Record<string, unknown> {
+  const raw = parseDocument(text).toJS() as { cases: Record<string, unknown>[] };
+  return raw.cases.find((c) => c.id === id)!;
+}
 
 function fail(fn: () => unknown): SuiteEditError {
   try {
@@ -55,6 +62,7 @@ describe('appendCasesToSuite', () => {
     expect(r.text).toBe(SUITE);
     expect(r.added).toEqual([]);
     expect(r.evaluatorWarning).toBe(false);
+    expect(r.skipped).toEqual([]);
   });
 
   it.each([[null], [''], ['  \n'], ['# nothing here\n'], ['---\n'], ['null\n'], ['---\nnull\n'], ['~\n']])(
@@ -127,5 +135,167 @@ describe('appendCasesToSuite', () => {
     const lines = e.issues!.filter((l) => l.includes('the `tool-call` evaluator requires'));
     expect(lines).toHaveLength(1);
     expect(lines[0]).toMatch(/^case t: the/);
+  });
+
+  describe('tool cases', () => {
+    const GET_ORDER: ToolDefinition = {
+      name: 'get_order',
+      description: 'Look up an order',
+      parameters: { type: 'object', properties: { id: { type: 'string' } } },
+    };
+    const TOOL_SUITE = `${SUITE}tools:
+  - name: get_order
+    description: Look up an order
+    parameters:
+      type: object
+      properties:
+        id:
+          type: string
+`;
+    const toolCase = (id: string, extra: Partial<TestCase> = {}): TestCase =>
+      mk(id, {
+        toolResults: [{ name: 'get_order', result: { status: 'shipped' } }],
+        expectedCalls: [{ name: 'get_order', arguments: {} }],
+        evaluators: ['tool-call', 'llm-judge'],
+        tags: ['imported', 'tools'],
+        ...extra,
+      });
+
+    it('drops a case tool identical to the suite tool, and the tools key with it', () => {
+      const reordered: ToolDefinition = {
+        parameters: { properties: { id: { type: 'string' } }, type: 'object' },
+        name: 'get_order',
+        description: 'Look up an order',
+      };
+      const r = appendCasesToSuite(TOOL_SUITE, [toolCase('t1', { tools: [reordered] })]);
+      expect(r.added).toEqual(['t1']);
+      expect(r.skipped).toEqual([]);
+      expect(r.addedCases[0]).not.toHaveProperty('tools');
+      const c = parseSuite(r.text).cases.find((x) => x.id === 't1')!;
+      expect(c.tools?.map((t) => t.name)).toEqual(['get_order']);
+      expect(rawCase(r.text, 't1')).not.toHaveProperty('tools');
+    });
+
+    it('keeps only the case tools that differ from the suite', () => {
+      const other: ToolDefinition = { name: 'refund_order', parameters: { type: 'object', properties: {} } };
+      const changed = { ...GET_ORDER, description: 'Find an order' };
+      const r = appendCasesToSuite(TOOL_SUITE, [
+        toolCase('t1', { tools: [GET_ORDER, other] }),
+        toolCase('t2', { tools: [changed] }),
+      ]);
+      expect(r.addedCases[0].tools).toEqual([other]);
+      expect(r.addedCases[1].tools).toEqual([changed]);
+      const t2 = parseSuite(r.text).cases.find((x) => x.id === 't2')!;
+      expect(t2.tools?.[0].description).toBe('Find an order');
+    });
+
+    it('skips cases calling tools defined nowhere and appends the rest', () => {
+      const r = appendCasesToSuite(SUITE, [
+        mk('plain'),
+        toolCase('t1', {
+          toolResults: [
+            { name: 'b', result: 1 },
+            { name: 'a', result: 2 },
+          ],
+          expectedCalls: [{ name: 'b', arguments: {} }],
+        }),
+        toolCase('t2', { tools: [GET_ORDER] }),
+      ]);
+      expect(r.skipped).toEqual([{ id: 't1', reason: 'tools not defined', tools: ['a', 'b'] }]);
+      expect(r.added).toEqual(['plain', 't2']);
+      expect(r.present).toEqual([]);
+      expect(parseSuite(r.text).cases.map((c) => c.id)).toEqual(['greeting', 'plain', 't2']);
+    });
+
+    it('skips when the suite defines only other tools', () => {
+      const r = appendCasesToSuite(TOOL_SUITE, [
+        toolCase('t1', { expectedCalls: [{ name: 'refund_order', arguments: {} }] }),
+      ]);
+      expect(r.skipped).toEqual([{ id: 't1', reason: 'tools not defined', tools: ['refund_order'] }]);
+    });
+
+    it('resolves names against the suite tools', () => {
+      const r = appendCasesToSuite(TOOL_SUITE, [toolCase('t1')]);
+      expect(r.added).toEqual(['t1']);
+      expect(r.skipped).toEqual([]);
+    });
+
+    it('returns the input unchanged when every case is skipped', () => {
+      const r = appendCasesToSuite(SUITE, [toolCase('t1')]);
+      expect(r).toEqual({
+        text: SUITE,
+        added: [],
+        present: [],
+        created: false,
+        evaluatorWarning: false,
+        addedCases: [],
+        skipped: [{ id: 't1', reason: 'tools not defined', tools: ['get_order'] }],
+      });
+    });
+
+    it('treats an absent `parameters` as the default when deduping', () => {
+      const bare = `${SUITE}tools:\n  - name: get_order\n`;
+      const explicit: ToolDefinition = { name: 'get_order', parameters: { type: 'object', properties: {} } };
+      const r1 = appendCasesToSuite(bare, [toolCase('t1', { tools: [explicit] })]);
+      expect(r1.addedCases[0]).not.toHaveProperty('tools');
+      const explicitSuite = `${SUITE}tools:\n  - name: get_order\n    parameters:\n      type: object\n      properties: {}\n`;
+      const r2 = appendCasesToSuite(explicitSuite, [
+        toolCase('t1', { tools: [{ name: 'get_order' } as ToolDefinition] }),
+      ]);
+      expect(r2.addedCases[0]).not.toHaveProperty('tools');
+    });
+
+    it('throws parse when the suite loader rejects text the editor accepts', () => {
+      // `yaml` keeps unknown tags; js-yaml (the loader parseSuite uses) rejects them.
+      const e = fail(() => appendCasesToSuite(`${SUITE}x: !foo 1\n`, [mk('a')]));
+      expect(e.code).toBe('parse');
+    });
+
+    it('does not warn about evaluators for cases that carry their own', () => {
+      const json = TOOL_SUITE.replace('  - llm-judge # judge against expected', '  - json-schema');
+      expect(appendCasesToSuite(json, [toolCase('t1')]).evaluatorWarning).toBe(false);
+      expect(appendCasesToSuite(json, [toolCase('t1'), mk('plain')]).evaluatorWarning).toBe(true);
+    });
+  });
+});
+
+describe('appendCasesToSuite: no YAML anchors', () => {
+  const ALIAS = /[&*]a\d/;
+
+  it('writes an imported tool case without anchors or aliases', () => {
+    const r = traceToCase(
+      {
+        tools: [{ name: 'get_order', input_schema: { type: 'object', properties: { order_id: { type: 'string' } } } }],
+        messages: [
+          { role: 'user', content: 'Where is ORD-1?' },
+          {
+            role: 'assistant',
+            content: null,
+            tool_calls: [
+              { id: 'c', type: 'function', function: { name: 'get_order', arguments: '{"order_id":"ORD-1","items":["a"]}' } },
+            ],
+          },
+          { role: 'tool', tool_call_id: 'c', content: 'shipped' },
+          { role: 'assistant', content: 'It shipped.' },
+        ],
+      },
+      { prefix: 'prod' },
+    );
+    if (!r.ok) throw new Error(r.reason);
+    const out = appendCasesToSuite(SUITE, [r.case]);
+    expect(out.added).toEqual([r.case.id]);
+    expect(out.text).not.toMatch(ALIAS);
+  });
+
+  it('writes no aliases even when a case shares an object', () => {
+    const args = { order_id: 'ORD-1', items: ['a'] };
+    const c = mk('prod-shared', {
+      tools: [{ name: 'get_order', parameters: { type: 'object', properties: {} } }],
+      toolResults: [{ name: 'get_order', arguments: args, result: 'ok' }],
+      expectedCalls: [{ name: 'get_order', arguments: args }],
+    });
+    const out = appendCasesToSuite(SUITE, [c]);
+    expect(out.text).not.toMatch(ALIAS);
+    expect(rawCase(out.text, 'prod-shared').expectedCalls).toEqual([{ name: 'get_order', arguments: args }]);
   });
 });
