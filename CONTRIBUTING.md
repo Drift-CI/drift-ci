@@ -7,7 +7,7 @@ workflow, commit conventions, and the sign-off we require on every commit.
 
 By participating in this project you agree to abide by the
 [Code of Conduct](CODE_OF_CONDUCT.md). Report unacceptable behaviour to
-**conduct@drift-ci.dev**.
+**conduct@drift-ci.com**.
 
 ## Development setup
 

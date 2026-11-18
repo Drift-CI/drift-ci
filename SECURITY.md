@@ -15,14 +15,15 @@ previous minor versions are not patched.
 
 **Please do not open public GitHub issues for security reports.**
 
-Report vulnerabilities privately to **security@drift-ci.dev**. Include:
+Report vulnerabilities privately through
+[GitHub's private vulnerability reporting](https://github.com/Drift-CI/drift-ci/security/advisories/new)
+(the **Report a vulnerability** button on the Security tab), or by email to
+**security@drift-ci.com**. Include:
 
 - A description of the vulnerability and its impact.
 - Steps to reproduce (proof-of-concept preferred).
 - Affected versions, if known.
 - Your contact information and whether you wish to be credited.
-
-Alternatively, use GitHub's private vulnerability reporting on this repository.
 
 ## Disclosure process
 

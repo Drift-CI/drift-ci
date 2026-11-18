@@ -3948,7 +3948,7 @@ OSS projects live or die by their first-run experience. These files ship in the 
 
 ### Threat Model & Security Disclosure
 
-A condensed threat-model summary lives in §16 ("Threat Model"); a fuller standalone threat model was planned as `docs/threat-model.md` but hasn't been written. Security reports go to `security@drift-ci.dev` (or GitHub Security Advisory); maintainers acknowledge within 72 hours and target a fix within 90 days.
+A condensed threat-model summary lives in §16 ("Threat Model"); a fuller standalone threat model was planned as `docs/threat-model.md` but hasn't been written. Security reports go through GitHub private vulnerability reporting or `security@drift-ci.com`; `SECURITY.md` sets the response times.
 
 ### Telemetry (Opt-In)
 
