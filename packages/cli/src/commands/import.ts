@@ -242,7 +242,7 @@ export function executeImport(file: string, opts: ImportOptions, io: ImportIO = 
   if (opts.dryRun) {
     report(io, { suitePath, added: addedIds.length, present, skips: reportSkips, toolSkips, redactions, dryRun: true });
     io.out('');
-    io.out(stringify(result.addedCases, { lineWidth: 0 }).trimEnd());
+    io.out(stringify(result.addedCases, { lineWidth: 0, aliasDuplicateObjects: false }).trimEnd());
     return 0;
   }
 

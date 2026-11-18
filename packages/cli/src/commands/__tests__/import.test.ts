@@ -427,3 +427,30 @@ describe('executeImport with tool traces', () => {
     expect(readFileSync(suite, 'utf8')).toBe(SUITE);
   });
 });
+
+describe('executeImport --dry-run with tool traces', () => {
+  it('prints tool cases without YAML anchors or aliases', () => {
+    writeSuite();
+    const file = writeTraces([
+      JSON.stringify({
+        tools: [{ type: 'function', function: { name: 'get_order', parameters: { type: 'object' } } }],
+        messages: [
+          { role: 'user', content: 'Where is order 42?' },
+          {
+            role: 'assistant',
+            content: null,
+            tool_calls: [
+              { id: 'c', type: 'function', function: { name: 'get_order', arguments: '{"order":42,"items":["a"]}' } },
+            ],
+          },
+          { role: 'tool', tool_call_id: 'c', content: '{"status":"shipped"}' },
+          { role: 'assistant', content: 'It shipped.' },
+        ],
+      }),
+    ]);
+    expect(executeImport(file, opts({ dryRun: true }), io)).toBe(0);
+    const printed = out.join('\n');
+    expect(printed).toContain('toolResults');
+    expect(printed).not.toMatch(/[&*]a\d/);
+  });
+});

@@ -576,15 +576,16 @@ describe('traceToCase: tool traces', () => {
       ],
       messages: [
         user,
-        oaCall([{ id: 'c', name: 'get_order', args: { token: key, nested: [longKey] } }]),
+        oaCall([{ id: 'c', name: 'get_order', args: { token: key, nested: [longKey], order_id: 'ORD-1' } }]),
         oaResult('c', `result ${key}`),
         final,
       ],
     });
     const red = '[REDACTED:anthropic-key]';
-    expect(r.case.expectedCalls).toEqual([{ name: 'get_order', arguments: { token: red, nested: [red] } }]);
+    // Redacted arguments can never match at run time, so they are dropped like free text.
+    expect(r.case.expectedCalls).toEqual([{ name: 'get_order', arguments: { order_id: 'ORD-1' } }]);
     expect(r.case.toolResults).toEqual([
-      { name: 'get_order', arguments: { token: red, nested: [red] }, result: `result ${red}` },
+      { name: 'get_order', arguments: { order_id: 'ORD-1' }, result: `result ${red}` },
     ]);
     expect(r.case.tools).toEqual([
       {
@@ -795,5 +796,48 @@ describe('traceToCase: untrusted nesting and call names', () => {
     expect(Object.keys(r.case.expectedCalls![0].arguments)).toEqual(['__proto__', 'order_id']);
     expect(JSON.stringify(r.case.toolResults)).toContain('"__proto__":{"a":1}');
     expect(() => TestCaseSchema.parse(r.case)).not.toThrow();
+  });
+});
+
+describe('traceToCase: tool expectations are safe to serialise and match', () => {
+  /** Every object and array reachable from `v`. */
+  function objectsIn(v: unknown, into: unknown[] = []): unknown[] {
+    if (typeof v === 'object' && v !== null) {
+      into.push(v);
+      for (const x of Object.values(v)) objectsIn(x, into);
+    }
+    return into;
+  }
+
+  it('shares no object between expectedCalls and toolResults, or anywhere in the case', () => {
+    const r = ok({
+      tools: [{ name: 'get_order', input_schema: { type: 'object', properties: { order_id: { type: 'string' } } } }],
+      messages: [
+        user,
+        oaCall([{ id: 'c', name: 'get_order', args: { order_id: 'ORD-1', items: ['a', ['b']], opt: { x: [1] } } }]),
+        oaResult('c', shipped),
+        final,
+      ],
+    });
+    const calls = new Set(objectsIn(r.case.expectedCalls));
+    expect(objectsIn(r.case.toolResults).filter((o) => calls.has(o))).toEqual([]);
+    const all = objectsIn(r.case);
+    expect(new Set(all).size).toBe(all.length);
+    expect(r.case.toolResults?.[0].arguments).toEqual(r.case.expectedCalls?.[0].arguments);
+  });
+
+  it('drops an argument holding a redacted secret from both lists and still counts it', () => {
+    const secret = ['sk', 'ant', 'x'.repeat(24)].join('-');
+    const r = ok({
+      messages: [
+        user,
+        oaCall([{ id: 'c', name: 'get_order', args: { api_key: secret, order_id: 'ORD-1', meta: { k: [secret] } } }]),
+        oaResult('c', shipped),
+        final,
+      ],
+    });
+    expect(r.case.expectedCalls).toStrictEqual([{ name: 'get_order', arguments: { order_id: 'ORD-1' } }]);
+    expect(r.case.toolResults).toStrictEqual([{ name: 'get_order', arguments: { order_id: 'ORD-1' }, result: shipped }]);
+    expect(r.redactions).toBe(2);
   });
 });

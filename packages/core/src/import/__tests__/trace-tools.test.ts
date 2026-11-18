@@ -176,3 +176,11 @@ describe('__proto__ keys', () => {
     expect(JSON.stringify(out)).toBe('{"__proto__":{"a":1},"n":2}');
   });
 });
+
+describe('filterArgs: redaction markers', () => {
+  it('drops a top-level argument containing a redaction marker anywhere inside', () => {
+    expect(
+      filterArgs({ api_key: '[REDACTED:openai-key]', nested: { a: ['x [REDACTED:jwt] y'] }, order_id: 'ORD-1' }),
+    ).toEqual({ order_id: 'ORD-1' });
+  });
+});

@@ -87,10 +87,26 @@ export function isFreeText(v: unknown): boolean {
   return false;
 }
 
-/** Drop every top-level argument whose value is, or contains, free text. */
+const REDACTION_MARKER = '[REDACTED:';
+
+/**
+ * True when a string anywhere inside `v` holds a redaction marker.
+ * Recursive: only call it on values already checked with `exceedsDepth`.
+ */
+export function hasRedaction(v: unknown): boolean {
+  if (typeof v === 'string') return v.includes(REDACTION_MARKER);
+  if (Array.isArray(v)) return v.some(hasRedaction);
+  if (isObject(v)) return Object.values(v).some(hasRedaction);
+  return false;
+}
+
+/**
+ * Drop every top-level argument whose value is, or contains, free text or a redacted
+ * secret (which can never match at run time). Run it on redacted arguments.
+ */
 export function filterArgs(args: Record<string, unknown>): Record<string, unknown> {
   const out: Record<string, unknown> = {};
-  for (const [k, v] of Object.entries(args)) if (!isFreeText(v)) setOwn(out, k, v);
+  for (const [k, v] of Object.entries(args)) if (!isFreeText(v) && !hasRedaction(v)) setOwn(out, k, v);
   return out;
 }
 

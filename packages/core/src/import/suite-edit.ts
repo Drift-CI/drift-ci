@@ -197,7 +197,7 @@ export function appendCasesToSuite(
     addedCases.some((c) => !c.evaluators?.length) &&
     !evaluatorNames(suiteJs.evaluators).some((n) => REFERENCE_EVALUATORS.has(n));
 
-  for (const tc of addedCases) seq.add(doc.createNode(tc));
+  for (const tc of addedCases) seq.add(doc.createNode(tc, { aliasDuplicateObjects: false }));
   const text = doc.toString(YAML_OPTS);
   try {
     parseSuite(text);

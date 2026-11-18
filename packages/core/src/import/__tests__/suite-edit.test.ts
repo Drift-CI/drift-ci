@@ -3,6 +3,7 @@ import { parseDocument } from 'yaml';
 import type { TestCase, ToolDefinition } from '../../types/index.js';
 import { parseSuite } from '../../loader/parse-suite.js';
 import { appendCasesToSuite, SuiteEditError } from '../suite-edit.js';
+import { traceToCase } from '../trace.js';
 
 const SUITE = `# Hand-written suite — keep this comment
 version: 1
@@ -255,5 +256,46 @@ describe('appendCasesToSuite', () => {
       expect(appendCasesToSuite(json, [toolCase('t1')]).evaluatorWarning).toBe(false);
       expect(appendCasesToSuite(json, [toolCase('t1'), mk('plain')]).evaluatorWarning).toBe(true);
     });
+  });
+});
+
+describe('appendCasesToSuite: no YAML anchors', () => {
+  const ALIAS = /[&*]a\d/;
+
+  it('writes an imported tool case without anchors or aliases', () => {
+    const r = traceToCase(
+      {
+        tools: [{ name: 'get_order', input_schema: { type: 'object', properties: { order_id: { type: 'string' } } } }],
+        messages: [
+          { role: 'user', content: 'Where is ORD-1?' },
+          {
+            role: 'assistant',
+            content: null,
+            tool_calls: [
+              { id: 'c', type: 'function', function: { name: 'get_order', arguments: '{"order_id":"ORD-1","items":["a"]}' } },
+            ],
+          },
+          { role: 'tool', tool_call_id: 'c', content: 'shipped' },
+          { role: 'assistant', content: 'It shipped.' },
+        ],
+      },
+      { prefix: 'prod' },
+    );
+    if (!r.ok) throw new Error(r.reason);
+    const out = appendCasesToSuite(SUITE, [r.case]);
+    expect(out.added).toEqual([r.case.id]);
+    expect(out.text).not.toMatch(ALIAS);
+  });
+
+  it('writes no aliases even when a case shares an object', () => {
+    const args = { order_id: 'ORD-1', items: ['a'] };
+    const c = mk('prod-shared', {
+      tools: [{ name: 'get_order', parameters: { type: 'object', properties: {} } }],
+      toolResults: [{ name: 'get_order', arguments: args, result: 'ok' }],
+      expectedCalls: [{ name: 'get_order', arguments: args }],
+    });
+    const out = appendCasesToSuite(SUITE, [c]);
+    expect(out.text).not.toMatch(ALIAS);
+    expect(rawCase(out.text, 'prod-shared').expectedCalls).toEqual([{ name: 'get_order', arguments: args }]);
   });
 });

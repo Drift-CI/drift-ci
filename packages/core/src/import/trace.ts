@@ -303,13 +303,14 @@ function build(trace: unknown, prefix: string): { case: TestCase; redactions: nu
   const seen = new Set<string>();
   for (const st of steps) {
     st.calls.forEach((c, i) => {
-      // The free-text filter runs on the redacted arguments.
+      // The filter runs on the redacted arguments, so redacted values are dropped too.
       const args = filterArgs(c.arguments);
       const call: Record<string, unknown> = Object.keys(args).length > 0 ? { name: c.name, arguments: args } : { name: c.name };
       expectedCalls.push(call);
       // Identical entries collapse. If one call recorded different results, both are kept and
       // the loop's first-match rule serves the first at run time; the spec accepts that.
-      const entry = { ...call, result: st.results[i] };
+      // Its own copy of the arguments: a shared object would make YAML write anchors and aliases.
+      const entry: Record<string, unknown> = { ...structuredClone(call), result: st.results[i] };
       const key = JSON.stringify(entry);
       if (!seen.has(key)) {
         seen.add(key);
