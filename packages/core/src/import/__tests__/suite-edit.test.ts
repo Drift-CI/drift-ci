@@ -299,3 +299,99 @@ describe('appendCasesToSuite: no YAML anchors', () => {
     expect(rawCase(out.text, 'prod-shared').expectedCalls).toEqual([{ name: 'get_order', arguments: args }]);
   });
 });
+
+describe('suite formatting', () => {
+  const MIXED = [
+    '# Support suite',
+    'version: 1',
+    'id: s',
+    'name: S',
+    'evaluators: [llm-judge]   # wide comment spacing',
+    'tools:',
+    '  - name: get_order',
+    '    parameters:',
+    '      type: object',
+    '      properties:',
+    '        order_id: { type: string }',
+    '      required: [order_id]',
+    'cases:',
+    '  - id: greeting',
+    '    input: hi',
+    '    expected: hello',
+    '    schema: { type: object }   # padded map, wide comment',
+    '    tags: [a, b]',
+    '',
+    '# trailing comment after the cases',
+    '',
+  ].join('\n');
+
+  it('keeps every existing line byte-identical, mixed flow styles and comment spacing included', () => {
+    const r = appendCasesToSuite(MIXED, [mk('prod-1')]);
+    const kept = MIXED.split('\n').filter((l) => l !== '');
+    const out = r.text.split('\n');
+    for (const line of kept) expect(out).toContain(line);
+    expect(r.text).toContain('# trailing comment after the cases');
+    expect(parseSuite(r.text).cases.map((c) => c.id)).toEqual(['greeting', 'prod-1']);
+  });
+
+  it('inserts new cases directly after the last case, at the list indentation', () => {
+    const r = appendCasesToSuite(MIXED, [mk('prod-1')]);
+    const lines = r.text.split('\n');
+    const at = lines.indexOf('  - id: prod-1');
+    expect(at).toBeGreaterThan(lines.indexOf('    tags: [a, b]'));
+    expect(at).toBeLessThan(lines.indexOf('# trailing comment after the cases'));
+  });
+
+  it('handles a cases list indented at column 0 and a suite without a final newline', () => {
+    const flat = 'version: 1\nid: s\nname: S\nevaluators: [llm-judge]\ncases:\n- id: a\n  input: hi\n  expected: x';
+    const r = appendCasesToSuite(flat, [mk('b')]);
+    expect(r.text.startsWith(flat)).toBe(true);
+    expect(r.text).toContain('\n- id: b\n');
+    expect(parseSuite(r.text).cases.map((c) => c.id)).toEqual(['a', 'b']);
+  });
+
+  it('keeps CRLF line endings', () => {
+    const crlf = 'version: 1\r\nid: s\r\nname: S\r\nevaluators: [llm-judge]\r\ncases:\r\n  - id: a\r\n    input: hi\r\n    expected: x\r\n';
+    const r = appendCasesToSuite(crlf, [mk('b', { expected: 'line1\nline2' })]);
+    expect(r.text.startsWith(crlf)).toBe(true);
+    expect(r.text.replace(/\r\n/g, '')).not.toContain('\n');
+    expect(parseSuite(r.text).cases.find((c) => c.id === 'b')?.expected).toBe('line1\nline2');
+  });
+
+  it('writes appended cases in a fixed field order, whatever order their keys arrive in', () => {
+    const scrambled = {
+      tags: ['imported', 'tools'],
+      input: 'q',
+      tools: [{ parameters: { type: 'object', properties: {} }, description: 'Look it up', name: 'lookup' }],
+      expected: 'a',
+      evaluators: ['tool-call', 'llm-judge'],
+      toolResults: [{ result: 'r', arguments: { q: 1 }, name: 'lookup' }],
+      systemPrompt: 'sys',
+      expectedCalls: [{ name: 'lookup' }],
+      id: 'prod-order',
+    } as unknown as TestCase;
+    const r = appendCasesToSuite(SUITE, [scrambled]);
+    expect(Object.keys(rawCase(r.text, 'prod-order'))).toEqual([
+      'id', 'systemPrompt', 'input', 'tools', 'toolResults', 'expectedCalls', 'expected', 'evaluators', 'tags',
+    ]);
+    expect(Object.keys(r.addedCases[0])[0]).toBe('id');
+    const raw = rawCase(r.text, 'prod-order') as { tools: object[]; toolResults: object[] };
+    expect(Object.keys(raw.tools[0])).toEqual(['name', 'description', 'parameters']);
+    expect(Object.keys(raw.toolResults[0])).toEqual(['name', 'arguments', 'result']);
+  });
+});
+
+describe('suite formatting edge cases', () => {
+  it('handles a last case ending in a block scalar, then comments and another key', () => {
+    const text = [
+      'version: 1', 'id: s', 'name: S', 'evaluators: [llm-judge]', 'cases:',
+      '  - id: a', '    input: hi', '    expected: |', '      line one', '      line two',
+      '  # a comment about the next case', 'metadata:  { owner: me }', '',
+    ].join('\n');
+    const r = appendCasesToSuite(text, [mk('b')]);
+    for (const line of text.split('\n').filter((l) => l !== '')) expect(r.text.split('\n')).toContain(line);
+    const suite = parseSuite(r.text);
+    expect(suite.cases.map((c) => c.id)).toEqual(['a', 'b']);
+    expect(suite.cases[0].expected).toBe('line one\nline two\n');
+  });
+});

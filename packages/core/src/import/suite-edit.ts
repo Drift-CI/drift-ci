@@ -1,5 +1,5 @@
 import { load as yamlLoad } from 'js-yaml';
-import { Document, isMap, isScalar, isSeq, parseDocument } from 'yaml';
+import { Document, isMap, isScalar, isSeq, parseDocument, stringify, type YAMLSeq } from 'yaml';
 import { parseSuite } from '../loader/parse-suite.js';
 import type { TestCase, ToolDefinition } from '../types/index.js';
 
@@ -40,6 +40,66 @@ export interface AppendCasesResult {
 /** Evaluators that compare free text with `expected` usefully. */
 const REFERENCE_EVALUATORS = new Set(['llm-judge', 'cosine-similarity']);
 const YAML_OPTS = { lineWidth: 0, flowCollectionPadding: false } as const;
+
+/** Field order for appended cases, so they read the same however their keys arrived (e.g. from Postgres jsonb). */
+const CASE_KEY_ORDER = [
+  'id', 'description', 'systemPrompt', 'input', 'messages', 'context',
+  'tools', 'toolResults', 'maxSteps', 'expectedCalls', 'expected',
+  'contains', 'schema', 'criteria', 'rubric', 'rubricQuorum',
+  'evaluators', 'threshold', 'maxTokens', 'runs', 'tags',
+];
+
+/** Field order inside tool, tool-result and expected-call entries. */
+const ENTRY_KEY_ORDER = ['name', 'description', 'parameters', 'arguments', 'result'];
+
+/** `src` with its keys in `order`; unknown keys follow in their original order. */
+function withKeyOrder(src: Record<string, unknown>, order: string[]): Record<string, unknown> {
+  const out: Record<string, unknown> = {};
+  for (const k of order) if (Object.hasOwn(src, k) && src[k] !== undefined) out[k] = src[k];
+  for (const k of Object.keys(src)) if (!Object.hasOwn(out, k) && src[k] !== undefined) out[k] = src[k];
+  return out;
+}
+
+/** The case with its keys, and those of its tool and step entries, in a fixed order. */
+function ordered(c: TestCase): TestCase {
+  const out = withKeyOrder(c as unknown as Record<string, unknown>, CASE_KEY_ORDER);
+  for (const k of ['tools', 'toolResults', 'expectedCalls']) {
+    const list = out[k];
+    if (Array.isArray(list)) {
+      out[k] = list.map((e) =>
+        typeof e === 'object' && e !== null && !Array.isArray(e)
+          ? withKeyOrder(e as Record<string, unknown>, ENTRY_KEY_ORDER)
+          : e,
+      );
+    }
+  }
+  return out as unknown as TestCase;
+}
+
+/**
+ * Insert `cases` after the last item of the block `cases` list, leaving every existing byte as it
+ * was (comments, flow-collection padding, line endings). Returns null when the list's layout
+ * can't be determined, so the caller falls back to re-rendering the document.
+ */
+function spliceCases(text: string, seq: YAMLSeq, cases: TestCase[]): string | null {
+  const last = seq.items[seq.items.length - 1] as { range?: [number, number, number] } | undefined;
+  const range = last?.range;
+  if (!range) return null;
+  const lineStart = text.lastIndexOf('\n', range[0] - 1) + 1;
+  const indent = text.slice(lineStart, range[0]).match(/^( *)- *$/)?.[1];
+  if (indent === undefined) return null;
+
+  const eol = text.includes('\r\n') ? '\r\n' : '\n';
+  const rendered = stringify(cases, { lineWidth: 0, aliasDuplicateObjects: false, flowCollectionPadding: false })
+    .trimEnd()
+    .split('\n')
+    .map((l) => (l === '' ? l : indent + l))
+    .join(eol) + eol;
+
+  const nl = text.indexOf('\n', Math.max(0, range[1] - 1));
+  if (nl === -1) return text + eol + rendered;
+  return text.slice(0, nl + 1) + rendered + text.slice(nl + 1);
+}
 
 function isBlankDocument(doc: Document): boolean {
   return doc.contents === null || (isScalar(doc.contents) && doc.contents.value == null);
@@ -145,6 +205,8 @@ export function appendCasesToSuite(
 
   const seq = doc.get('cases', true);
   if (!isSeq(seq)) throw new SuiteEditError('no-cases', 'The suite has no `cases` list.');
+  // A non-empty block list is edited in place; a new suite or a flow list (`cases: []`) is re-rendered.
+  const canSplice = !created && !seq.flow && seq.items.length > 0;
   seq.flow = false;
   const seen = new Set<string>();
   for (const item of seq.items) {
@@ -184,7 +246,7 @@ export function appendCasesToSuite(
       continue;
     }
     seen.add(c.id);
-    addedCases.push(withEvaluators(deduped, opts.evaluators));
+    addedCases.push(ordered(withEvaluators(deduped, opts.evaluators)));
   }
   const added = addedCases.map((c) => c.id);
 
@@ -197,8 +259,17 @@ export function appendCasesToSuite(
     addedCases.some((c) => !c.evaluators?.length) &&
     !evaluatorNames(suiteJs.evaluators).some((n) => REFERENCE_EVALUATORS.has(n));
 
-  for (const tc of addedCases) seq.add(doc.createNode(tc, { aliasDuplicateObjects: false }));
-  const text = doc.toString(YAML_OPTS);
+  const existingIds = seq.items.map((item) => (isMap(item) ? item.get('id') : undefined));
+  let text = canSplice ? spliceCases(suiteText as string, seq, addedCases) : null;
+  // Safety net: the spliced text must parse to exactly the old cases followed by the new ones.
+  if (text !== null) {
+    const ids = (parseDocument(text).toJS() as { cases?: { id?: unknown }[] } | null)?.cases?.map((c) => c?.id);
+    if (JSON.stringify(ids) !== JSON.stringify([...existingIds, ...added])) text = null;
+  }
+  if (text === null) {
+    for (const tc of addedCases) seq.add(doc.createNode(tc, { aliasDuplicateObjects: false }));
+    text = doc.toString(YAML_OPTS);
+  }
   try {
     parseSuite(text);
   } catch (e) {
@@ -207,7 +278,7 @@ export function appendCasesToSuite(
       const first = (e as Error).message.split('\n')[0];
       throw new SuiteEditError('invalid', first, [first]);
     }
-    const parsed = doc.toJS() as { cases?: { id?: unknown }[] };
+    const parsed = parseDocument(text).toJS() as { cases?: { id?: unknown }[] };
     const labelled = issues.map((issue) => {
       const id =
         issue.path[0] === 'cases' && typeof issue.path[1] === 'number'
