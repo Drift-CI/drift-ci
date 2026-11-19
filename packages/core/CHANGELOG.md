@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.11.1](https://github.com/Drift-CI/drift-ci/compare/core-v1.11.0...core-v1.11.1) (2026-11-19)
+
+
+### Bug Fixes
+
+* **core:** appending cases leaves the rest of the suite untouched ([#220](https://github.com/Drift-CI/drift-ci/issues/220)) ([5e1148d](https://github.com/Drift-CI/drift-ci/commit/5e1148dc3357024868ad219cd218cb9457999400))
+
 ## [1.11.0](https://github.com/Drift-CI/drift-ci/compare/core-v1.10.1...core-v1.11.0) (2026-11-18)
 
 
