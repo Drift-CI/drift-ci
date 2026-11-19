@@ -126842,7 +126842,7 @@ function normalize_stringify_options(opts = stringify_defaults) {
         strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : stringify_defaults.strictNullHandling,
     };
 }
-function stringify(object, opts = {}) {
+function stringify_stringify(object, opts = {}) {
     let obj = object;
     const options = normalize_stringify_options(opts);
     let obj_keys;
@@ -126892,7 +126892,7 @@ function stringify(object, opts = {}) {
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/utils/query.mjs
 
 function stringifyQuery(query) {
-    return stringify(query, { arrayFormat: 'brackets' });
+    return stringify_stringify(query, { arrayFormat: 'brackets' });
 }
 //# sourceMappingURL=query.mjs.map
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/openai@7.50.0_@aws-sdk+credential-provider-node@3.972.36_google-auth-library@10.6.2_undici@6.29.1_ws@8.21.0_zod@4.6.7/node_modules/openai/internal/data-residency.mjs
@@ -158325,7 +158325,7 @@ function stringify_normalize_stringify_options(opts = qs_stringify_defaults) {
         strictNullHandling: typeof opts.strictNullHandling === 'boolean' ? opts.strictNullHandling : qs_stringify_defaults.strictNullHandling,
     };
 }
-function stringify_stringify(object, opts = {}) {
+function qs_stringify_stringify(object, opts = {}) {
     let obj = object;
     const options = stringify_normalize_stringify_options(opts);
     let obj_keys;
@@ -158378,7 +158378,7 @@ function stringify_stringify(object, opts = {}) {
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.137.0_zod@4.6.7/node_modules/@anthropic-ai/sdk/internal/utils/query.mjs
 
 function query_stringifyQuery(query) {
-    return stringify_stringify(query, { arrayFormat: 'brackets' });
+    return qs_stringify_stringify(query, { arrayFormat: 'brackets' });
 }
 //# sourceMappingURL=query.mjs.map
 ;// CONCATENATED MODULE: ../../node_modules/.pnpm/@anthropic-ai+sdk@0.137.0_zod@4.6.7/node_modules/@anthropic-ai/sdk/lib/credentials/types.mjs
@@ -216841,6 +216841,64 @@ class SuiteEditError extends Error {
 /** Evaluators that compare free text with `expected` usefully. */
 const REFERENCE_EVALUATORS = new Set(['llm-judge', 'cosine-similarity']);
 const YAML_OPTS = { lineWidth: 0, flowCollectionPadding: false };
+/** Field order for appended cases, so they read the same however their keys arrived (e.g. from Postgres jsonb). */
+const CASE_KEY_ORDER = (/* unused pure expression or super */ null && ([
+    'id', 'description', 'systemPrompt', 'input', 'messages', 'context',
+    'tools', 'toolResults', 'maxSteps', 'expectedCalls', 'expected',
+    'contains', 'schema', 'criteria', 'rubric', 'rubricQuorum',
+    'evaluators', 'threshold', 'maxTokens', 'runs', 'tags',
+]));
+/** Field order inside tool, tool-result and expected-call entries. */
+const ENTRY_KEY_ORDER = (/* unused pure expression or super */ null && (['name', 'description', 'parameters', 'arguments', 'result']));
+/** `src` with its keys in `order`; unknown keys follow in their original order. */
+function withKeyOrder(src, order) {
+    const out = {};
+    for (const k of order)
+        if (Object.hasOwn(src, k) && src[k] !== undefined)
+            out[k] = src[k];
+    for (const k of Object.keys(src))
+        if (!Object.hasOwn(out, k) && src[k] !== undefined)
+            out[k] = src[k];
+    return out;
+}
+/** The case with its keys, and those of its tool and step entries, in a fixed order. */
+function ordered(c) {
+    const out = withKeyOrder(c, CASE_KEY_ORDER);
+    for (const k of ['tools', 'toolResults', 'expectedCalls']) {
+        const list = out[k];
+        if (Array.isArray(list)) {
+            out[k] = list.map((e) => typeof e === 'object' && e !== null && !Array.isArray(e)
+                ? withKeyOrder(e, ENTRY_KEY_ORDER)
+                : e);
+        }
+    }
+    return out;
+}
+/**
+ * Insert `cases` after the last item of the block `cases` list, leaving every existing byte as it
+ * was (comments, flow-collection padding, line endings). Returns null when the list's layout
+ * can't be determined, so the caller falls back to re-rendering the document.
+ */
+function spliceCases(text, seq, cases) {
+    const last = seq.items[seq.items.length - 1];
+    const range = last?.range;
+    if (!range)
+        return null;
+    const lineStart = text.lastIndexOf('\n', range[0] - 1) + 1;
+    const indent = text.slice(lineStart, range[0]).match(/^( *)- *$/)?.[1];
+    if (indent === undefined)
+        return null;
+    const eol = text.includes('\r\n') ? '\r\n' : '\n';
+    const rendered = stringify(cases, { lineWidth: 0, aliasDuplicateObjects: false, flowCollectionPadding: false })
+        .trimEnd()
+        .split('\n')
+        .map((l) => (l === '' ? l : indent + l))
+        .join(eol) + eol;
+    const nl = text.indexOf('\n', Math.max(0, range[1] - 1));
+    if (nl === -1)
+        return text + eol + rendered;
+    return text.slice(0, nl + 1) + rendered + text.slice(nl + 1);
+}
 function isBlankDocument(doc) {
     return doc.contents === null || (isScalar(doc.contents) && doc.contents.value == null);
 }
@@ -216934,6 +216992,8 @@ function appendCasesToSuite(suiteText, cases, opts = {}) {
     const seq = doc.get('cases', true);
     if (!isSeq(seq))
         throw new SuiteEditError('no-cases', 'The suite has no `cases` list.');
+    // A non-empty block list is edited in place; a new suite or a flow list (`cases: []`) is re-rendered.
+    const canSplice = !created && !seq.flow && seq.items.length > 0;
     seq.flow = false;
     const seen = new Set();
     for (const item of seq.items) {
@@ -216973,7 +217033,7 @@ function appendCasesToSuite(suiteText, cases, opts = {}) {
             continue;
         }
         seen.add(c.id);
-        addedCases.push(withEvaluators(deduped, opts.evaluators));
+        addedCases.push(ordered(withEvaluators(deduped, opts.evaluators)));
     }
     const added = addedCases.map((c) => c.id);
     if (addedCases.length === 0) {
@@ -216982,9 +217042,19 @@ function appendCasesToSuite(suiteText, cases, opts = {}) {
     // Only cases without their own evaluators fall back to the suite's.
     const evaluatorWarning = addedCases.some((c) => !c.evaluators?.length) &&
         !evaluatorNames(suiteJs.evaluators).some((n) => REFERENCE_EVALUATORS.has(n));
-    for (const tc of addedCases)
-        seq.add(doc.createNode(tc, { aliasDuplicateObjects: false }));
-    const text = doc.toString(YAML_OPTS);
+    const existingIds = seq.items.map((item) => (isMap(item) ? item.get('id') : undefined));
+    let text = canSplice ? spliceCases(suiteText, seq, addedCases) : null;
+    // Safety net: the spliced text must parse to exactly the old cases followed by the new ones.
+    if (text !== null) {
+        const ids = parseDocument(text).toJS()?.cases?.map((c) => c?.id);
+        if (JSON.stringify(ids) !== JSON.stringify([...existingIds, ...added]))
+            text = null;
+    }
+    if (text === null) {
+        for (const tc of addedCases)
+            seq.add(doc.createNode(tc, { aliasDuplicateObjects: false }));
+        text = doc.toString(YAML_OPTS);
+    }
     try {
         parseSuite(text);
     }
@@ -216994,7 +217064,7 @@ function appendCasesToSuite(suiteText, cases, opts = {}) {
             const first = e.message.split('\n')[0];
             throw new SuiteEditError('invalid', first, [first]);
         }
-        const parsed = doc.toJS();
+        const parsed = parseDocument(text).toJS();
         const labelled = issues.map((issue) => {
             const id = issue.path[0] === 'cases' && typeof issue.path[1] === 'number'
                 ? parsed.cases?.[issue.path[1]]?.id

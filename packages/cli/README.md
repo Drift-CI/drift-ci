@@ -48,7 +48,7 @@ Imported cases are scored against the production reply, so use an evaluator that
 
 **Review traces before committing them.** Common secret formats (AWS access keys, Anthropic and OpenAI API keys, GitHub and Slack tokens, JWTs and PEM private keys) are redacted automatically. Other credentials, such as bearer tokens or passwords in plain text, are not, and neither is personal data such as names, emails and addresses.
 
-Comments in an existing suite are kept. The YAML library may normalise some formatting, such as folded `>` scalars or the spacing before inline comments, so check the diff.
+New cases are added after the last case in `cases:`, and the rest of the suite is left exactly as it was, comments and formatting included. The exception is a flow-style list such as `cases: []`, which is rewritten in block style, so that suite is reformatted.
 
 Exit codes: `0` cases were imported, or every usable trace was already present (re-importing a file is safe), `1` nothing could be imported or the result failed validation (nothing is written), `2` the input, suite or config can't be read, the suite can't be written, or `--prefix`/`--evaluator` is invalid. Other option errors (such as a bad `--limit`) exit `1`, as for every command.
 
