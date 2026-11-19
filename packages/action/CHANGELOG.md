@@ -1,5 +1,18 @@
 # Changelog
 
+## [1.11.0](https://github.com/Drift-CI/drift-ci/compare/v1.10.0...v1.11.0) (2026-11-19)
+
+
+### Features
+
+* tool-call traces become multi-step cases ([#218](https://github.com/Drift-CI/drift-ci/issues/218)) ([1ffeaa8](https://github.com/Drift-CI/drift-ci/commit/1ffeaa82a4cb7f874103b72b6c3a037c8ce1404d))
+
+
+### Bug Fixes
+
+* **core:** appending cases leaves the rest of the suite untouched ([#220](https://github.com/Drift-CI/drift-ci/issues/220)) ([5e1148d](https://github.com/Drift-CI/drift-ci/commit/5e1148dc3357024868ad219cd218cb9457999400))
+* **core:** baseline $schema points at drift-ci.com ([#213](https://github.com/Drift-CI/drift-ci/issues/213)) ([c83818d](https://github.com/Drift-CI/drift-ci/commit/c83818da11bd8125771c899ed48ccdc05608bf2e))
+
 ## [1.10.0](https://github.com/Drift-CI/drift-ci/compare/v1.9.1...v1.10.0) (2026-11-17)
 
 
