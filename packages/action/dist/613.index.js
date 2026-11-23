@@ -945,7 +945,7 @@ const fromTemporaryCredentials = (options, credentialDefaultProvider, regionProv
             }
             params.TokenCode = await options.mfaCodeProvider(params?.SerialNumber);
         }
-        const { AssumeRoleCommand, STSClient } = await Promise.resolve().then(() => __importStar(__webpack_require__(63102)));
+        const { AssumeRoleCommand, STSClient } = await Promise.resolve().then(() => __importStar(__webpack_require__(40721)));
         if (!stsClient) {
             const defaultCredentialsOrError = typeof credentialDefaultProvider === "function" ? credentialDefaultProvider() : undefined;
             const credentialSources = [
@@ -1129,7 +1129,7 @@ tslib_1.__exportStar(__webpack_require__(70682), exports);
 
 /***/ }),
 
-/***/ 63102:
+/***/ 40721:
 /***/ ((__unused_webpack_module, exports, __webpack_require__) => {
 
 
