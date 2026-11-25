@@ -1,0 +1,38 @@
+name: DCO
+
+# Every commit in a pull request must be signed off (Developer Certificate of Origin; see
+# CONTRIBUTING.md). Merge commits and GitHub bot commits are skipped. The checker is
+# scripts/dco/check.mjs, with no dependencies, so no install step is needed.
+on:
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+  pull-requests: read
+
+concurrency:
+  group: dco-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  dco:
+    name: DCO
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+
+      - name: Test the checker
+        run: node --test "scripts/dco/*.test.mjs"
+
+      - name: Check sign-offs
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/dco/check.mjs
