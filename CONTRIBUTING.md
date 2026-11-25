@@ -109,10 +109,14 @@ message, certifying that you have the right to submit the work under the
 project's MIT license. The full text of the DCO is at
 <https://developercertificate.org/>.
 
-PRs with unsigned commits will fail CI. You can retro-sign with:
+The **DCO** check fails a pull request if any commit lacks a
+`Signed-off-by` line whose email matches that commit's author email, so make
+sure `git config user.email` is the address you sign with. Merge commits and
+commits made by GitHub bots (Dependabot, the dist-bundle sync, releases) are
+skipped. To sign off commits already on your branch:
 
 ```bash
-git rebase --signoff main
+git rebase --signoff origin/main
 git push --force-with-lease
 ```
 
